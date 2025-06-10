@@ -1,0 +1,116 @@
+---
+title: "Authentication"
+description: "Set up authentication for the OnlyFans SDK with multiple modes to fit your needs"
+---
+
+## Authentication Overview
+
+The OnlyFans SDK provides **three authentication modes** to suit different integration needs. Most applications should use **Access Mode** for the simplest setup.
+
+<CardGroup cols={3}>
+  <Card title="Access Mode" icon="cloud">
+    **Recommended** - OFAuth handles all complexity automatically
+  </Card>
+  <Card title="Direct Mode" icon="bolt">
+    **Advanced** - Direct OnlyFans API with full control
+  </Card>
+  <Card title="Custom Mode" icon="cog">
+    **Enterprise** - Custom proxy infrastructure (available for enterprise needs)
+  </Card>
+</CardGroup>
+
+## Access Mode (Recommended)
+
+**Best for most applications.** OFAuth handles authentication, session management, and API complexity automatically.
+
+### Setup
+
+```typescript
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+const sdk = new OFSDK({
+  mode: "access",
+  ofauthApiKey: process.env.OFAUTH_API_KEY
+})
+```
+
+### Using Connection IDs
+
+Authenticate API calls using connection IDs from the OFAuth Link flow:
+
+```typescript
+// All SDK methods use the same authentication pattern
+const { data, error } = await sdk.user.getById({
+  authentication: { connectionId: "conn_123456789" },
+  userId: 123456789
+})
+```
+
+<Info>
+  **Connection IDs** are obtained through OFAuth Link and represent authorized connections to specific OnlyFans accounts. See the [Link documentation](/guides/link/overview) for setup details.
+</Info>
+
+## Direct Mode (Advanced)
+
+**For advanced use cases** where you need full control over the authentication flow.
+
+### Setup
+
+```typescript
+const sdk = new OFSDK({
+  mode: "direct",
+  ofauthApiKey: process.env.OFAUTH_API_KEY // Required for request signing
+})
+```
+
+### Authentication Flow
+
+```typescript
+// 1. Create authentication session
+const authSession = await sdk.link.initSession({
+  mode: "api",
+  clientReferenceId: "unique_session_id"
+})
+
+// 2. Login with credentials
+const loginResult = await sdk.link.loginWithCredentials(
+  authSession.clientSecret,
+  "user@example.com", 
+  "password123"
+)
+
+// 3. Use session for API calls
+if (loginResult.status === "completed") {
+  const session = loginResult.data.session
+  
+  const { data } = await sdk.self.getMe({
+    authentication: { session }
+  })
+}
+```
+
+<Warning>
+  **Advanced Users Only**: Direct mode requires handling 2FA, session management, and security considerations. Use Access mode unless you specifically need this level of control.
+</Warning>
+
+## Custom Mode (Enterprise)
+
+**Available for enterprise setups** with custom proxy infrastructure. Contact OFAuth for configuration details.
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="SDK Architecture" icon="boxes" href="/sdk/core-concepts/architecture">
+    **Understand the design** - Learn about the SDK's modular structure and type safety
+  </Card>
+  <Card title="Core Modules" icon="book" href="/sdk/modules/authentication/link-authentication">
+    **Start building** - Explore the available modules and operations
+  </Card>
+  <Card title="Link Setup" icon="link" href="/guides/link/overview">
+    **Authentication flows** - Set up OFAuth Link for user connections
+  </Card>
+</CardGroup>
+
+<Info>
+  **Recommended Path**: Start with Access mode for the simplest setup, then explore the Core Modules to understand what's possible with the SDK.
+</Info> 

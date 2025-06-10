@@ -1,0 +1,471 @@
+---
+title: "Error Handling"
+description: "Comprehensive error handling strategies and patterns for the OnlyFans SDK"
+---
+
+## Overview
+
+The OnlyFans SDK uses a consistent **Result pattern** for error handling, eliminating exceptions and making error handling predictable across all methods.
+
+<CardGroup cols={2}>
+  <Card title="Result Pattern" icon="check-circle">
+    All methods return `{ data, error }` - never both, never exceptions
+  </Card>
+  <Card title="Structured Errors" icon="info-circle">
+    Rich error information with type, message, retry info, and details
+  </Card>
+</CardGroup>
+
+## Response Format
+
+Every SDK method returns this consistent format:
+
+```typescript
+// Success case
+{
+  data: T,           // Your actual data
+  error: undefined   // No error
+}
+
+// Error case
+{
+  data: undefined,   // No data
+  error: {
+    type: "error_type",
+    statusCode: 400,
+    message: "Human readable error message", 
+    retry: false,    // Whether this error is retryable
+    details?: any    // Additional error context (optional)
+  }
+}
+```
+
+<Info>
+  **No Exceptions**: The SDK never throws exceptions for API errors. All errors are returned in the `error` property, making error handling predictable.
+</Info>
+
+## Error Types
+
+The SDK categorizes errors into distinct types for appropriate handling:
+
+### Authentication Errors (401)
+```typescript
+const { data, error } = await sdk.self.getMe({
+  authentication: { session: expiredSession }
+})
+
+if (error?.type === "unauthorized") {
+  console.log("Session expired, redirecting to login...")
+  await redirectToLogin()
+}
+```
+
+**Common causes:** Expired sessions, invalid connection IDs, missing authentication
+
+### Permission Errors (403)
+```typescript
+const { data, error } = await sdk.posts.deletePost({
+  authentication: { session },
+  postId: 12345
+})
+
+if (error?.type === "forbidden") {
+  console.log("You don't have permission to delete this post")
+}
+```
+
+**Common causes:** Insufficient permissions, accessing private content, account restrictions
+
+### Rate Limiting (429)
+```typescript
+const { data, error } = await sdk.messages.sendChatMessage(params)
+
+if (error?.type === "too_many_requests") {
+  console.log("Rate limited, implementing backoff...")
+  await new Promise(resolve => setTimeout(resolve, 5000))
+  // Retry the request
+}
+```
+
+**Handling strategy:** Implement exponential backoff, respect retry intervals, queue requests
+
+### Validation Errors (400)
+```typescript
+const { data, error } = await sdk.posts.createPost({
+  authentication: { session },
+  params: { text: "", mediaItems: [] } // Invalid - empty
+})
+
+if (error?.type === "bad_request") {
+  console.log("Validation error:", error.message)
+  if (error.details) {
+    console.log("Field errors:", error.details)
+  }
+}
+```
+
+**Common causes:** Missing required fields, invalid values, malformed data
+
+## Basic Error Handling
+
+### Simple Error Checking
+```typescript
+async function sendMessage(userId: number, text: string) {
+  const { data, error } = await sdk.messages.sendChatMessage({
+    authentication: { session: userSession },
+    userId,
+    params: { text }
+  })
+  
+  if (error) {
+    console.error(`Failed to send message: ${error.message}`)
+    return null
+  }
+  
+  return data
+}
+```
+
+### Error Type Switching
+```typescript
+async function handleApiCall() {
+  const { data, error } = await sdk.self.getMe({
+    authentication: { session: userSession }
+  })
+  
+  if (error) {
+    switch (error.type) {
+      case "unauthorized":
+        await redirectToLogin()
+        break
+      case "forbidden":
+        showErrorMessage("Access denied")
+        break
+      case "too_many_requests":
+        await implementBackoff()
+        break
+      case "not_found":
+        showErrorMessage("Resource not found")
+        break
+      default:
+        showErrorMessage("An unexpected error occurred")
+    }
+    return null
+  }
+  
+  return data
+}
+```
+
+## Advanced Error Handling
+
+### Retry Logic with Exponential Backoff
+```typescript
+async function apiCallWithRetry<T>(
+  apiCall: () => Promise<{ data?: T; error?: any }>,
+  maxRetries: number = 3
+): Promise<{ data?: T; error?: any }> {
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const result = await apiCall()
+    
+    if (!result.error) {
+      return result // Success
+    }
+    
+    // Don't retry non-retryable errors
+    if (!result.error.retry || attempt === maxRetries) {
+      return result
+    }
+    
+    // Exponential backoff for retryable errors
+    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 30000)
+    console.log(`Retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`)
+    
+    await new Promise(resolve => setTimeout(resolve, delay))
+  }
+  
+  return { error: { type: "retry_exhausted", message: "Max retries exceeded" } }
+}
+
+// Usage
+const result = await apiCallWithRetry(() => 
+  sdk.messages.sendChatMessage(params)
+)
+```
+
+### Error Recovery Patterns
+```typescript
+class SDKErrorHandler {
+  private retryableErrors = ["too_many_requests", "internal_server_error", "bad_gateway"]
+  
+  async handleWithRecovery<T>(
+    operation: () => Promise<{ data?: T; error?: any }>,
+    fallback?: () => Promise<T>
+  ): Promise<T | null> {
+    
+    try {
+      const { data, error } = await operation()
+      
+      if (!error) {
+        return data
+      }
+      
+      // Handle specific error types
+      switch (error.type) {
+        case "unauthorized":
+          await this.refreshAuthentication()
+          // Retry once after auth refresh
+          const retryResult = await operation()
+          return retryResult.data || null
+          
+        case "too_many_requests":
+          await this.handleRateLimit(error)
+          return null
+          
+        case "not_found":
+          console.warn("Resource not found, using fallback")
+          return fallback ? await fallback() : null
+          
+        default:
+          console.error("API error:", error.message)
+          return null
+      }
+      
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      return null
+    }
+  }
+  
+  private async refreshAuthentication() {
+    // Implementation for refreshing auth
+    console.log("Refreshing authentication...")
+  }
+  
+  private async handleRateLimit(error: any) {
+    const delay = error.retryAfter || 5000
+    console.log(`Rate limited, waiting ${delay}ms`)
+    await new Promise(resolve => setTimeout(resolve, delay))
+  }
+}
+
+// Usage
+const errorHandler = new SDKErrorHandler()
+
+const result = await errorHandler.handleWithRecovery(
+  () => sdk.user.getById({ authentication: { session }, userId: 123 }),
+  () => ({ id: 123, username: "unknown" }) // Fallback
+)
+```
+
+### Circuit Breaker Pattern
+```typescript
+class CircuitBreaker {
+  private failures = 0
+  private lastFailureTime = 0
+  private state: "closed" | "open" | "half-open" = "closed"
+  
+  constructor(
+    private threshold = 5,
+    private timeout = 30000
+  ) {}
+  
+  async execute<T>(operation: () => Promise<{ data?: T; error?: any }>): Promise<{ data?: T; error?: any }> {
+    if (this.state === "open") {
+      if (Date.now() - this.lastFailureTime < this.timeout) {
+        return { error: { type: "circuit_open", message: "Circuit breaker is open" } }
+      }
+      this.state = "half-open"
+    }
+    
+    try {
+      const result = await operation()
+      
+      if (result.error) {
+        this.onFailure()
+        return result
+      }
+      
+      this.onSuccess()
+      return result
+      
+    } catch (error) {
+      this.onFailure()
+      return { error: { type: "circuit_error", message: "Circuit breaker caught error" } }
+    }
+  }
+  
+  private onSuccess() {
+    this.failures = 0
+    this.state = "closed"
+  }
+  
+  private onFailure() {
+    this.failures++
+    this.lastFailureTime = Date.now()
+    
+    if (this.failures >= this.threshold) {
+      this.state = "open"
+    }
+  }
+}
+```
+
+## Error Logging and Monitoring
+
+### Structured Error Logging
+```typescript
+class ErrorLogger {
+  static log(error: any, context: any = {}) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      type: error.type,
+      statusCode: error.statusCode,
+      message: error.message,
+      retry: error.retry,
+      context,
+      details: error.details
+    }
+    
+    // Send to your logging service
+    console.error("SDK Error:", JSON.stringify(logEntry, null, 2))
+    
+    // Send to monitoring (e.g., Sentry, DataDog)
+    if (this.shouldAlert(error)) {
+      this.sendAlert(logEntry)
+    }
+  }
+  
+  private static shouldAlert(error: any): boolean {
+    const alertableTypes = ["internal_server_error", "bad_gateway", "service_unavailable"]
+    return alertableTypes.includes(error.type)
+  }
+  
+  private static sendAlert(logEntry: any) {
+    // Implementation for sending alerts
+    console.log("Sending alert for error:", logEntry.type)
+  }
+}
+
+// Usage
+const { data, error } = await sdk.messages.sendChatMessage(params)
+
+if (error) {
+  ErrorLogger.log(error, {
+    operation: "sendChatMessage",
+    userId: params.userId,
+    hasMedia: !!params.mediaItems?.length
+  })
+}
+```
+
+## Production Error Handling
+
+### Global Error Handler
+```typescript
+class GlobalSDKErrorHandler {
+  private static instance: GlobalSDKErrorHandler
+  
+  static getInstance(): GlobalSDKErrorHandler {
+    if (!this.instance) {
+      this.instance = new GlobalSDKErrorHandler()
+    }
+    return this.instance
+  }
+  
+  async handleError(error: any, operation: string): Promise<void> {
+    // Log all errors
+    ErrorLogger.log(error, { operation })
+    
+    // Handle specific error types globally
+    switch (error.type) {
+      case "unauthorized":
+        await this.handleAuthError()
+        break
+      case "too_many_requests":
+        await this.handleRateLimit()
+        break
+      case "internal_server_error":
+        await this.handleServerError()
+        break
+    }
+  }
+  
+  private async handleAuthError() {
+    // Clear invalid sessions, redirect to login
+    localStorage.removeItem("session")
+    window.location.href = "/login"
+  }
+  
+  private async handleRateLimit() {
+    // Show user-friendly rate limit message
+    console.log("Please wait before making more requests")
+  }
+  
+  private async handleServerError() {
+    // Show maintenance message
+    console.log("Service temporarily unavailable")
+  }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Always Check Errors" icon="shield-check">
+    **Never ignore the error property**
+    
+    ```typescript
+    const { data, error } = await sdk.method()
+    if (error) {
+      // Handle appropriately
+    }
+    ```
+  </Card>
+  <Card title="Implement Retries" icon="refresh">
+    **Use retries for transient errors**
+    
+    ```typescript
+    if (error?.retry) {
+      await implementBackoff()
+      // Retry operation
+    }
+    ```
+  </Card>
+  <Card title="Log Everything" icon="file-text">
+    **Comprehensive error logging**
+    
+    ```typescript
+    ErrorLogger.log(error, {
+      operation: "operationName",
+      context: additionalData
+    })
+    ```
+  </Card>
+  <Card title="User-Friendly Messages" icon="message-square">
+    **Show helpful error messages**
+    
+    ```typescript
+    const userMessage = getUserFriendlyMessage(error.type)
+    showNotification(userMessage)
+    ```
+  </Card>
+</CardGroup>
+
+## Error Type Reference
+
+| Type | Status | Retry | Description |
+|------|--------|-------|-------------|
+| `unauthorized` | 401 | ❌ | Invalid session/authentication |
+| `forbidden` | 403 | ❌ | Insufficient permissions |
+| `not_found` | 404 | ❌ | Resource doesn't exist |
+| `bad_request` | 400 | ❌ | Validation error |
+| `too_many_requests` | 429 | ✅ | Rate limit exceeded |
+| `internal_server_error` | 500 | ✅ | Server error |
+| `bad_gateway` | 502 | ✅ | Gateway error |
+| `service_unavailable` | 503 | ✅ | Service down |
+
+<Warning>
+  **Production Readiness**: Always implement proper error handling, logging, and user feedback in production applications.
+</Warning> 

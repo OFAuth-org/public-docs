@@ -1,71 +1,134 @@
 ---
-title: Introduction
-description: "Welcome to the home of your new documentation"
+title: "Welcome to OFAuth"
+description:
+  "The most comprehensive OnlyFans integration platform for developers"
 ---
 
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="Hero Light"
-/>
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="Hero Dark"
-/>
 
-## Setting up
+## What is OFAuth?
 
-The first step to world-class documentation is setting up your editing environments.
+OFAuth provides the most comprehensive and secure way to integrate OnlyFans
+authentication and data access into your applications. Our platform handles the
+complexity of OnlyFans integration so you can focus on building great user
+experiences.
+
+### Why Choose OFAuth?
 
 <CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
-  </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
-  </Card>
+	<Card title="Enterprise Security" icon="shield-check">
+		Bank-grade encryption and security practices protect your users' data with
+		automatic session management
+	</Card>
+	<Card title="Simple Integration" icon="code">
+		Get started in minutes with our hosted authentication or use our APIs for
+		full control
+	</Card>
+	<Card title="Always Up-to-Date" icon="refresh">
+		Dynamic rules engine automatically adapts to OnlyFans changes - no code
+		updates required
+	</Card>
+	<Card title="Production Ready" icon="gauge-high">
+		99.9% uptime with global proxy network and intelligent caching for optimal
+		performance
+	</Card>
 </CardGroup>
 
-## Make it yours
+## Built by Industry Pioneers
 
-Update your docs to your brand and add valuable content for the best user conversion.
+OFAuth was founded by the first person to reverse engineer OnlyFans' request signing algorithm. Our team has built and scaled multiple products and services in the creator economy, helping others do the same along the way.
+
+OFAuth represents the culmination of years of production experience - every feature, security measure, and optimization has been battle-tested by thousands of users in real-world applications. When you choose OFAuth, you're not just getting an API - you're getting the collective knowledge and proven solutions from the industry's most experienced OnlyFans integration experts.
+
+## Get Started
 
 <CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/content/components/accordions"
-  >
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
-  </Card>
+	<Card title="Quick Start" icon="rocket" href="/quickstart">
+		**New to OFAuth?** Get from zero to working integration in under 10 minutes
+	</Card>
+	<Card title="OnlyFans SDK" icon="code" href="/sdk">
+		**Want a Node.js SDK?** Get started with our comprehensive TypeScript SDK
+	</Card>
+	<Card title="Create Account" icon="user-plus" href="https://ofauth.com/platform">
+		**Ready to build?** Sign up for free and get your API keys in minutes
+	</Card>
+	<Card title="Authentication Guide" icon="link" href="/guides/link/overview">
+		**Need integration help?** Choose between hosted or API mode authentication
+	</Card>
+	<Card title="Access API" icon="database" href="/guides/access">
+		**Want direct API access?** Use our proxied API for any programming language
+	</Card>
+	<Card title="API Reference" icon="key" href="/api-reference/overview">
+		**Want technical details?** Complete API documentation with examples
+	</Card>
 </CardGroup>
+
+## What You Can Build
+
+Build powerful OnlyFans integrations across these popular use cases:
+
+<CardGroup cols={3}>
+	<Card title="Creator Dashboards" icon="chart-line">
+		Analytics, content management, and performance insights for creators
+	</Card>
+	<Card title="Subscriber Management" icon="users">
+		Tools to organize and communicate with subscribers at scale
+	</Card>
+	<Card title="Content Automation" icon="calendar">
+		Scheduling, publishing, and workflow automation solutions
+	</Card>
+	<Card title="Message Management" icon="message-bot">
+		Automated fan interactions and response management systems
+	</Card>
+	<Card title="Revenue Analytics" icon="trending-up">
+		Pricing optimization and promotional effectiveness tools
+	</Card>
+	<Card title="Multi-Platform Tools" icon="grid">
+		Integrate OnlyFans with other creator economy platforms
+	</Card>
+</CardGroup>
+
+<Info>
+	**Building for Production?** Before deploying your OnlyFans integration, review our [Production Considerations](/getting-started/production-considerations) guide for critical reliability and risk management information.
+</Info>
+
+## Integration Flow Overview
+
+Here's how OFAuth works at a high level:
+
+```mermaid
+graph TD
+    A[Your Application] --> B[OFAuth Link API]
+    B --> C[User Authentication]
+    C --> D[OnlyFans Login]
+    D --> E[Connection Established]
+    E --> F[Access API Available]
+    F --> G[Your App + OnlyFans Data]
+
+    style A fill:#e1f5fe
+    style G fill:#e8f5e8
+    style B fill:#fff3e0
+    style F fill:#fff3e0
+```
+
+1. **Initialize** - Your app creates an authentication session
+2. **Authenticate** - User securely logs in through OFAuth
+3. **Connect** - OFAuth establishes a secure connection to OnlyFans
+4. **Access** - Your app can now access OnlyFans data on behalf of the user
+
+## Need Help?
+
+<CardGroup cols={2}>
+	<Card title="Join Community" icon="discord" href="https://discord.gg/ofauth">
+		Connect with other developers and get support from the community
+	</Card>
+	<Card title="Contact Support" icon="envelope" href="mailto:support@ofauth.com">
+		Get direct help from our technical team
+	</Card>
+</CardGroup>
+
+---
+
+<Info>
+	**Ready to start?** Most developers complete their first integration within an
+	hour using our [Quick Start guide](/quickstart).
+</Info>

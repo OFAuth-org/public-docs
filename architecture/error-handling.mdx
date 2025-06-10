@@ -1,0 +1,433 @@
+---
+title: "Error Handling Standards"
+description:
+  "Error codes, response formats, and debugging strategies for the OFAuth API"
+---
+
+## Overview
+
+The OFAuth API uses standard HTTP status codes with structured JSON error
+responses to provide clear, actionable feedback when things go wrong. This
+systematic approach helps developers quickly identify and resolve issues.
+
+## Error Response Format
+
+All API errors return a consistent JSON structure:
+
+```json
+{
+	"error": "Human-readable error description",
+	"code": "MACHINE_READABLE_ERROR_CODE",
+	"details": {
+		"field": "Additional context when applicable"
+	}
+}
+```
+
+### Error Response Fields
+
+| Field     | Type   | Description                                           |
+| --------- | ------ | ----------------------------------------------------- |
+| `error`   | string | Human-readable error message for developers           |
+| `code`    | string | Machine-readable error code for programmatic handling |
+| `details` | object | Additional context like field validation errors       |
+
+## HTTP Status Codes
+
+### Success Codes
+
+| Code  | Description | When Used                             |
+| ----- | ----------- | ------------------------------------- |
+| `200` | OK          | Request successful, data returned     |
+| `201` | Created     | Resource successfully created         |
+| `204` | No Content  | Request successful, no data to return |
+
+### Client Error Codes
+
+| Code  | Category     | Description                | Action Required         |
+| ----- | ------------ | -------------------------- | ----------------------- |
+| `400` | Client Error | Invalid request parameters | Fix request format/data |
+| `401` | Client Error | Invalid/missing API key    | Check authentication    |
+| `403` | Client Error | Insufficient permissions   | Contact support         |
+| `404` | Client Error | Resource not found         | Check endpoint URL      |
+| `422` | Client Error | Validation failed          | Fix request data        |
+| `429` | Client Error | Rate limit exceeded        | Wait and retry          |
+
+### Server Error Codes
+
+| Code  | Category     | Description            | Action Required           |
+| ----- | ------------ | ---------------------- | ------------------------- |
+| `500` | Server Error | Internal server error  | Retry or contact support  |
+| `502` | Server Error | Upstream service error | Retry or contact support  |
+| `503` | Server Error | Service unavailable    | Check status page         |
+| `504` | Server Error | Gateway timeout        | Retry with longer timeout |
+
+## Error Code Categories
+
+### Authentication Errors (AUTH\_\*)
+
+| Code                        | HTTP Status | Description                        | Resolution                             |
+| --------------------------- | ----------- | ---------------------------------- | -------------------------------------- |
+| `AUTH_INVALID_KEY`          | 401         | API key is invalid or malformed    | Verify API key format and validity     |
+| `AUTH_KEY_EXPIRED`          | 401         | API key has expired                | Generate new API key                   |
+| `AUTH_INSUFFICIENT_SCOPE`   | 403         | API key lacks required permissions | Contact support for permission upgrade |
+| `AUTH_CONNECTION_NOT_FOUND` | 404         | Connection ID doesn't exist        | Re-authenticate user                   |
+| `AUTH_SESSION_EXPIRED`      | 401         | User session has expired           | Re-authenticate user                   |
+
+### Validation Errors (VALIDATION\_\*)
+
+| Code                        | HTTP Status | Description                  | Resolution                   |
+| --------------------------- | ----------- | ---------------------------- | ---------------------------- |
+| `VALIDATION_REQUIRED_FIELD` | 422         | Required field missing       | Add missing field to request |
+| `VALIDATION_INVALID_FORMAT` | 422         | Field format is incorrect    | Fix field format             |
+| `VALIDATION_INVALID_VALUE`  | 422         | Field value is invalid       | Use valid field value        |
+| `VALIDATION_FIELD_TOO_LONG` | 422         | Field exceeds maximum length | Shorten field value          |
+
+### Rate Limiting Errors (RATE_LIMIT\_\*)
+
+| Code                        | HTTP Status | Description                 | Resolution                     |
+| --------------------------- | ----------- | --------------------------- | ------------------------------ |
+| `RATE_LIMIT_EXCEEDED`       | 429         | Request rate limit exceeded | Wait and retry with backoff    |
+| `RATE_LIMIT_QUOTA_EXCEEDED` | 429         | Monthly quota exceeded      | Upgrade plan or wait for reset |
+
+### Connection Errors (CONNECTION\_\*)
+
+| Code                        | HTTP Status | Description                 | Resolution                |
+| --------------------------- | ----------- | --------------------------- | ------------------------- |
+| `CONNECTION_NOT_FOUND`      | 404         | Connection ID not found     | Re-authenticate user      |
+| `CONNECTION_EXPIRED`        | 401         | Connection has expired      | Re-authenticate user      |
+| `CONNECTION_INVALID_STATE`  | 400         | Connection in invalid state | Check connection status   |
+| `CONNECTION_LIMIT_EXCEEDED` | 403         | Too many connections        | Remove unused connections |
+
+### Upstream Errors (UPSTREAM\_\*)
+
+| Code                        | HTTP Status | Description                  | Resolution                |
+| --------------------------- | ----------- | ---------------------------- | ------------------------- |
+| `UPSTREAM_UNAVAILABLE`      | 502         | OnlyFans API unavailable     | Retry after delay         |
+| `UPSTREAM_TIMEOUT`          | 504         | OnlyFans API timeout         | Retry with longer timeout |
+| `UPSTREAM_RATE_LIMITED`     | 429         | OnlyFans rate limit hit      | Wait and retry            |
+| `UPSTREAM_INVALID_RESPONSE` | 502         | Unexpected upstream response | Report to support         |
+
+### Dynamic Rules Errors (RULES\_\*)
+
+| Code                      | HTTP Status | Description                 | Resolution                            |
+| ------------------------- | ----------- | --------------------------- | ------------------------------------- |
+| `RULES_OUTDATED`          | 503         | Dynamic rules need updating | Wait and retry                        |
+| `RULES_UNAVAILABLE`       | 503         | Rules service unavailable   | Wait and retry                        |
+| `RULES_INVALID_SIGNATURE` | 401         | Request signature invalid   | Update rules and regenerate signature |
+
+## Error Handling Examples
+
+### Basic Error Handling
+
+```javascript
+async function handleApiCall(url, options) {
+	try {
+		const response = await fetch(url, options);
+
+		if (!response.ok) {
+			const errorData = await response.json();
+
+			// Handle specific error types
+			switch (errorData.code) {
+				case "AUTH_CONNECTION_NOT_FOUND":
+					console.log("User needs to re-authenticate");
+					redirectToAuth();
+					break;
+
+				case "RATE_LIMIT_EXCEEDED":
+					console.log("Rate limited, waiting...");
+					await waitAndRetry(response.headers.get("X-RateLimit-Retry-After"));
+					break;
+
+				case "UPSTREAM_UNAVAILABLE":
+					console.log("OnlyFans API unavailable, retrying...");
+					return retryWithBackoff(url, options);
+
+				default:
+					console.error("API Error:", errorData.error);
+					throw new Error(errorData.error);
+			}
+		}
+
+		return response.json();
+	} catch (error) {
+		console.error("Request failed:", error);
+		throw error;
+	}
+}
+```
+
+### Advanced Error Handler Class
+
+```javascript
+class ApiErrorHandler {
+	constructor() {
+		this.retryableErrors = [
+			"UPSTREAM_UNAVAILABLE",
+			"UPSTREAM_TIMEOUT",
+			"RULES_OUTDATED",
+			"RATE_LIMIT_EXCEEDED",
+		];
+	}
+
+	async handleError(response, originalRequest) {
+		const errorData = await response.json();
+
+		// Log error for debugging
+		console.error(`API Error ${response.status}:`, errorData);
+
+		// Handle specific error patterns
+		if (this.isRetryableError(errorData.code)) {
+			return this.handleRetryableError(errorData, originalRequest);
+		}
+
+		if (this.isAuthError(errorData.code)) {
+			return this.handleAuthError(errorData);
+		}
+
+		if (this.isValidationError(errorData.code)) {
+			return this.handleValidationError(errorData);
+		}
+
+		// Generic error handling
+		throw new ApiError(errorData.error, errorData.code, response.status);
+	}
+
+	isRetryableError(code) {
+		return this.retryableErrors.includes(code);
+	}
+
+	isAuthError(code) {
+		return code.startsWith("AUTH_") || code.startsWith("CONNECTION_");
+	}
+
+	isValidationError(code) {
+		return code.startsWith("VALIDATION_");
+	}
+
+	async handleRetryableError(errorData, originalRequest) {
+		// Implement exponential backoff
+		const delay = this.calculateRetryDelay(errorData);
+		await new Promise((resolve) => setTimeout(resolve, delay));
+
+		// Retry original request
+		return fetch(originalRequest.url, originalRequest.options);
+	}
+
+	handleAuthError(errorData) {
+		// Trigger re-authentication flow
+		this.triggerReauth(errorData.code);
+		throw new AuthError(errorData.error, errorData.code);
+	}
+
+	handleValidationError(errorData) {
+		// Extract validation details for user-friendly messages
+		const fieldErrors = this.extractFieldErrors(errorData.details);
+		throw new ValidationError(errorData.error, fieldErrors);
+	}
+
+	calculateRetryDelay(errorData) {
+		if (errorData.code === "RATE_LIMIT_EXCEEDED") {
+			// Use Retry-After header if available
+			return (errorData.retryAfter || 60) * 1000;
+		}
+
+		// Exponential backoff for other errors
+		return Math.min(Math.pow(2, this.retryCount) * 1000, 30000);
+	}
+}
+
+// Custom error classes
+class ApiError extends Error {
+	constructor(message, code, status) {
+		super(message);
+		this.name = "ApiError";
+		this.code = code;
+		this.status = status;
+	}
+}
+
+class AuthError extends ApiError {
+	constructor(message, code) {
+		super(message, code, 401);
+		this.name = "AuthError";
+	}
+}
+
+class ValidationError extends ApiError {
+	constructor(message, fieldErrors) {
+		super(message);
+		this.name = "ValidationError";
+		this.fieldErrors = fieldErrors;
+	}
+}
+```
+
+### Validation Error Details
+
+Validation errors include specific field information:
+
+```json
+{
+	"error": "Validation failed",
+	"code": "VALIDATION_REQUIRED_FIELD",
+	"details": {
+		"field": "email",
+		"message": "Email address is required",
+		"value": null
+	}
+}
+```
+
+Handle validation errors with user-friendly messages:
+
+```javascript
+function handleValidationError(errorData) {
+	const fieldErrors = {};
+
+	if (errorData.details) {
+		fieldErrors[errorData.details.field] = errorData.details.message;
+	}
+
+	// Display field-specific errors in UI
+	Object.entries(fieldErrors).forEach(([field, message]) => {
+		const fieldElement = document.getElementById(field);
+		if (fieldElement) {
+			showFieldError(fieldElement, message);
+		}
+	});
+}
+```
+
+## Debugging Tips
+
+<CardGroup cols={2}>
+	<Card title="Use Error Codes" icon="code">
+		Always check the `code` field for programmatic error handling
+	</Card>
+	<Card title="Log Full Responses" icon="file-text">
+		Log complete error responses for debugging and support
+	</Card>
+	<Card title="Monitor Error Patterns" icon="chart-line">
+		Track error frequency and types to identify issues
+	</Card>
+	<Card title="Test Error Scenarios" icon="flask">
+		Test your error handling with intentional invalid requests
+	</Card>
+</CardGroup>
+
+### Error Monitoring
+
+Implement error tracking for production applications:
+
+```javascript
+class ErrorMonitor {
+	constructor() {
+		this.errorCounts = new Map();
+		this.errorLog = [];
+	}
+
+	logError(error, context) {
+		const errorEntry = {
+			timestamp: new Date().toISOString(),
+			error: error.message,
+			code: error.code,
+			status: error.status,
+			context,
+			stack: error.stack,
+		};
+
+		this.errorLog.push(errorEntry);
+
+		// Update error counts
+		const count = this.errorCounts.get(error.code) || 0;
+		this.errorCounts.set(error.code, count + 1);
+
+		// Alert if error rate is high
+		if (count > 10) {
+			this.alertHighErrorRate(error.code, count);
+		}
+
+		// Send to monitoring service
+		this.sendToMonitoring(errorEntry);
+	}
+
+	getErrorStats() {
+		return {
+			totalErrors: this.errorLog.length,
+			errorCounts: Object.fromEntries(this.errorCounts),
+			recentErrors: this.errorLog.slice(-10),
+		};
+	}
+}
+```
+
+## Common Error Scenarios
+
+### Authentication Issues
+
+```javascript
+// Handling expired connections
+try {
+	const response = await fetch("/v2/access/users/me", {
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": connectionId,
+		},
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+
+		if (error.code === "CONNECTION_EXPIRED") {
+			// Redirect to re-authentication
+			window.location.href = "/auth/reconnect";
+			return;
+		}
+	}
+} catch (error) {
+	console.error("Failed to fetch user data:", error);
+}
+```
+
+### Rate Limiting
+
+```javascript
+// Handling rate limits with exponential backoff
+async function apiCallWithRetry(url, options, maxRetries = 3) {
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		try {
+			const response = await fetch(url, options);
+
+			if (response.status === 429) {
+				const retryAfter =
+					parseInt(response.headers.get("X-RateLimit-Retry-After")) || 60;
+				const delay = Math.min(Math.pow(2, attempt) * 1000, retryAfter * 1000);
+
+				console.log(`Rate limited. Waiting ${delay / 1000} seconds...`);
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				continue;
+			}
+
+			return response;
+		} catch (error) {
+			if (attempt === maxRetries - 1) throw error;
+		}
+	}
+}
+```
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card title="Rate Limiting" icon="gauge" href="/architecture/rate-limiting">
+		Understand rate limiting and backoff strategies
+	</Card>
+	<Card title="Performance" icon="chart-line" href="/architecture/performance">
+		Learn about caching and optimization
+	</Card>
+	<Card title="Quick Start" icon="rocket" href="/quickstart">
+		Try the API
+	</Card>
+</CardGroup>

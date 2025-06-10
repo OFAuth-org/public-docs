@@ -1,0 +1,274 @@
+---
+title: "SDK Configuration"
+sidebarTitle: "Configuration"
+description: "Complete configuration reference for the OnlyFans SDK with all available options and modes"
+---
+
+## Overview
+
+The OnlyFans SDK supports three distinct modes of operation, each with its own configuration options. Choose the mode that best fits your use case and infrastructure requirements.
+
+## Configuration Options
+
+### Complete Configuration Reference
+
+```typescript
+interface OFSDKOptions {
+  mode: "access" | "direct" | "custom"
+  ofauthApiKey?: string
+  debugLog?: boolean
+  customOptions?: {
+    baseUrl: string
+    signRequests?: boolean
+    beforeRequest?: (url: string, request: RequestInit) => RequestInit
+  }
+}
+```
+
+<ParamField path="mode" type="string" required>
+  The SDK operation mode. Choose `"access"` for managed API calls, `"direct"` for full control, or `"custom"` for enterprise setups.
+</ParamField>
+
+<ParamField path="ofauthApiKey" type="string">
+  Your OFAuth API key. Required for `"access"` mode and when `signRequests: true` in custom mode.
+</ParamField>
+
+<ParamField path="debugLog" type="boolean" default="false">
+  Enable detailed request/response logging for debugging purposes.
+</ParamField>
+
+<ParamField path="customOptions.baseUrl" type="string">
+  Custom API base URL for custom mode. Requests will be prefixed with this URL.
+</ParamField>
+
+<ParamField path="customOptions.signRequests" type="boolean" default="false">
+  Whether to sign requests using OFAuth's dynamic rules in custom mode.
+</ParamField>
+
+<ParamField path="customOptions.beforeRequest" type="function">
+  Function to modify requests before they're sent. Useful for adding custom headers or authentication.
+</ParamField>
+
+## Configuration Modes
+
+### Access Mode (Recommended)
+
+**Best for**: Most applications, managed API calls through OFAuth
+
+```typescript
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+const sdk = new OFSDK({
+  mode: "access",
+  ofauthApiKey: process.env.OFAUTH_API_KEY,
+  debugLog: false // Enable for development
+})
+```
+
+<Info>
+  Access mode uses OFAuth's managed infrastructure to handle OnlyFans API complexities automatically.
+</Info>
+
+**Features:**
+- Automatic request signing and session management
+- Built-in error handling and retry logic
+- No need to manage OnlyFans API changes
+- Simplified authentication flow
+- Usage tracking and analytics
+
+**Requirements:**
+- Valid OFAuth API key
+- Active OFAuth subscription
+
+### Direct Mode
+
+**Best for**: Full control over API requests, custom session management, local debugging
+
+```typescript
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+const sdk = new OFSDK({
+  mode: "direct",
+  ofauthApiKey: process.env.OFAUTH_API_KEY, // Required for request signing
+  debugLog: true // Helpful for debugging direct API calls
+})
+```
+
+<Warning>
+  Direct mode requires manual session management and handling of OnlyFans API changes.
+</Warning>
+
+**Features:**
+- Direct communication with OnlyFans API
+- Full control over request/response handling
+- No usage costs for OFAuth services
+- Custom session management
+- Detailed debugging capabilities
+
+**Requirements:**
+- Valid OFAuth API key (for request signing rules)
+- Manual session management
+- Handling of OnlyFans API updates
+
+**Use Cases:**
+- Development and testing environments
+- Custom authentication flows
+- Applications with specific session requirements
+- Cost-sensitive implementations
+
+### Custom Mode
+
+**Best for**: Enterprise setups with custom proxy infrastructure
+
+```typescript
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+const sdk = new OFSDK({
+  mode: "custom",
+  customOptions: {
+    baseUrl: "https://your-api-proxy.com",
+    signRequests: false, // Set to true if using OFAuth signing
+    beforeRequest: (url, request) => {
+      // Add custom headers or modify requests
+      request.headers = {
+        ...request.headers,
+        "X-Custom-Header": "your-value",
+        "Authorization": "Bearer " + process.env.CUSTOM_TOKEN
+      }
+      return request
+    }
+  },
+  ofauthApiKey: process.env.OFAUTH_API_KEY // Required if signRequests: true
+})
+```
+
+<Tip>
+  Custom mode is perfect for enterprise environments where requests need to go through internal proxies or custom infrastructure.
+</Tip>
+
+**Features:**
+- Custom API endpoint configuration
+- Request modification capabilities
+- Optional OFAuth request signing
+- Enterprise proxy support
+- Custom authentication integration
+
+**Requirements:**
+- Custom API infrastructure
+- OFAuth API key (if using request signing)
+
+**Use Cases:**
+- Enterprise environments with proxy requirements
+- Custom API gateways
+- Multi-tenant applications
+- Advanced security requirements
+
+## Environment Variables
+
+For security and deployment flexibility, use environment variables for sensitive configuration:
+
+```bash .env
+# Required for access mode and direct mode
+OFAUTH_API_KEY=your_ofauth_api_key_here
+
+# Optional: Enable debug logging
+OFSDK_DEBUG=true
+
+# Custom mode: Your custom API base URL
+CUSTOM_API_BASE_URL=https://your-custom-api.com
+```
+
+<CodeGroup>
+```typescript dotenv usage
+import dotenv from 'dotenv'
+dotenv.config()
+
+const sdk = new OFSDK({
+  mode: "access",
+  ofauthApiKey: process.env.OFAUTH_API_KEY,
+  debugLog: process.env.OFSDK_DEBUG === 'true'
+})
+```
+
+```typescript environment-specific config
+const config = {
+  development: {
+    mode: "direct" as const,
+    debugLog: true
+  },
+  production: {
+    mode: "access" as const,
+    debugLog: false
+  }
+}
+
+const env = process.env.NODE_ENV || 'development'
+const sdk = new OFSDK({
+  ...config[env],
+  ofauthApiKey: process.env.OFAUTH_API_KEY
+})
+```
+</CodeGroup>
+
+## Debug Configuration
+
+Enable detailed logging to troubleshoot issues during development:
+
+```typescript
+const sdk = new OFSDK({
+  mode: "direct",
+  ofauthApiKey: process.env.OFAUTH_API_KEY,
+  debugLog: true // Enables detailed request/response logging
+})
+
+// Example debug output:
+// [OFSDK Request]: Making request to GET https://onlyfans.com/api2/v2/users/me
+// [OFSDK Response]: 200 OK
+```
+
+<Warning>
+  Never enable debug logging in production as it may expose sensitive information in logs.
+</Warning>
+
+## Advanced Custom Configuration
+
+For complex enterprise setups, the `beforeRequest` function provides powerful request modification capabilities:
+
+```typescript
+const sdk = new OFSDK({
+  mode: "custom",
+  customOptions: {
+    baseUrl: "https://api-gateway.company.com/onlyfans-proxy",
+    beforeRequest: (url, request) => {
+      // Add enterprise authentication
+      request.headers = {
+        ...request.headers,
+        "X-Enterprise-Token": process.env.ENTERPRISE_TOKEN,
+        "X-Request-ID": crypto.randomUUID(),
+        "X-Timestamp": Date.now().toString()
+      }
+      
+      // Add request tracking
+      console.log(`[Enterprise] Request to: ${url}`)
+      
+      // Modify request based on URL patterns
+      if (url.includes('/messages/')) {
+        request.headers["X-Rate-Limit-Bypass"] = "true"
+      }
+      
+      return request
+    }
+  }
+})
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication Setup" icon="key" href="/sdk/core-concepts/authentication">
+    Configure authentication modes and establish secure connections to OnlyFans
+  </Card>
+  <Card title="Architecture Overview" icon="blueprint" href="/sdk/core-concepts/architecture">
+    Understand the SDK's internal structure and design patterns
+  </Card>
+</CardGroup> 

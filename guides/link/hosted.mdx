@@ -1,0 +1,541 @@
+---
+title: "Hosted Mode - Link API"
+description: "Simple redirect-based OnlyFans authentication"
+---
+
+## Overview
+
+Hosted Mode provides the simplest integration path for OnlyFans authentication. Users are redirected to OFAuth's secure authentication pages, reducing your security burden while providing a seamless authentication experience.
+
+<Info>
+	**Available Immediately**: Hosted Mode is available to all users without
+	requiring approval.
+</Info>
+
+
+
+## How It Works
+
+1. **Initialize**: Create a link session with hosted mode configuration
+2. **Redirect/Popup**: Send users to OFAuth's secure authentication page or embed in a popup
+3. **Authentication**: Users complete authentication on OFAuth's pages
+4. **Return**: Users are redirected back to your application with results
+5. **Verify**: Verify the session server-side to get connection details
+
+## Integration Options
+
+Hosted Mode offers two integration approaches to fit your application's user experience:
+
+<CardGroup cols={2}>
+	<Card title="Redirect Integration" icon="external-link">
+		**Traditional Flow** - Redirect users to OFAuth's authentication pages.
+		Perfect for web applications and simple mobile integrations.
+	</Card>
+	<Card title="Popup/Embed Integration" icon="window">
+		**Seamless UX** - Use our Embed SDK to display authentication in a popup or
+		iframe. Keeps users in your application throughout the flow.
+	</Card>
+</CardGroup>
+
+### Redirect Integration
+
+The standard approach where users navigate to OFAuth's authentication pages:
+
+- Users leave your application temporarily
+- Authentication happens on OFAuth's secure domain
+- Users return to your application when complete
+- Simple implementation with just URL redirection
+
+### Popup/Embed Integration
+
+A more seamless experience using our Embed SDK:
+
+- Authentication opens in a popup window or embedded iframe
+- Users never leave your main application
+- Better user experience and higher conversion rates
+- SDK handles popup management and communication
+
+<Info>
+	**Embed SDK**: The OFAuth Embed SDK provides a seamless popup experience for
+	hosted authentication. Contact [support@ofauth.com](mailto:support@ofauth.com)
+	for SDK access and integration documentation.
+</Info>
+
+## Base URL
+
+```
+https://api.ofauth.com/v2/link
+```
+
+## Authentication
+
+All requests require your API key:
+
+```http
+apikey: YOUR_API_KEY
+```
+
+## Core Endpoints
+
+### Initialize Hosted Session
+
+Create a new hosted authentication session.
+
+<Expandable title="POST /init">
+
+```http
+POST /v2/link/init
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+- `Content-Type`: application/json
+
+**Request Body:**
+
+```json
+{
+	"mode": "hosted",
+	"hosted": {
+		"returnUrl": "https://yourapp.com/cancel",
+		"successUrl": "https://yourapp.com/success",
+		"skipApproval": false
+	},
+	"clientReferenceId": "user_123",
+	"connectionId": "conn_existing_123",
+	"options": {
+		"returnRawSession": false
+	}
+}
+```
+
+**Parameters:**
+
+| Parameter                  | Type    | Required | Description                                                      |
+| -------------------------- | ------- | -------- | ---------------------------------------------------------------- |
+| `mode`                     | string  | No       | Set to "hosted" (default)                                        |
+| `hosted.returnUrl`         | string  | No       | URL to redirect to on cancellation (recommended)                 |
+| `hosted.successUrl`        | string  | No       | URL to redirect to on success (recommended)                      |
+| `hosted.skipApproval`      | boolean | No       | Skip approval step (requires special permission, default: false) |
+| `clientReferenceId`        | string  | No       | Your internal user identifier for webhook correlation            |
+| `connectionId`             | string  | No       | Existing connection ID to reconnect to                           |
+| `options.returnRawSession` | boolean | No       | Return raw session data (requires approval, default: false)      |
+
+**Response:**
+
+```json
+{
+	"clientSecret": "cs_abc123def456",
+	"url": "https://auth.ofauth.com/link/cs_abc123def456",
+	"expiresAt": "2024-01-15T10:30:00Z"
+}
+```
+
+</Expandable>
+
+### Retrieve Session Status
+
+Check the current status of a hosted session.
+
+<Expandable title="GET /{clientSecret}">
+
+```http
+GET /v2/link/{clientSecret}
+```
+
+**Parameters:**
+
+- `clientSecret`: The client secret from the init response
+
+**Response (Different Status States):**
+
+```json
+// Initial state
+{
+	"status": "initialized"
+}
+
+// User is authenticating
+{
+	"status": "awaiting_approval"
+}
+
+// Authentication completed
+{
+	"status": "active",
+	"data": {
+		"id": "conn_xyz789",
+		"platformUserId": "12345",
+		"userData": {
+			"userId": "12345",
+			"name": "Jane Doe",
+			"username": "janedoe",
+			"avatar": "https://example.com/avatar.jpg"
+		},
+		"permissions": ["read:all", "write:all"],
+		"status": "active"
+	}
+}
+```
+
+**Status Values:**
+
+- `initialized`: Session created, waiting for user to start authentication
+- `awaiting_approval`: User is on the authentication page
+- `active`: Authentication successful and connection active
+- `failed`: Authentication failed or was cancelled
+- `not_found`: Session expired or doesn't exist
+
+</Expandable>
+
+### Delete Session
+
+Clean up a hosted session.
+
+<Expandable title="DELETE /{clientSecret}">
+
+```http
+DELETE /v2/link/{clientSecret}
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+
+**Response:**
+
+```json
+{
+	"success": true
+}
+```
+
+</Expandable>
+
+## Implementation Guide
+
+### Step 1: Initialize the Session
+
+<CodeGroup>
+
+```javascript JavaScript
+const initResponse = await fetch("https://api.ofauth.com/v2/link/init", {
+	method: "POST",
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"Content-Type": "application/json"
+	},
+	body: JSON.stringify({
+		mode: "hosted",
+		hosted: {
+			returnUrl: "https://yourapp.com/cancel",
+			successUrl: "https://yourapp.com/success"
+		},
+		clientReferenceId: "user_123"
+	})
+})
+
+const { clientSecret, url } = await initResponse.json()
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/link/init",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "Content-Type": "application/json"
+    },
+    json={
+        "mode": "hosted",
+        "hosted": {
+            "returnUrl": "https://yourapp.com/cancel",
+            "successUrl": "https://yourapp.com/success"
+        },
+        "clientReferenceId": "user_123"
+    }
+)
+
+data = response.json()
+client_secret = data["clientSecret"]
+auth_url = data["url"]
+```
+
+```php PHP
+$response = file_get_contents("https://api.ofauth.com/v2/link/init", false, stream_context_create([
+    'http' => [
+        'method' => 'POST',
+        'header' => [
+            'apikey: YOUR_API_KEY',
+            'Content-Type: application/json'
+        ],
+        'content' => json_encode([
+            'mode' => 'hosted',
+            'hosted' => [
+                'returnUrl' => 'https://yourapp.com/cancel',
+                'successUrl' => 'https://yourapp.com/success'
+            ],
+            'clientReferenceId' => 'user_123'
+        ])
+    ]
+]));
+
+$data = json_decode($response, true);
+$clientSecret = $data['clientSecret'];
+$authUrl = $data['url'];
+```
+
+</CodeGroup>
+
+### Step 2: Redirect User to Authentication
+
+After initialization, redirect the user to the authentication URL:
+
+```javascript
+window.location.href = url // Redirect to authentication page
+```
+
+### Step 3: Handle Return URLs
+
+When users complete or cancel authentication, they'll be redirected to your specified URLs:
+
+<CodeGroup>
+
+```javascript Success Handler
+// User visits: https://yourapp.com/success?session=cs_abc123def456
+
+const urlParams = new URLSearchParams(window.location.search)
+const sessionId = urlParams.get("session")
+
+if (sessionId) {
+	// Verify the session server-side
+	const response = await fetch(`/api/verify-session?session=${sessionId}`)
+	const { connectionId } = await response.json()
+
+	// Store connection ID for future API calls
+	localStorage.setItem("connectionId", connectionId)
+}
+```
+
+```javascript Cancel Handler
+// User visits: https://yourapp.com/cancel?session=cs_abc123def456
+
+const urlParams = new URLSearchParams(window.location.search)
+const sessionId = urlParams.get("session")
+
+// Handle cancellation
+console.log("User cancelled authentication")
+```
+
+</CodeGroup>
+
+### Step 4: Verify Session Server-Side
+
+Always verify the session status server-side for security:
+
+<CodeGroup>
+
+```javascript Node.js
+app.get("/api/verify-session", async (req, res) => {
+	const { session } = req.query
+
+	const response = await fetch(`https://api.ofauth.com/v2/link/${session}`, {
+		headers: {
+			apikey: process.env.OFAUTH_API_KEY
+		}
+	})
+
+	const sessionData = await response.json()
+
+	if (sessionData.status === "active") {
+		// Store connection ID in your database
+		res.json({
+			success: true,
+			connectionId: sessionData.data.id,
+			userData: sessionData.data.userData
+		})
+	} else {
+		res.status(400).json({
+			success: false,
+			error: "Authentication not completed"
+		})
+	}
+})
+```
+
+```python Python
+@app.route('/api/verify-session')
+def verify_session():
+    session_id = request.args.get('session')
+
+    response = requests.get(
+        f"https://api.ofauth.com/v2/link/{session_id}",
+        headers={"apikey": os.getenv("OFAUTH_API_KEY")}
+    )
+
+    session_data = response.json()
+
+    if session_data['status'] == 'active':
+        # Store connection ID in your database
+        return jsonify({
+            'success': True,
+            'connectionId': session_data['data']['id'],
+            'userData': session_data['data']['userData']
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'error': 'Authentication not completed'
+        }), 400
+```
+
+</CodeGroup>
+
+## Integration Examples
+
+### React Component
+
+```javascript
+import { useState } from "react"
+
+function ConnectOnlyFansButton({ userId }) {
+	const [isLoading, setIsLoading] = useState(false)
+
+	const handleConnect = async () => {
+		setIsLoading(true)
+
+		try {
+			const response = await fetch("/api/auth/init", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					userId: userId,
+					mode: "hosted"
+				})
+			})
+
+			const { url } = await response.json()
+			window.location.href = url
+		} catch (error) {
+			console.error("Failed to initialize authentication:", error)
+			setIsLoading(false)
+		}
+	}
+
+	return (
+		<button
+			onClick={handleConnect}
+			disabled={isLoading}
+			className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+			{isLoading ? "Connecting..." : "Connect OnlyFans Account"}
+		</button>
+	)
+}
+```
+
+### Multiple Account Management
+
+```javascript
+async function addNewAccount(userId) {
+	const response = await fetch("/api/auth/init", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			userId: userId,
+			mode: "hosted",
+			accountType: "additional"
+		})
+	})
+
+	const { url } = await response.json()
+
+	// Open in popup for better UX
+	const popup = window.open(url, "auth", "width=500,height=600")
+
+	// Listen for completion
+	const checkClosed = setInterval(() => {
+		if (popup.closed) {
+			clearInterval(checkClosed)
+			// Refresh account list
+			window.location.reload()
+		}
+	}, 1000)
+}
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+	<Card title="Server-Side Verification" icon="shield-check">
+		Always verify session status server-side, never trust client-side data
+	</Card>
+	<Card title="HTTPS Only" icon="lock">
+		Use HTTPS for all redirect URLs and API communications
+	</Card>
+	<Card title="Session Expiry" icon="clock">
+		Link sessions expire after 1 hour for security
+	</Card>
+	<Card title="State Management" icon="database">
+		Store connection IDs securely in your database
+	</Card>
+</CardGroup>
+
+## Error Handling
+
+<AccordionGroup>
+
+<Accordion title="Session Expired">
+```json
+{
+  "error": "Session expired",
+  "code": "SESSION_EXPIRED",
+  "expiresAt": "2024-01-15T10:30:00Z"
+}
+```
+**Solution**: Create a new session with `/init`
+</Accordion>
+
+<Accordion title="Invalid Client Secret">
+```json
+{
+  "error": "Session not found",
+  "code": "SESSION_NOT_FOUND"
+}
+```
+**Solution**: Verify the client secret parameter
+</Accordion>
+
+<Accordion title="Authentication Failed">
+```json
+{
+  "status": "failed",
+  "error": "User cancelled authentication or credentials were invalid"
+}
+```
+**Solution**: User needs to retry authentication
+</Accordion>
+
+</AccordionGroup>
+
+## Testing
+
+<Info>
+	**Development Mode**: Use test API keys for development. Test sessions work
+	with demo credentials that are provided on the hosted authentication page.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card title="Access API" icon="key" href="/api-reference/access/overview">
+		Use connection IDs to access OnlyFans data
+	</Card>
+	<Card title="Webhooks" icon="webhook" href="/api-reference/account/overview">
+		Get notified of connection events
+	</Card>
+	<Card title="API Mode" icon="code" href="/guides/link/api-mode">
+		Need more control? Try programmatic authentication
+	</Card>
+</CardGroup>

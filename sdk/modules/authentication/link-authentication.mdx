@@ -1,0 +1,513 @@
+---
+title: "Link Authentication"
+description: "Complete API reference for SDK authentication methods including session initialization, login, and 2FA handling"
+---
+
+## Overview
+
+The Link module (`sdk.link`) handles OnlyFans authentication flows, session management, and two-factor authentication. This module provides direct authentication capabilities for building custom login experiences.
+
+<Info>
+  **When to use Link Authentication**: Use these methods when you need direct control over the authentication flow, such as building custom login UI or handling authentication in server-side applications. For most web applications, the standard hosted OFAuth Link OAuth-style flow is recommended.
+</Info>
+
+<Info>
+  **Link vs Access**: OFAuth Link handles account connection (this module), while OFAuth Access handles API calls to OnlyFans endpoints using established connections. Most applications use Link for authentication and Access for data retrieval.
+</Info>
+
+## Session Initialization
+
+### `initSession(options)`
+
+Initialize a new authentication session for OnlyFans login.
+
+<ParamField path="options" type="InitSessionOptions" required>
+  Configuration for the authentication session.
+</ParamField>
+
+<ParamField path="options.mode" type="'api'" required>
+  The session mode. Currently only 'api' mode is supported.
+</ParamField>
+
+<ParamField path="options.clientReferenceId" type="string" required>
+  A unique identifier for this session. Use this to track sessions in your application.
+</ParamField>
+
+<ParamField path="options.webhook" type="string">
+  Optional webhook URL to receive authentication status updates.
+</ParamField>
+
+<ResponseField name="clientSecret" type="string">
+  The session secret used for subsequent authentication operations.
+</ResponseField>
+
+<ResponseField name="sessionId" type="string">
+  Internal session identifier.
+</ResponseField>
+
+<RequestExample>
+```typescript Initialize Session
+const authSession = await sdk.link.initSession({
+  mode: "api",
+  clientReferenceId: "user_123_session_" + Date.now(),
+  webhook: "https://your-app.com/webhooks/auth" // Optional
+})
+
+console.log("Session secret:", authSession.clientSecret)
+// Store this secret for subsequent authentication calls
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success Response
+{
+  "data": {
+    "clientSecret": "cs_1234567890abcdef",
+    "sessionId": "session_abcdef123456"
+  },
+  "error": undefined
+}
+```
+</ResponseExample>
+
+## Login Methods
+
+### `loginWithCredentials(clientSecret, email, password, proxyOptions?)`
+
+Attempt to log in to OnlyFans using email and password credentials.
+
+<ParamField path="clientSecret" type="string" required>
+  The client secret obtained from `initSession()`.
+</ParamField>
+
+<ParamField path="email" type="string" required>
+  The user's OnlyFans email address.
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  The user's OnlyFans password.
+</ParamField>
+
+<ParamField path="proxyOptions" type="ProxyOptions">
+  Optional proxy configuration for the login request.
+  
+  <Expandable title="Proxy Options">
+    <ParamField path="url" type="string" required>
+      Proxy URL in format: `http://username:password@proxy.example.com:8080`
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="status" type="'completed' | 'awaiting_2fa' | 'failed'" required>
+  The login attempt status.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Present when status is 'completed'. Contains the session data for API calls.
+  
+  <Expandable title="Session Data">
+    <ResponseField name="session" type="object" required>
+      Authentication headers to use for OnlyFans API calls.
+    </ResponseField>
+    
+    <ResponseField name="user" type="object" required>
+      Basic user information for the authenticated account.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Present when status is 'failed'. Contains the error message.
+</ResponseField>
+
+<RequestExample>
+```typescript Login with Email/Password
+const loginResult = await sdk.link.loginWithCredentials(
+  authSession.clientSecret,
+  "user@example.com",
+  "secure_password_123",
+  {
+    url: "http://proxy_user:proxy_pass@proxy.example.com:8080" // Optional
+  }
+)
+
+if (loginResult.status === "completed") {
+  const session = loginResult.data.session
+  console.log("Login successful!")
+  
+  // Store session securely for API calls
+  await storeUserSession(loginResult.data.user.id, session)
+  
+} else if (loginResult.status === "awaiting_2fa") {
+  console.log("2FA required")
+  // Prompt user for 2FA code
+  
+} else {
+  console.error("Login failed:", loginResult.error)
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Successful Login
+{
+  "status": "completed",
+  "data": {
+    "session": {
+      "user-id": "123456789",
+      "x-bc": "random_browser_context_string",
+      "cookie": "session_cookies_here",
+      "user-agent": "Mozilla/5.0..."
+    },
+    "user": {
+      "id": "123456789",
+      "username": "example_user",
+      "name": "Example User",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+</ResponseExample>
+
+<ResponseExample>
+```json 2FA Required
+{
+  "status": "awaiting_2fa",
+  "data": {
+    "message": "Two-factor authentication required"
+  }
+}
+```
+</ResponseExample>
+
+### `submitTwoFactorCode(clientSecret, code)`
+
+Submit a two-factor authentication code when login requires 2FA.
+
+<ParamField path="clientSecret" type="string" required>
+  The client secret from the authentication session.
+</ParamField>
+
+<ParamField path="code" type="string" required>
+  The 6-digit 2FA code from the user's authenticator app.
+</ParamField>
+
+<ResponseField name="status" type="'completed' | 'failed'" required>
+  The 2FA verification status.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Present when status is 'completed'. Contains session and user data.
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Present when status is 'failed'. Contains the error message.
+</ResponseField>
+
+<RequestExample>
+```typescript Submit 2FA Code
+// After login returns "awaiting_2fa" status
+const twoFactorCode = await getTwoFactorCodeFromUser() // Your UI implementation
+
+const otpResult = await sdk.link.submitTwoFactorCode(
+  authSession.clientSecret,
+  twoFactorCode
+)
+
+if (otpResult.status === "completed") {
+  const session = otpResult.data.session
+  console.log("2FA verification successful!")
+  
+  // Store session for API calls
+  await storeUserSession(otpResult.data.user.id, session)
+  
+} else {
+  console.error("2FA failed:", otpResult.error)
+  // Allow user to retry or go back to password entry
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Successful 2FA
+{
+  "status": "completed",
+  "data": {
+    "session": {
+      "user-id": "123456789",
+      "x-bc": "browser_context_after_2fa",
+      "cookie": "updated_session_cookies",
+      "user-agent": "Mozilla/5.0..."
+    },
+    "user": {
+      "id": "123456789",
+      "username": "example_user",
+      "name": "Example User",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+</ResponseExample>
+
+## Session Status
+
+### `getAuthenticationStatus(clientSecret)`
+
+Check the current status of an authentication session.
+
+<ParamField path="clientSecret" type="string" required>
+  The client secret from the authentication session.
+</ParamField>
+
+<ResponseField name="status" type="'pending' | 'completed' | 'failed' | 'expired'" required>
+  Current authentication status.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Present when status is 'completed'. Contains session and user data.
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Present when status is 'failed' or 'expired'.
+</ResponseField>
+
+<RequestExample>
+```typescript Check Authentication Status
+const status = await sdk.link.getAuthenticationStatus(
+  authSession.clientSecret
+)
+
+switch (status.status) {
+  case "pending":
+    console.log("Authentication still in progress...")
+    break
+    
+  case "completed":
+    console.log("Authentication successful!")
+    const session = status.data.session
+    // Use session for API calls
+    break
+    
+  case "failed":
+    console.error("Authentication failed:", status.error)
+    break
+    
+  case "expired":
+    console.log("Session expired, need to start over")
+    break
+}
+```
+</RequestExample>
+
+## Complete Authentication Flow
+
+Here's a complete example showing the full authentication flow with error handling:
+
+```typescript Complete Authentication Example
+async function authenticateUser(
+  email: string,
+  password: string,
+  getTwoFactorCode: () => Promise<string>
+): Promise<{ session: any; user: any } | null> {
+  
+  try {
+    // Step 1: Initialize session
+    const authSession = await sdk.link.initSession({
+      mode: "api",
+      clientReferenceId: `auth_${Date.now()}_${Math.random()}`
+    })
+    
+    console.log("Session initialized:", authSession.clientSecret)
+    
+    // Step 2: Attempt login
+    const loginResult = await sdk.link.loginWithCredentials(
+      authSession.clientSecret,
+      email,
+      password
+    )
+    
+    if (loginResult.status === "completed") {
+      // Login successful without 2FA
+      console.log("Login successful!")
+      return {
+        session: loginResult.data.session,
+        user: loginResult.data.user
+      }
+    }
+    
+    if (loginResult.status === "awaiting_2fa") {
+      // Step 3: Handle 2FA if required
+      console.log("2FA required, requesting code...")
+      
+      const twoFactorCode = await getTwoFactorCode()
+      
+      const otpResult = await sdk.link.submitTwoFactorCode(
+        authSession.clientSecret,
+        twoFactorCode
+      )
+      
+      if (otpResult.status === "completed") {
+        console.log("2FA verification successful!")
+        return {
+          session: otpResult.data.session,
+          user: otpResult.data.user
+        }
+      } else {
+        console.error("2FA verification failed:", otpResult.error)
+        return null
+      }
+    }
+    
+    // Login failed
+    console.error("Login failed:", loginResult.error)
+    return null
+    
+  } catch (error) {
+    console.error("Authentication error:", error)
+    return null
+  }
+}
+
+// Usage
+const authResult = await authenticateUser(
+  "user@example.com",
+  "password123",
+  async () => {
+    // Your implementation to get 2FA code from user
+    return prompt("Enter 2FA code:")
+  }
+)
+
+if (authResult) {
+  console.log("Authenticated as:", authResult.user.username)
+  
+  // Now you can use the session for API calls
+  const { data: profile } = await sdk.self.getMe({
+    authentication: { session: authResult.session }
+  })
+  
+  console.log("Profile loaded:", profile)
+} else {
+  console.log("Authentication failed")
+}
+```
+
+## Error Handling
+
+Authentication methods can fail for various reasons. Here are common error scenarios:
+
+### Invalid Credentials
+
+```typescript
+const loginResult = await sdk.link.loginWithCredentials(
+  clientSecret,
+  "wrong@email.com",
+  "wrong_password"
+)
+
+if (loginResult.status === "failed") {
+  console.error("Invalid credentials:", loginResult.error)
+  // Show error message to user
+}
+```
+
+### Account Restrictions
+
+```typescript
+// Some accounts may be restricted or suspended
+if (loginResult.status === "failed" && 
+    loginResult.error.includes("restricted")) {
+  console.log("Account has restrictions")
+  // Handle account restriction scenario
+}
+```
+
+### Network Issues
+
+```typescript
+try {
+  const loginResult = await sdk.link.loginWithCredentials(
+    clientSecret,
+    email,
+    password
+  )
+} catch (error) {
+  if (error.message.includes("network") || 
+      error.message.includes("timeout")) {
+    console.log("Network error, please try again")
+    // Implement retry logic
+  }
+}
+```
+
+## Best Practices
+
+<Warning>
+  **Security**: Never log or store passwords in plain text. Always use secure storage for session data and implement proper session expiration.
+</Warning>
+
+<Tip>
+  **Session Management**: Sessions can expire. Implement session validation and refresh logic in your application.
+</Tip>
+
+<Info>
+  **Rate Limiting**: Authentication endpoints are rate limited. Don't attempt too many login requests in quick succession.
+</Info>
+
+### Secure Session Storage
+
+```typescript
+// Example secure session storage
+import crypto from "crypto"
+
+const ENCRYPTION_KEY = process.env.SESSION_ENCRYPTION_KEY // 32 bytes key
+
+function encryptSession(sessionData: any): string {
+  const iv = crypto.randomBytes(16)
+  const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY)
+  let encrypted = cipher.update(JSON.stringify(sessionData), 'utf8', 'hex')
+  encrypted += cipher.final('hex')
+  return iv.toString('hex') + ':' + encrypted
+}
+
+function decryptSession(encryptedData: string): any {
+  const [ivHex, encrypted] = encryptedData.split(':')
+  const iv = Buffer.from(ivHex, 'hex')
+  const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY)
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+  decrypted += decipher.final('utf8')
+  return JSON.parse(decrypted)
+}
+
+// Store session securely
+async function storeSession(userId: string, session: any) {
+  const encrypted = encryptSession(session)
+  
+  await database.sessions.upsert({
+    where: { userId },
+    update: { 
+      sessionData: encrypted,
+      updatedAt: new Date()
+    },
+    create: {
+      userId,
+      sessionData: encrypted,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  })
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Connection Management" icon="link" href="/sdk/link-connections">
+    Learn how to manage active OnlyFans connections
+  </Card>
+  <Card title="User Management" icon="user" href="/sdk/user-management">
+    Start making authenticated API calls to manage users and profiles
+  </Card>
+</CardGroup> 

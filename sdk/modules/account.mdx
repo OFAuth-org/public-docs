@@ -1,0 +1,316 @@
+---
+title: "Account Management"
+description: "Manage account-level settings and webhook configurations with the OnlyFans SDK"
+---
+
+## Overview
+
+The Account module (`sdk.account`) handles account-level settings and webhook configurations for receiving real-time notifications about connection events and rule updates.
+
+<Card title="Account Module" icon="cog">
+  **sdk.account** - Account settings and webhook management
+</Card>
+
+## Webhook Management
+
+### Set Webhook
+
+Configure a webhook URL to receive real-time notifications about connection events.
+
+```typescript
+const { data, error } = await sdk.account.setWebhook(
+  "https://your-app.com/webhooks",
+  [
+    "connection.created",
+    "connection.updated", 
+    "connection.expired",
+    "rules.update"
+  ]
+)
+
+if (error) {
+  console.error("Failed to set webhook:", error.message)
+} else {
+  console.log("Webhook configured successfully")
+}
+```
+
+<ParamField path="webhookUrl" type="string" required>
+  The HTTPS URL where webhook events will be sent
+</ParamField>
+
+<ParamField path="events" type="array" required>
+  Array of event types to subscribe to:
+  - `connection.created` - New connection established
+  - `connection.updated` - Connection status changed
+  - `connection.expired` - Connection expired
+  - `rules.update` - API rules updated
+</ParamField>
+
+### Get Webhook Configuration
+
+Retrieve the current webhook configuration.
+
+```typescript
+const { data, error } = await sdk.account.getWebhookConfiguration()
+
+if (error) {
+  console.error("Failed to get webhook config:", error.message)
+} else if (data?.url) {
+  console.log("Current webhook URL:", data.url)
+  console.log("Subscribed events:", data.events)
+} else {
+  console.log("No webhook configured")
+}
+```
+
+**Response format:**
+```typescript
+{
+  data: {
+    url: string | null;
+    events: string[];
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
+  error: ErrorMessage | undefined;
+}
+```
+
+### Delete Webhook
+
+Remove the current webhook configuration.
+
+```typescript
+const { data, error } = await sdk.account.deleteWebhook()
+
+if (error) {
+  console.error("Failed to delete webhook:", error.message)
+} else {
+  console.log("Webhook removed successfully")
+}
+```
+
+## Webhook Events
+
+### Event Types
+
+<CardGroup cols={2}>
+  <Card title="Connection Events" icon="link">
+    **connection.created** - New user connection
+    **connection.updated** - Connection status change
+    **connection.expired** - Connection expired
+  </Card>
+  <Card title="System Events" icon="refresh">
+    **rules.update** - API rules updated
+  </Card>
+</CardGroup>
+
+### Event Payload Structure
+
+All webhook events follow this structure:
+
+```typescript
+{
+  event: string;           // Event type
+  timestamp: string;       // ISO timestamp
+  data: {
+    connectionId?: string; // For connection events
+    userId?: string;       // OnlyFans user ID
+    status?: string;       // Connection status
+    // ... other event-specific data
+  };
+  signature: string;       // HMAC signature for verification
+}
+```
+
+### Webhook Security
+
+<Warning>
+  **Verify Signatures**: Always verify webhook signatures to ensure authenticity. Use your API key to validate the HMAC signature included in each webhook.
+</Warning>
+
+```typescript
+import crypto from 'crypto';
+
+function verifyWebhookSignature(payload: string, signature: string, apiKey: string): boolean {
+  const expectedSignature = crypto
+    .createHmac('sha256', apiKey)
+    .update(payload)
+    .digest('hex');
+    
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
+  );
+}
+
+// Express.js webhook handler example
+app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-signature'] as string;
+  const payload = req.body.toString();
+  
+  if (!verifyWebhookSignature(payload, signature, process.env.OFAUTH_API_KEY)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  const event = JSON.parse(payload);
+  handleWebhookEvent(event);
+  
+  res.status(200).json({ received: true });
+});
+```
+
+## Integration Examples
+
+### Complete Webhook Setup
+
+```typescript
+async function setupWebhooks() {
+  try {
+    // Set webhook for all events
+    const webhookResult = await sdk.account.setWebhook(
+      "https://your-app.com/api/webhooks",
+      [
+        "connection.created",
+        "connection.updated", 
+        "connection.expired",
+        "rules.update"
+      ]
+    );
+
+    if (webhookResult.error) {
+      console.error("Webhook setup failed:", webhookResult.error.message);
+      return;
+    }
+
+    // Verify configuration
+    const config = await sdk.account.getWebhookConfiguration();
+    
+    if (config.data) {
+      console.log("✅ Webhook configured successfully");
+      console.log("URL:", config.data.url);
+      console.log("Events:", config.data.events);
+    }
+    
+  } catch (error) {
+    console.error("Setup error:", error);
+  }
+}
+```
+
+### Event Handler
+
+```typescript
+function handleWebhookEvent(event: any) {
+  switch (event.event) {
+    case "connection.created":
+      console.log(`New connection: ${event.data.connectionId}`);
+      // Handle new user connection
+      onNewConnection(event.data);
+      break;
+      
+    case "connection.updated":
+      console.log(`Connection updated: ${event.data.connectionId}`);
+      // Handle connection status change
+      onConnectionUpdate(event.data);
+      break;
+      
+    case "connection.expired":
+      console.log(`Connection expired: ${event.data.connectionId}`);
+      // Handle expired connection
+      onConnectionExpired(event.data);
+      break;
+      
+    case "rules.update":
+      console.log("API rules updated");
+      // Handle rules update
+      onRulesUpdate(event.data);
+      break;
+      
+    default:
+      console.log(`Unknown event: ${event.event}`);
+  }
+}
+```
+
+### Webhook Management Dashboard
+
+```typescript
+async function createWebhookDashboard() {
+  const config = await sdk.account.getWebhookConfiguration();
+  
+  if (config.error) {
+    console.error("Failed to load webhook config:", config.error.message);
+    return;
+  }
+  
+  if (config.data) {
+    console.log("📊 Webhook Dashboard");
+    console.log("==================");
+    console.log(`Status: ${config.data.active ? "✅ Active" : "❌ Inactive"}`);
+    console.log(`URL: ${config.data.url}`);
+    console.log(`Events: ${config.data.events.join(", ")}`);
+    console.log(`Created: ${new Date(config.data.createdAt).toLocaleDateString()}`);
+    console.log(`Updated: ${new Date(config.data.updatedAt).toLocaleDateString()}`);
+  } else {
+    console.log("📊 No webhook configured");
+    console.log("Run setupWebhooks() to configure notifications");
+  }
+}
+```
+
+## Error Handling
+
+Account operations may return these error types:
+
+- `unauthorized` (401): Invalid or missing API key
+- `forbidden` (403): Insufficient permissions
+- `bad_request` (400): Invalid webhook URL or events
+- `not_found` (404): No webhook configuration found
+
+```typescript
+const result = await sdk.account.setWebhook(webhookUrl, events);
+
+if (result.error) {
+  switch (result.error.type) {
+    case "bad_request":
+      console.error("Invalid webhook configuration:", result.error.details);
+      break;
+    case "unauthorized":
+      console.error("API key is invalid or missing");
+      break;
+    case "forbidden":
+      console.error("Insufficient permissions for webhook management");
+      break;
+    default:
+      console.error("Webhook error:", result.error.message);
+  }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Security" icon="shield-check">
+    **Secure webhooks**
+    
+    - Always verify HMAC signatures
+    - Use HTTPS endpoints only
+    - Implement rate limiting
+    - Log webhook events for debugging
+  </Card>
+  <Card title="Reliability" icon="refresh">
+    **Handle failures gracefully**
+    
+    - Implement retry logic for failed events
+    - Use idempotent event processing
+    - Monitor webhook delivery success
+    - Have fallback polling mechanisms
+  </Card>
+</CardGroup>
+
+<Note>
+  **Documentation**: For more detailed webhook event schemas and handling examples, refer to the [OFAuth webhook documentation](https://docs.ofauth.com/guide/OnlyFans-authentication/Integrating#step-3-handle-webhook-events).
+</Note> 

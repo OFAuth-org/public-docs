@@ -1,0 +1,452 @@
+---
+title: "Content Management"
+description: "Create and manage posts, media vault, and uploads with full TypeScript support and automatic validation"
+---
+
+## Overview
+
+The OnlyFans SDK provides **comprehensive content management** through three main modules with **complete type safety** and **automatic parameter validation**.
+
+<CardGroup cols={3}>
+  <Card title="Posts" icon="file-text">
+    **sdk.posts** - Content creation, retrieval, and scheduling with type-safe parameters
+  </Card>
+  <Card title="Vault" icon="folder">
+    **sdk.vault** - Media management and organization with validated operations
+  </Card>
+  <Card title="Upload" icon="upload">
+    **sdk.upload** - File uploads with progress tracking and type validation
+  </Card>
+</CardGroup>
+
+## Why Use the SDK for Content Management?
+
+<CardGroup cols={2}>
+  <Card title="Type-Safe Creation" icon="shield">
+    **Compile-time validation** for all post parameters, media types, and scheduling options
+  </Card>
+  <Card title="Smart Validation" icon="check-circle">
+    **Automatic parameter checking** ensures valid media IDs, price formats, and content restrictions
+  </Card>
+</CardGroup>
+
+## Posts Module
+
+The `Posts` module handles post creation, retrieval, and management.
+
+### Methods
+
+<ParamField path="sdk.posts.getById(postId, options?)" type="method">
+  Get a specific post by ID
+  
+  <Expandable title="Parameters">
+    <ParamField path="postId" type="string" required>
+      The ID of the post to retrieve
+    </ParamField>
+    
+    <ParamField path="options" type="object">
+      <Expandable title="Options">
+        <ParamField path="connectionId" type="string">
+          Connection ID for Access mode
+        </ParamField>
+        <ParamField path="session" type="object">
+          Session object for Direct mode
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+  
+  <Expandable title="Response">
+    <ResponseField name="data" type="object">
+      <Expandable title="Post Object">
+        <ResponseField name="id" type="string">Post ID</ResponseField>
+        <ResponseField name="text" type="string">Post content</ResponseField>
+        <ResponseField name="price" type="number">Post price</ResponseField>
+        <ResponseField name="isOpened" type="boolean">Whether post is opened</ResponseField>
+        <ResponseField name="canPurchase" type="boolean">Whether post can be purchased</ResponseField>
+        <ResponseField name="media" type="array">Array of media items</ResponseField>
+        <ResponseField name="author" type="object">Author information</ResponseField>
+        <ResponseField name="createdAt" type="string">Creation timestamp</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="error" type="null">No error if successful</ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="sdk.posts.getAll(options?)" type="method">
+  Get all posts from timeline
+  
+  <Expandable title="Parameters">
+    <ParamField path="options" type="object">
+      <Expandable title="Options">
+        <ParamField path="limit" type="number">
+          Number of posts to retrieve (default: 20)
+        </ParamField>
+        <ParamField path="offset" type="string">
+          Offset for pagination
+        </ParamField>
+        <ParamField path="order" type="string">
+          Sort order: "publish_date_desc" | "publish_date_asc"
+        </ParamField>
+        <ParamField path="connectionId" type="string">
+          Connection ID for Access mode
+        </ParamField>
+        <ParamField path="session" type="object">
+          Session object for Direct mode
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="sdk.posts.create(postData, options?)" type="method">
+  Create a new post
+  
+  <Expandable title="Parameters">
+    <ParamField path="postData" type="object" required>
+      <Expandable title="Post Data">
+        <ParamField path="text" type="string">Post content</ParamField>
+        <ParamField path="price" type="number">Post price (0 for free)</ParamField>
+        <ParamField path="mediaItems" type="array">Array of media item IDs</ParamField>
+        <ParamField path="schedule" type="string">Schedule date (ISO string)</ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Example Usage
+
+<Tabs>
+  <Tab title="Access Mode">
+    ```typescript
+    // Get a specific post
+    const result = await sdk.posts.getById("12345", {
+      connectionId: "conn_abc123"
+    });
+    
+    if (result.error) {
+      console.error("Error:", result.error.message);
+      return;
+    }
+    
+    console.log("Post:", result.data);
+    
+    // Get timeline posts
+    const timelineResult = await sdk.posts.getAll({
+      connectionId: "conn_abc123",
+      limit: 10,
+      order: "publish_date_desc"
+    });
+    
+    if (timelineResult.data) {
+      console.log("Posts:", timelineResult.data);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Direct Mode">
+    ```typescript
+    // Get a specific post
+    const result = await sdk.posts.getById("12345", {
+      session: sessionData
+    });
+    
+    // Create a new post
+    const createResult = await sdk.posts.create({
+      text: "Hello world!",
+      price: 0,
+      mediaItems: ["media_123", "media_456"]
+    }, {
+      session: sessionData
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Vault Module
+
+The `Vault` module manages your media library and storage.
+
+### Methods
+
+<ParamField path="sdk.vault.getAll(options?)" type="method">
+  Get all media items from vault
+  
+  <Expandable title="Parameters">
+    <ParamField path="options" type="object">
+      <Expandable title="Options">
+        <ParamField path="limit" type="number">Number of items to retrieve</ParamField>
+        <ParamField path="offset" type="string">Offset for pagination</ParamField>
+        <ParamField path="type" type="string">Media type filter: "photo" | "video" | "audio"</ParamField>
+        <ParamField path="connectionId" type="string">Connection ID for Access mode</ParamField>
+        <ParamField path="session" type="object">Session object for Direct mode</ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="sdk.vault.getById(mediaId, options?)" type="method">
+  Get a specific media item by ID
+  
+  <Expandable title="Response">
+    <ResponseField name="data" type="object">
+      <Expandable title="Media Object">
+        <ResponseField name="id" type="string">Media ID</ResponseField>
+        <ResponseField name="type" type="string">Media type</ResponseField>
+        <ResponseField name="source" type="object">Media source URLs</ResponseField>
+        <ResponseField name="preview" type="object">Preview URLs</ResponseField>
+        <ResponseField name="duration" type="number">Duration (for video/audio)</ResponseField>
+        <ResponseField name="size" type="object">Dimensions</ResponseField>
+        <ResponseField name="createdAt" type="string">Upload timestamp</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="sdk.vault.delete(mediaId, options?)" type="method">
+  Delete a media item from vault
+</ParamField>
+
+### Example Usage
+
+```typescript
+// Get all vault media
+const vaultResult = await sdk.vault.getAll({
+  connectionId: "conn_abc123",
+  limit: 50,
+  type: "photo"
+});
+
+if (vaultResult.data) {
+  console.log("Vault media:", vaultResult.data);
+}
+
+// Get specific media item
+const mediaResult = await sdk.vault.getById("media_123", {
+  connectionId: "conn_abc123"
+});
+
+// Delete media item
+const deleteResult = await sdk.vault.delete("media_123", {
+  connectionId: "conn_abc123"
+});
+```
+
+## Upload Module
+
+The `Upload` module handles file uploads to the platform.
+
+### Methods
+
+<ParamField path="sdk.upload.uploadFile(file, options?)" type="method">
+  Upload a file to the platform
+  
+  <Expandable title="Parameters">
+    <ParamField path="file" type="File | Buffer | string" required>
+      The file to upload (File object, Buffer, or file path)
+    </ParamField>
+    
+    <ParamField path="options" type="object">
+      <Expandable title="Options">
+        <ParamField path="type" type="string">
+          Media type: "photo" | "video" | "audio"
+        </ParamField>
+        <ParamField path="description" type="string">
+          File description
+        </ParamField>
+        <ParamField path="tags" type="array">
+          Array of tags
+        </ParamField>
+        <ParamField path="connectionId" type="string">
+          Connection ID for Access mode
+        </ParamField>
+        <ParamField path="session" type="object">
+          Session object for Direct mode
+        </ParamField>
+      </Expandable>
+    </ParamField>
+  </Expandable>
+  
+  <Expandable title="Response">
+    <ResponseField name="data" type="object">
+      <Expandable title="Upload Result">
+        <ResponseField name="id" type="string">Uploaded media ID</ResponseField>
+        <ResponseField name="url" type="string">Media URL</ResponseField>
+        <ResponseField name="type" type="string">Media type</ResponseField>
+        <ResponseField name="size" type="number">File size in bytes</ResponseField>
+        <ResponseField name="duration" type="number">Duration (for video/audio)</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="sdk.upload.getUploadProgress(uploadId)" type="method">
+  Get upload progress for a specific upload
+  
+  <Expandable title="Response">
+    <ResponseField name="data" type="object">
+      <ResponseField name="progress" type="number">Upload progress (0-100)</ResponseField>
+      <ResponseField name="status" type="string">Upload status</ResponseField>
+      <ResponseField name="error" type="string">Error message if failed</ResponseField>
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+### Example Usage
+
+<Tabs>
+  <Tab title="Browser">
+    ```typescript
+    // Upload from file input
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    const file = fileInput.files[0];
+    
+    const uploadResult = await sdk.upload.uploadFile(file, {
+      type: "photo",
+      description: "Profile picture",
+      connectionId: "conn_abc123"
+    });
+    
+    if (uploadResult.error) {
+      console.error("Upload failed:", uploadResult.error.message);
+      return;
+    }
+    
+    console.log("Upload successful:", uploadResult.data);
+    ```
+  </Tab>
+  
+  <Tab title="Node.js">
+    ```typescript
+    import fs from 'fs';
+    
+    // Upload from file path
+    const filePath = './image.jpg';
+    const fileBuffer = fs.readFileSync(filePath);
+    
+    const uploadResult = await sdk.upload.uploadFile(fileBuffer, {
+      type: "photo",
+      description: "Content image",
+      session: sessionData
+    });
+    
+    if (uploadResult.data) {
+      console.log("Media ID:", uploadResult.data.id);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Integration Patterns
+
+### Content Workflow
+
+```typescript
+// Complete content creation workflow
+async function createContentPost() {
+  try {
+    // 1. Upload media files
+    const imageUpload = await sdk.upload.uploadFile(imageFile, {
+      type: "photo",
+      connectionId: "conn_abc123"
+    });
+    
+    if (imageUpload.error) {
+      throw new Error(`Upload failed: ${imageUpload.error.message}`);
+    }
+    
+    // 2. Create post with uploaded media
+    const postResult = await sdk.posts.create({
+      text: "Check out my new content!",
+      price: 10.00,
+      mediaItems: [imageUpload.data.id]
+    }, {
+      connectionId: "conn_abc123"
+    });
+    
+    if (postResult.error) {
+      throw new Error(`Post creation failed: ${postResult.error.message}`);
+    }
+    
+    console.log("Post created successfully:", postResult.data);
+    
+  } catch (error) {
+    console.error("Content creation failed:", error);
+  }
+}
+```
+
+### Vault Management
+
+```typescript
+// Organize vault content
+async function organizeVault() {
+  const vaultResult = await sdk.vault.getAll({
+    connectionId: "conn_abc123",
+    limit: 100
+  });
+  
+  if (vaultResult.data) {
+    // Filter old unused media
+    const oldMedia = vaultResult.data.filter(item => {
+      const uploadDate = new Date(item.createdAt);
+      const monthsOld = (Date.now() - uploadDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
+      return monthsOld > 6;
+    });
+    
+    // Clean up old media
+    for (const media of oldMedia) {
+      await sdk.vault.delete(media.id, {
+        connectionId: "conn_abc123"
+      });
+    }
+  }
+}
+```
+
+## Error Handling
+
+Content management operations can fail for various reasons. Always handle errors appropriately:
+
+```typescript
+const result = await sdk.posts.create(postData, options);
+
+if (result.error) {
+  switch (result.error.type) {
+    case 'bad_request':
+      console.error("Invalid post data:", result.error.details);
+      break;
+    case 'unauthorized':
+      console.error("Authentication required");
+      break;
+    case 'forbidden':
+      console.error("Insufficient permissions");
+      break;
+    default:
+      console.error("Unexpected error:", result.error.message);
+  }
+}
+```
+
+## Best Practices
+
+### File Upload Optimization
+
+- **Compress images** before upload to reduce file size
+- **Validate file types** and sizes before uploading
+- **Use progress tracking** for large files
+- **Implement retry logic** for failed uploads
+
+### Content Organization
+
+- **Tag content** appropriately for easy discovery
+- **Use descriptive filenames** for vault organization
+- **Regular cleanup** of unused media to save storage
+- **Batch operations** when possible to improve performance
+
+### Performance Tips
+
+- **Paginate large content lists** to avoid memory issues
+- **Cache frequently accessed media** locally
+- **Use appropriate image sizes** for different contexts
+- **Implement lazy loading** for media-heavy interfaces 

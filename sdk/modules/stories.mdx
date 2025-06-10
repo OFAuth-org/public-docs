@@ -1,0 +1,141 @@
+---
+title: "Stories"
+description: "Manage OnlyFans stories with the SDK"
+---
+
+## Overview
+
+The Stories module (`sdk.stories`) provides functionality for managing OnlyFans stories. Currently, the SDK has limited story functionality with only deletion capabilities implemented.
+
+<Card title="Stories Module" icon="clock">
+  **sdk.stories** - Basic story management operations
+</Card>
+
+## Delete Story
+
+Delete a story from your profile.
+
+```typescript
+const { data, error } = await sdk.stories.deleteStory({
+  authentication: { session: userData },
+  storyId: 123456
+})
+
+if (error) {
+  console.error("Failed to delete story:", error.message)
+} else {
+  console.log("Story deleted successfully")
+}
+```
+
+<ParamField path="storyId" type="number" required>
+  The ID of the story to delete
+</ParamField>
+
+<ParamField path="authentication" type="object" required>
+  Authentication session data for the operation
+</ParamField>
+
+## Response Format
+
+All story operations return the standard SDK response format:
+
+```typescript
+type StoryResponse = {
+  data: any | undefined;
+  error: ErrorMessage | undefined;
+}
+```
+
+## Error Handling
+
+Story operations may return these error types:
+
+- `unauthorized` (401): Session is invalid or expired
+- `forbidden` (403): No permission to delete the story
+- `not_found` (404): Story does not exist
+- `bad_request` (400): Invalid story ID or parameters
+
+Example error handling:
+
+```typescript
+const result = await sdk.stories.deleteStory({
+  authentication: { session: userData },
+  storyId: 123456
+})
+
+if (result.error) {
+  switch (result.error.type) {
+    case "not_found":
+      console.error("Story not found")
+      break
+    case "forbidden":
+      console.error("No permission to delete this story")
+      break
+    case "unauthorized":
+      console.error("Session expired, please login again")
+      break
+    default:
+      console.error("Error deleting story:", result.error.message)
+  }
+} else {
+  console.log("Story deleted successfully")
+}
+```
+
+## Limitations
+
+<Warning>
+  **Limited Functionality**: The current SDK implementation only supports story deletion. Other story operations like creation, editing, viewing, and retrieval are not yet implemented.
+</Warning>
+
+<Note>
+  **Future Development**: Additional story functionality may be added in future SDK releases. Check the latest SDK documentation for updates.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Error Handling" icon="shield-check">
+    **Always handle errors**
+    
+    - Check for authentication errors
+    - Validate story existence before deletion
+    - Implement proper error logging
+  </Card>
+  <Card title="User Experience" icon="user-check">
+    **Confirm before deletion**
+    
+    - Ask for user confirmation
+    - Provide clear feedback
+    - Handle edge cases gracefully
+  </Card>
+</CardGroup>
+
+## Integration Example
+
+```typescript
+// Example story management with confirmation
+async function deleteStoryWithConfirmation(storyId: number) {
+  const confirmDelete = confirm("Are you sure you want to delete this story?")
+  
+  if (!confirmDelete) {
+    return
+  }
+
+  const result = await sdk.stories.deleteStory({
+    authentication: { session: userData },
+    storyId
+  })
+
+  if (result.error) {
+    alert(`Failed to delete story: ${result.error.message}`)
+  } else {
+    alert("Story deleted successfully!")
+    // Refresh the stories list or update UI
+  }
+}
+
+// Usage
+deleteStoryWithConfirmation(123456)
+``` 

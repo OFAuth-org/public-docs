@@ -1,0 +1,858 @@
+---
+title: "Dynamic Rules for Request Signing"
+description: "Current signing parameters required for OnlyFans API authentication"
+---
+
+## Overview
+
+The Dynamic Rules API (`/v2/dynamic-rules`) provides the current signing parameters required to generate valid signatures for OnlyFans API requests. OnlyFans requires cryptographically signed requests and **changes their signing requirements very frequently** - sometimes multiple times per day.
+
+<Info>
+	**Most Users Don't Need This**: If you're using OFAuth's [Access
+	API](/api-reference/access/overview), **request signing is handled
+	automatically**. Dynamic rules are only needed if you're making direct
+	requests to OnlyFans APIs outside of OFAuth's proxy system.
+</Info>
+
+<Warning>
+	**Critical for Direct API Access**: OnlyFans API requests will fail without
+	properly signed requests using current dynamic rules. The signing requirements
+	change so frequently (hourly to daily) that hardcoded signing values become
+	obsolete quickly, causing all API requests to return 401/403 authentication
+	errors.
+</Warning>
+
+<Warning>
+	**Third-Party Dependency Risk**: While OFAuth's Dynamic Rules API is stable and reliable, it depends on OnlyFans (a third party) for functionality. OnlyFans has a history of making sudden, breaking changes to their systems without notice. Although we work diligently to minimize disruption and maintain service availability, **you should plan for potential outages and have fallback strategies** when building production applications that depend on OnlyFans APIs.
+</Warning>
+
+### When You Need Dynamic Rules
+
+Dynamic rules are required when:
+
+- **Direct OnlyFans API Integration**: Making requests directly to `onlyfans.com` APIs
+- **Custom Proxy Solutions**: Building your own request proxy system
+- **Advanced Use Cases**: Specific requirements that can't use OFAuth's Access API
+
+<Info>
+	**Update Detection**: Set up webhooks for proactive notifications, or watch for 400 "Please refresh the page" errors when making direct OnlyFans API requests.
+</Info>
+
+### When You Don't Need Dynamic Rules
+
+You can skip dynamic rules implementation if:
+
+- **Using Access API**: All OnlyFans requests go through OFAuth's `/v2/access` endpoints
+- **Standard Integration**: Following OFAuth's recommended integration patterns
+- **Simplified Architecture**: Want OFAuth to handle all OnlyFans API complexity
+
+### Why Dynamic Rules Are Essential
+
+OnlyFans implements sophisticated anti-abuse measures that require:
+
+1. **Cryptographic Signatures**: Every API request must include a valid signature
+2. **Current Parameters**: Signing algorithm, fields, and formats change frequently
+3. **Exact Implementation**: Minor deviations result in rejected requests
+4. **Real-time Updates**: Rules can change multiple times per day without notice
+
+### What Happens Without Current Rules
+
+- **Authentication Failures**: 401/403 errors for all OnlyFans API requests
+- **Service Interruption**: Applications stop working until rules are updated
+- **User Impact**: Authentication flows fail, data access blocked
+
+### How OFAuth Solves This
+
+OFAuth provides two solutions for handling OnlyFans' complex signing requirements:
+
+**1. Access API (Recommended)**
+
+- **Automatic Signing**: All request signing handled transparently
+- **No Implementation Required**: Use standard REST endpoints
+- **Always Current**: Signing rules updated automatically
+- **Zero Maintenance**: No code changes needed for rule updates
+
+**2. Dynamic Rules API (Advanced)**
+
+- **Real-time Monitoring**: OFAuth tracks rule changes 24/7
+- **Instant Access**: Latest rules available via API immediately, and sent as a webhook event
+- **Manual Signing**: Use the `/sign` endpoint for custom implementations
+- **High Availability**: Multiple redundant systems ensure rule availability
+
+## Base URL
+
+```
+https://api.ofauth.com/v2/dynamic-rules
+```
+
+## Authentication
+
+All Dynamic Rules API requests require your API key:
+
+```http
+apikey: YOUR_API_KEY
+```
+
+## Access Control
+
+Access to dynamic rules is controlled by your subscription plan:
+
+- **Exclusive Access**: Latest rules available immediately (requires `latest_rules` permission)
+- **Early Access**: Rules available with slight delay (requires `preview_rules` permission)  
+- **Public Access**: Rules available after longer delay (no special permissions required)
+
+## Core Endpoints
+
+### Get Current Rules
+
+Retrieve the latest OnlyFans API rules and signing parameters.
+
+<Expandable title="GET /">
+
+```http
+GET /v2/dynamic-rules
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+
+**Response:**
+
+```json
+{
+	"rules": {
+		"static_param": "staticp",
+		"format": "{0}:{1}:{2}:{3}",
+		"start": "start",
+		"end": "end", 
+		"prefix": "",
+		"suffix": "",
+		"checksum_constant": 123,
+		"checksum_indexes": [1, 2, 3, 4, 5],
+		"app_token": "33d57ade8c02dbc5a333db99ff9ae26a",
+		"revision": "202401150001"
+	},
+	"is_current": true,
+	"is_public": false,
+	"is_early_access": true,
+	"is_exclusive_access": false
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `rules.static_param` | string | Static parameter used in signing |
+| `rules.format` | string | Format string for the signature |
+| `rules.start` | string | Start delimiter for signature |
+| `rules.end` | string | End delimiter for signature |
+| `rules.checksum_constant` | number | Constant added to checksum calculation |
+| `rules.checksum_indexes` | number[] | Array indexes used in checksum |
+| `rules.app_token` | string | Current app token |
+| `rules.revision` | string | Rules revision identifier |
+| `is_current` | boolean | Whether rules are current |
+| `is_public` | boolean | Whether rules are in public tier |
+| `is_early_access` | boolean | Whether rules are in early access tier |
+| `is_exclusive_access` | boolean | Whether rules are in exclusive tier |
+
+</Expandable>
+
+### Sign Request
+
+Generate a signed request using current rules for OnlyFans API access.
+
+<Expandable title="POST /sign">
+
+```http
+POST /v2/dynamic-rules/sign
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+- `Content-Type`: application/json
+
+**Request Body:**
+
+```json
+{
+	"endpoint": "/api2/v2/users/me",
+	"user-id": "12345",
+	"time": "1705312200"
+}
+```
+
+**Parameters:**
+
+| Parameter  | Type             | Required | Description                                            |
+| ---------- | ---------------- | -------- | ------------------------------------------------------ |
+| `endpoint` | string           | Yes      | OnlyFans API endpoint path (e.g., "/api2/v2/users/me") |
+| `user-id`  | string or number | No       | OnlyFans user ID for authenticated requests            |
+| `time`     | string or number | No       | Unix timestamp (defaults to current time)              |
+
+**Response:**
+
+```json
+{
+	"signed": {
+		"sign": "start:abc123def456:789:end",
+		"time": "1705312200",
+		"user-id": "12345",
+		"app-token": "current_app_token",
+		"x-of-rev": "202501150001-abcdef"
+	},
+	"is_public": false,
+	"is_early_access": true,
+	"is_exclusive_access": false
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `signed.sign` | string | Generated signature for the request |
+| `signed.time` | string | Timestamp used in signing |
+| `signed.user-id` | string | User ID (if provided) |
+| `signed.app-token` | string | App token to include in headers |
+| `signed.x-of-rev` | string | Rules revision identifier |
+
+**Using the Signed Response:**
+
+The values in the `signed` object should be added as headers when making requests to OnlyFans:
+
+```javascript
+const signResponse = await fetch(
+	"https://api.ofauth.com/v2/dynamic-rules/sign",
+	{
+		method: "POST",
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			endpoint: "/api2/v2/users/me",
+			"user-id": "12345"
+		})
+	}
+)
+
+const { signed } = await signResponse.json()
+
+// Use signed values as headers for OnlyFans request
+const onlyFansResponse = await fetch("https://onlyfans.com/api2/v2/users/me", {
+	headers: {
+		sign: signed.sign,
+		time: signed.time,
+		"user-id": signed["user-id"],
+		"app-token": signed["app-token"],
+		"x-of-rev": signed["x-of-rev"],
+		"user-agent": "Mozilla ...",
+		accept: "application/json"
+	}
+})
+```
+
+</Expandable>
+
+### Check Rules Status
+
+Get the current status of dynamic rules without fetching the actual rules.
+
+<Expandable title="GET /status">
+
+```http
+GET /v2/dynamic-rules/status
+```
+
+**Response:**
+
+```json
+{
+	"revision": "202401150001",
+	"early_access_revision": "202401150001", 
+	"public_revision": "202401140003",
+	"is_current": true,
+	"is_early_access": true,
+	"is_exclusive_access": false,
+	"is_public": false,
+	"access_granted": true
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `revision` | string | Current rules revision |
+| `early_access_revision` | string | Early access rules revision |
+| `public_revision` | string | Public rules revision |
+| `is_current` | boolean | Whether rules are current and usable |
+| `is_early_access` | boolean | Whether rules are in early access tier |
+| `is_exclusive_access` | boolean | Whether rules are in exclusive tier |
+| `is_public` | boolean | Whether rules are in public tier |
+| `access_granted` | boolean | Whether your API key has access to current rules |
+
+</Expandable>
+
+## Implementation Guide
+
+### 1. Fetch and Cache Rules
+
+<CodeGroup>
+
+```javascript JavaScript
+class RulesManager {
+	constructor(apiKey) {
+		this.apiKey = apiKey
+		this.rules = null
+		this.lastFetch = null
+	}
+
+	async getRules() {
+		// Check if we need to fetch new rules
+		if (!this.rules || this.shouldRefresh()) {
+			await this.fetchRules()
+		}
+		return this.rules
+	}
+
+	async fetchRules() {
+		const response = await fetch("https://api.ofauth.com/v2/dynamic-rules", {
+			headers: { apikey: this.apiKey }
+		})
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch rules: ${response.status}`)
+		}
+
+		const data = await response.json()
+		this.rules = data
+		this.lastFetch = Date.now()
+	}
+
+	shouldRefresh() {
+		if (!this.rules || !this.lastFetch) return true
+		// Refresh every 5 minutes or if rules are not current
+		return Date.now() - this.lastFetch > 5 * 60 * 1000 || !this.rules.is_current
+	}
+}
+```
+
+```python Python
+import time
+import requests
+
+class RulesManager:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.rules = None
+        self.last_fetch = None
+
+    def get_rules(self):
+        if not self.rules or self.should_refresh():
+            self.fetch_rules()
+        return self.rules
+
+    def fetch_rules(self):
+        response = requests.get(
+            'https://api.ofauth.com/v2/dynamic-rules',
+            headers={'apikey': self.api_key}
+        )
+        response.raise_for_status()
+
+        self.rules = response.json()
+        self.last_fetch = time.time()
+
+    def should_refresh(self):
+        if not self.rules or not self.last_fetch:
+            return True
+        
+        # Refresh every 5 minutes or if rules are not current
+        return (time.time() - self.last_fetch > 300 or 
+                not self.rules.get('is_current', False))
+```
+
+</CodeGroup>
+
+### 2. Generate Signed Requests
+
+<CodeGroup>
+
+```javascript JavaScript
+class RequestSigner {
+	constructor(rulesManager) {
+		this.rulesManager = rulesManager
+	}
+
+	async signRequest(endpoint, userId = null) {
+		const response = await fetch(
+			"https://api.ofauth.com/v2/dynamic-rules/sign",
+			{
+				method: "POST",
+				headers: {
+					apikey: this.rulesManager.apiKey,
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({
+					endpoint,
+					...(userId && { "user-id": userId })
+				})
+			}
+		)
+
+		if (!response.ok) {
+			throw new Error(`Signing failed: ${response.status}`)
+		}
+
+		return response.json()
+	}
+
+	async makeSignedRequest(endpoint, userId = null, options = {}) {
+		const signedData = await this.signRequest(endpoint, userId)
+
+		const headers = {
+			...signedData.signed,
+			"user-agent": "OnlyFans/1.0.0",
+			accept: "application/json",
+			...options.headers
+		}
+
+		return fetch(`https://onlyfans.com${endpoint}`, {
+			...options,
+			headers
+		})
+	}
+}
+```
+
+```python Python
+class RequestSigner:
+    def __init__(self, rules_manager):
+        self.rules_manager = rules_manager
+
+    def sign_request(self, endpoint, user_id=None):
+        payload = {
+            'endpoint': endpoint
+        }
+
+        if user_id:
+            payload['user-id'] = user_id
+
+        response = requests.post(
+            'https://api.ofauth.com/v2/dynamic-rules/sign',
+            headers={
+                'apikey': self.rules_manager.api_key,
+                'Content-Type': 'application/json'
+            },
+            json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def make_signed_request(self, endpoint, user_id=None, **kwargs):
+        signed_data = self.sign_request(endpoint, user_id)
+
+        headers = {
+            **signed_data['signed'],
+            'user-agent': 'OnlyFans/1.0.0',
+            'accept': 'application/json'
+        }
+
+        if 'headers' in kwargs:
+            headers.update(kwargs['headers'])
+
+        kwargs['headers'] = headers
+
+        return requests.request(
+            kwargs.get('method', 'GET'),
+            f'https://onlyfans.com{endpoint}',
+            **kwargs
+        )
+```
+
+</CodeGroup>
+
+### 3. Handle Rules Updates
+
+<Warning>
+	**Do NOT poll for rules updates**. Only fetch new rules when you receive a 400 "Please refresh the page" error from OnlyFans APIs, or when you receive a webhook notification. Polling wastes resources and is not the intended usage pattern.
+</Warning>
+
+There are two proper ways to detect when rules need updating:
+
+1. **Error-Driven (Reactive)**: Monitor for 400 "Please refresh the page" errors from OnlyFans APIs
+2. **Webhook-Driven (Proactive)**: Set up a webhook endpoint to receive rules updates with the new rules included in the payload
+
+<CodeGroup>
+
+```javascript Error-Driven Rules Refresh
+class RequestSigner {
+	constructor(rulesManager) {
+		this.rulesManager = rulesManager
+	}
+
+	async makeSignedRequest(endpoint, userId = null, options = {}) {
+		try {
+			const signedData = await this.signRequest(endpoint, userId)
+			
+			const headers = {
+				...signedData.signed,
+				"user-agent": "Mozilla ...",
+				accept: "application/json",
+				...options.headers
+			}
+
+			const response = await fetch(`https://onlyfans.com${endpoint}`, {
+				...options,
+				headers
+			})
+
+			// ONLY refresh rules on 400 error from OnlyFans
+			if (response.status === 400) {
+				const body = await response.json()
+				if (body?.error?.code === 401 && 
+					body?.error?.message?.includes("Please refresh the page")) {
+					console.log("Rules outdated, fetching new rules...")
+					await this.rulesManager.fetchRules()
+					// Retry the request with new rules
+					return this.makeSignedRequest(endpoint, userId, options)
+				}
+			}
+
+			return response
+		} catch (error) {
+			console.error("Request failed:", error)
+			throw error
+		}
+	}
+}
+```
+
+```javascript Proper Caching Pattern with Error Handling
+class RulesManager {
+	constructor(apiKey) {
+		this.apiKey = apiKey
+		this.rules = null
+		this.lastFetchAttempt = null
+		this.minRetryDelay = 5000 // 5 seconds minimum between retries
+	}
+
+	async getRules() {
+		// Only fetch if we don't have rules cached
+		if (!this.rules) {
+			await this.fetchRules()
+		}
+		return this.rules
+	}
+
+	async fetchRules() {
+		// Prevent too frequent retry attempts
+		if (this.lastFetchAttempt && 
+			Date.now() - this.lastFetchAttempt < this.minRetryDelay) {
+			throw new Error("Too many fetch attempts, please wait before retrying")
+		}
+
+		this.lastFetchAttempt = Date.now()
+
+		try {
+			const response = await fetch("https://api.ofauth.com/v2/dynamic-rules", {
+				headers: { apikey: this.apiKey },
+				timeout: 10000 // 10 second timeout
+			})
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch rules: ${response.status}`)
+			}
+
+			const data = await response.json()
+			this.rules = data
+			console.log("Rules fetched and cached")
+		} catch (error) {
+			console.error("Failed to fetch rules:", error)
+			// Don't cache failed attempts, but do rate limit retries
+			throw error
+		}
+	}
+
+	// Force refresh when 400 error is detected
+	async refreshRules() {
+		console.log("Refreshing rules due to 400 error...")
+		this.rules = null // Clear cache
+		return this.fetchRules()
+	}
+}
+```
+
+```javascript Webhook-Driven Updates
+// Set up webhook endpoint to receive rules updates
+app.post('/webhook/rules-updated', (req, res) => {
+	const { eventType, live, data } = req.body
+	
+	if (eventType === 'rules.update') {
+		console.log('Rules update webhook received:', data.revision)
+		// Update cached rules directly from webhook payload
+		rulesManager.updateRulesFromWebhook(data)
+		res.status(200).send('OK')
+	}
+})
+
+// Usage with webhook-driven updates
+class WebhookRulesManager extends RulesManager {
+	async getRules() {
+		if (!this.rules) {
+			await this.fetchRules()
+		}
+		return this.rules
+	}
+	
+	// Update rules directly from webhook payload
+	updateRulesFromWebhook(webhookData) {
+		const { rules, revision } = webhookData
+		
+		// Update cached rules with the new rules from webhook
+		this.rules = {
+			rules,
+			is_current: true,
+			is_public: false, // Set based on your access level
+			is_early_access: true,
+			is_exclusive_access: false
+		}
+		
+		console.log(`Rules updated via webhook to revision: ${revision}`)
+	}
+	
+	// Called by webhook handler (legacy method)
+	clearCache() {
+		this.rules = null
+		console.log('Rules cache cleared due to webhook notification')
+	}
+}
+```
+
+</CodeGroup>
+
+**Webhook Payload Structure:**
+
+```json
+{
+  "eventType": "rules.update",
+  "live": true,
+  "data": {
+    "rules": {
+      "static_param": "staticp",
+      "format": "{0}:{1}:{2}:{3}",
+      "start": "start", 
+      "end": "end",
+      "prefix": "",
+      "suffix": "",
+      "checksum_constant": 123,
+      "checksum_indexes": [1, 2, 3, 4, 5],
+      "app_token": "current_app_token",
+      "revision": "202501150001-abcdef"
+    },
+    "revision": "202501150001-abcdef"
+  }
+}
+```
+
+<Info>
+	**No API Call Required**: The webhook includes the complete rules object in the payload, so you don't need to make a separate API request to `/v2/dynamic-rules` when you receive the webhook.
+</Info>
+
+## Advanced Integration Patterns
+
+### Self-Signing Implementation
+
+For high-volume applications, you can implement local signing after fetching rules:
+
+```javascript
+import crypto from 'crypto';
+
+function signRequest(rules, { endpoint, userId = null, time = null }) {
+    const signTime = time || Math.floor(Date.now() / 1000).toString();
+    
+    const url = new URL(endpoint, 'https://onlyfans.com');
+    const path = url.pathname + url.search;
+    
+    const message = [
+        rules.static_param,
+        signTime,
+        path,
+        userId || '0'
+    ].join('\n');
+    
+    const shaHash = crypto.createHash('sha1').update(message).digest('hex');
+    const hashBuffer = Buffer.from(shaHash, 'ascii');
+    
+    const checksum = rules.checksum_indexes.reduce((sum, index) => {
+        return sum + hashBuffer[index];
+    }, 0) + rules.checksum_constant;
+    
+    const sign = [
+        rules.start,
+        shaHash,
+        Math.abs(checksum).toString(16),
+        rules.end
+    ].join(':');
+    
+    return {
+        sign,
+        time: signTime,
+        'app-token': rules.app_token,
+        'x-of-rev': rules.revision
+    };
+}
+```
+
+## Error Handling
+
+<AccordionGroup>
+
+<Accordion title="Rules Update Required (400 from OnlyFans)">
+When making requests to OnlyFans APIs with signed headers, you may receive:
+
+```json
+HTTP 400 Bad Request
+{
+  "error": {
+    "code": 401,
+    "message": "Please refresh the page"
+  }
+}
+```
+
+**Solution**: This indicates your rules are outdated. Fetch new rules and retry the request.
+
+```javascript
+// Check OnlyFans API responses for this signal
+if (response.status === 400) {
+    const body = await response.json()
+    if (body?.error?.code === 401 && 
+        body?.error?.message?.includes("Please refresh the page")) {
+        await rulesManager.fetchRules()
+        // Retry your request with new rules
+    }
+}
+```
+
+<Warning>
+	This is one of two proper ways to detect rules updates. The other is setting up a webhook endpoint to receive proactive notifications.
+</Warning>
+
+</Accordion>
+
+<Accordion title="Insufficient Access (403)">
+```json
+{
+  "error": "You don't have access to the latest rules, please upgrade your plan.",
+  "is_current": true,
+  "is_public": false,
+  "is_early_access": false,
+  "is_exclusive_access": true
+}
+```
+
+**Solution**: Upgrade your subscription plan to access the latest rules tier.
+
+</Accordion>
+
+<Accordion title="Rules Not Current (503)">
+```json
+{
+  "error": "The rules are not up to date. Please try again later, or contact 'support@ofauth.com' if this issue persists.",
+  "is_current": false,
+  "is_public": true,
+  "is_early_access": false,
+  "is_exclusive_access": false
+}
+```
+
+**Solution**: Wait 30-60 seconds and retry. This typically happens during OnlyFans maintenance windows.
+
+</Accordion>
+
+<Accordion title="Invalid Method (405)">
+```json
+{
+  "error": "Invalid method"
+}
+```
+
+**Solution**: Ensure you're using the correct HTTP method for each endpoint (GET for `/`, POST for `/sign`, GET for `/status`).
+
+</Accordion>
+
+</AccordionGroup>
+
+## Best Practices
+
+### Rules Management
+
+<CardGroup cols={2}>
+	<Card title="Cache Efficiently" icon="database">
+		Cache rules but refresh when `is_current` becomes false
+	</Card>
+	<Card title="Monitor Changes" icon="eye">
+		Use webhooks or watch for 400 "Please refresh the page" errors
+	</Card>
+	<Card title="Handle Access Tiers" icon="shield">
+		Design your app to gracefully handle different access levels
+	</Card>
+	<Card title="Auto-Retry Logic" icon="refresh">
+		Implement automatic rule refresh and request retry on 400 errors
+	</Card>
+	<Card title="Plan for Outages" icon="exclamation-triangle">
+		Build fallback strategies for OnlyFans API disruptions
+	</Card>
+	<Card title="Error Handling" icon="bug">
+		Implement robust error handling for third-party dependencies
+	</Card>
+</CardGroup>
+
+### Performance Optimization
+
+<Warning>
+	For high-volume applications, implement local signing using the rules data
+	rather than calling the `/sign` endpoint for every request.
+</Warning>
+
+### Reliability Considerations
+
+<Warning>
+	**Production Readiness**: OnlyFans is known for making sudden changes that can break integrations. When building production applications:
+	
+	- **Implement circuit breakers** to handle extended outages
+	- **Build retry logic with exponential backoff** for temporary failures  
+	- **Monitor error rates** and have alerting in place
+	- **Consider rate limiting** your own API calls to avoid overwhelming systems during recovery
+	- **Have a communication plan** for when OnlyFans APIs are unavailable
+	- **Test your error handling** regularly to ensure it works when needed
+</Warning>
+
+## Migration Guide
+
+### From Legacy Signing
+
+If you're migrating from a legacy signing implementation:
+
+1. **Replace static rules** with dynamic rule fetching
+2. **Update signing algorithms** based on current rules structure
+3. **Implement proper caching** with `is_current` checks
+4. **Add monitoring** for rules changes using `/status` endpoint
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card title="Access API" icon="key" href="/api-reference/access/overview">
+		Use signed requests with the Access API
+	</Card>
+	<Card title="Link API" icon="link" href="/api-reference/link/overview">
+		Establish user connections for signing
+	</Card>
+	<Card title="Account API" icon="user" href="/api-reference/account/overview">
+		Monitor connections and webhook events
+	</Card>
+</CardGroup>

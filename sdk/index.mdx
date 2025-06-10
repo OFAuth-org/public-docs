@@ -1,0 +1,207 @@
+---
+title: "OnlyFans JavaScript SDK"
+sidebarTitle: "Introduction"
+description: "The easiest way to integrate OnlyFans into your JavaScript/TypeScript applications"
+---
+
+## What is the OnlyFans JavaScript SDK?
+
+The OnlyFans JavaScript SDK is a comprehensive TypeScript library that makes integrating with OnlyFans **10x easier** than using the raw APIs. Built by the team behind OFAuth, it provides a developer-friendly interface with built-in best practices, error handling, and type safety.
+
+<CardGroup cols={2}>
+  <Card title="10x Faster Development" icon="rocket">
+    Pre-built methods, TypeScript definitions, and automatic error handling eliminate boilerplate code
+  </Card>
+  <Card title="Production Ready" icon="shield">
+    Built-in retry logic, rate limiting, session management, and error recovery patterns
+  </Card>
+  <Card title="Type Safe" icon="code">
+    Full TypeScript support with IntelliSense, autocomplete, and compile-time error checking
+  </Card>
+  <Card title="Self-Documenting" icon="book">
+    Inline documentation, examples, and guided development experience
+  </Card>
+</CardGroup>
+
+## Why Choose the SDK Over Direct API?
+
+### Before: Raw API Calls
+```javascript
+// Manual HTTP requests with lots of boilerplate
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123/messages", {
+  method: "POST",
+  headers: {
+    "apikey": process.env.OFAUTH_API_KEY,
+    "x-connection-id": "conn_123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Hello!",
+    mediaItems: ["/path/to/image.jpg"],
+    price: 10.00
+  })
+})
+
+// Manual error handling
+if (!response.ok) {
+  const error = await response.json()
+  if (error.statusCode === 429) {
+    // Manual retry logic
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Try again...
+  }
+  throw new Error(error.message)
+}
+
+const result = await response.json()
+```
+
+### After: SDK Magic ✨
+```typescript
+// One line with built-in error handling and retries
+const { data, error } = await sdk.messages.sendChatMessage({
+  authentication: { connectionId: "conn_123" },
+  userId: 123,
+  params: {
+    text: "Hello!",
+    mediaItems: ["/path/to/image.jpg"],
+    price: 10.00
+  }
+})
+
+if (error) {
+  console.error("Message failed:", error.message)
+  // Automatic retry suggestions and structured error types
+} else {
+  console.log("Message sent:", data.id)
+}
+```
+
+## What You Can Build
+
+The SDK unlocks powerful OnlyFans integration possibilities:
+
+<CardGroup cols={3}>
+  <Card title="Creator Analytics" icon="chart-bar">
+    **Performance Dashboards** - Track earnings, post performance, and subscriber growth with comprehensive analytics
+  </Card>
+  <Card title="Content Management" icon="file-text">
+    **Automated Publishing** - Upload media, create posts, and schedule content with type-safe operations
+  </Card>
+  <Card title="Fan Engagement" icon="comments">
+    **Messaging Automation** - Send personalized messages, manage subscriber lists, and create campaigns
+  </Card>
+  <Card title="Subscriber Tools" icon="users">
+    **List Management** - Organize subscribers, track spending, and segment audiences for targeted content
+  </Card>
+  <Card title="Revenue Optimization" icon="dollar-sign">
+    **Business Intelligence** - Analyze top-performing content and optimize pricing strategies
+  </Card>
+  <Card title="Integration Tools" icon="link">
+    **Custom Workflows** - Build integrations with other platforms and automate business processes
+  </Card>
+</CardGroup>
+
+## Key Features & Benefits
+
+### **Complete Type Safety**
+- **Full TypeScript definitions** with IntelliSense autocomplete
+- **Compile-time validation** prevents invalid parameter combinations
+- **Context-aware suggestions** guide correct API usage
+- **Runtime validation** catches errors before API calls
+
+```typescript
+// ✅ Full IntelliSense support and validation
+const { data, error } = await sdk.statistics.getStats({
+  statType: "posts",    // IDE autocompletes valid options
+  params: { 
+    by: "purchases",    // Context-aware validation
+    limit: 20          // Type-checked parameters
+  }
+})
+```
+
+### **Parameter Validation**
+- **Automatic validation** of all parameters before API calls
+- **Enum validation** ensures only valid values are accepted
+- **Required field enforcement** at compile time
+- **Context-sensitive validation** prevents impossible combinations
+
+### **Complete OnlyFans Coverage**
+- **User Management**: Profiles, subscribers, connections
+- **Content Creation**: Posts, media uploads, pricing
+- **Messaging**: Direct messages, mass messaging, rich content
+- **Analytics**: Earnings, subscriber metrics, performance insights
+- **Business Tools**: Promotions, subscriber management, automation
+
+### **Developer Experience**
+- **TypeScript First**: Full type definitions and IntelliSense support
+- **Consistent API**: All methods follow the same `{ data, error }` pattern
+- **Rich Documentation**: Inline docs, examples, and guided workflows
+
+### **Production Features**
+- **Error Handling**: Structured error types with retry recommendations
+- **Request Signing**: Automatic OnlyFans API signature generation
+- **Monitoring**: Built-in logging and debugging capabilities
+
+## SDK Architecture
+
+The SDK is organized into logical modules that mirror OnlyFans functionality:
+
+<CardGroup cols={3}>
+  <Card title="Authentication" icon="key">
+    **Link & Account Modules**
+    
+    Handle login flows, session management, and connection lifecycle
+  </Card>
+  <Card title="Content & Users" icon="users">
+    **Messages, Posts, User Modules**
+    
+    Manage content creation, user interactions, and profile operations
+  </Card>
+  <Card title="Business & Analytics" icon="chart-line">
+    **Statistics, Subscriptions, Vault**
+    
+    Access earnings data, subscriber metrics, and media management
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+Ready to start building? The SDK provides **guided setup** with comprehensive documentation:
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/sdk/quickstart">
+    **Package setup** - Install the SDK and configure your environment
+  </Card>
+  <Card title="Architecture" icon="boxes" href="/sdk/core-concepts/architecture">
+    **Design overview** - Understand the SDK's modular structure and type safety
+  </Card>
+  <Card title="Authentication" icon="key" href="/sdk/core-concepts/authentication">
+    **Auth setup** - Configure connection flows and session management
+  </Card>
+  <Card title="API Reference" icon="book" href="/sdk/modules/authentication/link-authentication">
+    **Method docs** - Explore all available operations with examples
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/sdk/quickstart">
+    **Package setup** - Install the SDK and configure your environment
+  </Card>
+  <Card title="SDK Architecture" icon="boxes" href="/sdk/core-concepts/architecture">
+    **Design overview** - Understand type safety and modular structure
+  </Card>
+  <Card title="Authentication" icon="key" href="/sdk/core-concepts/authentication">
+    **Auth flows** - Set up connections and session management
+  </Card>
+  <Card title="Core Modules" icon="book" href="/sdk/modules/authentication/link-authentication">
+    **Method docs** - Explore all SDK operations with examples
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Ready for Production?** Review our [Production Considerations](/getting-started/production-considerations) guide for important deployment and security information. 
+</Warning>

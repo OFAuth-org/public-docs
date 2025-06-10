@@ -1,0 +1,492 @@
+---
+title: "Access Overview"
+description: "Seamless, proxied access to OnlyFans data with automatic session management"
+---
+
+## Overview
+
+The Access API (`/v2/access`) provides seamless, proxied access to OnlyFans data while handling authentication, session management, and proxy optimization automatically. This API acts as a transparent proxy, allowing you to make requests as if directly to OnlyFans while OFAuth handles all the complexity.
+
+**Two Authentication Methods:**
+
+1. **Link Connection ID**: Use OFAuth's Link API to authenticate users and get a connection ID
+2. **Direct Session Headers**: Provide your own OnlyFans session headers if you handle authentication separately
+
+<Info>
+	**Using Node.js?** Consider our [OnlyFans SDK](/sdk) which provides a more convenient interface over the Access API with TypeScript support, error handling, and built-in best practices.
+</Info>
+
+<Info>
+	**Production Deployment?** Review our [Production Considerations](/getting-started/production-considerations) guide for critical information about building reliable OnlyFans integrations.
+</Info>
+
+## Base URL
+
+```
+https://api.ofauth.com/v2/access
+```
+
+## Authentication
+
+The Access API supports two authentication approaches depending on how you handle user authentication:
+
+### Method 1: Link Connection ID (Recommended)
+
+Use OFAuth's Link API to authenticate users and obtain a connection ID:
+
+```http
+apikey: YOUR_API_KEY
+x-connection-id: CONNECTION_ID
+```
+
+This is the recommended approach as it handles session management, renewal, and security automatically.
+
+### Method 2: Direct Session Headers
+
+If you handle OnlyFans authentication separately, provide the session headers directly:
+
+```http
+apikey: YOUR_API_KEY
+x-bc: ONLYFANS_BC_HEADER
+user-id: ONLYFANS_USER_ID
+cookie: ONLYFANS_SESSION_COOKIE
+user-agent: ONLYFANS_USER_AGENT
+```
+
+<Warning>
+	**Session Management**: When using direct session headers, you're responsible
+	for handling session expiration, renewal, and security. The Link API approach
+	handles this automatically.
+</Warning>
+
+## Request Format
+
+The Access API accepts any HTTP method and forwards requests to OnlyFans with the appropriate authentication and proxying.
+
+### Basic Request Structure
+
+```http
+GET /v2/access/users/me HTTP/1.1
+Host: api.ofauth.com
+apikey: YOUR_API_KEY
+x-connection-id: conn_abc123
+```
+
+### Headers
+
+| Header   | Required | Description         |
+| -------- | -------- | ------------------- |
+| `apikey` | Yes      | Your OFAuth API key |
+
+**Method 1: Link Connection ID**
+| Header | Required | Description |
+| ----------------- | -------- | ---------------------------------------------------------- |
+| `x-connection-id` | Yes\* | The connection ID from Link API authentication |
+
+**Method 2: Direct Session Headers**
+| Header | Required | Description |
+| ----------------- | -------- | ---------------------------------------------------------- |
+| `x-bc` | Yes* | OnlyFans x-bc authentication header |
+| `user-id` | Yes* | OnlyFans user ID |
+| `cookie` | Yes* | OnlyFans session cookie |
+| `user-agent` | Yes* | OnlyFans user agent (should match session) |
+
+\*Choose one authentication method - either connection ID or all session headers
+
+## Response Format
+
+Responses are passed through transparently from OnlyFans
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 12345,
+  "username": "example_user",
+  ...
+}
+```
+
+## Common Endpoints
+
+### User Information
+
+<CodeGroup>
+
+```javascript Get Current User (Link Connection)
+const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-connection-id": "conn_abc123"
+	}
+})
+```
+
+```javascript Get Current User (Session Headers)
+const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-bc": "your_bc_header_value",
+		"user-id": "12345",
+		cookie: "your_session_cookie",
+		"user-agent": "Mozilla ...."
+	}
+})
+```
+
+</CodeGroup>
+
+### Messages
+
+<CodeGroup>
+
+```javascript Get Conversations
+const conversations = await fetch(
+	"https://api.ofauth.com/v2/access/chats/rooms",
+	{
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": "conn_abc123"
+		}
+	}
+)
+```
+
+```javascript Get Messages
+const messages = await fetch(
+	"https://api.ofauth.com/v2/access/chats/rooms/123/messages",
+	{
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": "conn_abc123"
+		}
+	}
+)
+```
+
+</CodeGroup>
+
+### Content
+
+<CodeGroup>
+
+```javascript Get User Posts
+const posts = await fetch(
+	"https://api.ofauth.com/v2/access/users/12345/posts",
+	{
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": "conn_abc123"
+		}
+	}
+)
+```
+
+```javascript Get Stories
+const stories = await fetch(
+	"https://api.ofauth.com/v2/access/users/12345/stories",
+	{
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": "conn_abc123"
+		}
+	}
+)
+```
+
+</CodeGroup>
+
+### Subscriptions
+
+<CodeGroup>
+
+```javascript Get Subscriptions
+const subscriptions = await fetch(
+	"https://api.ofauth.com/v2/access/subscriptions",
+	{
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": "conn_abc123"
+		}
+	}
+)
+```
+
+```javascript Get Following List
+const following = await fetch(
+	"https://api.ofauth.com/v2/access/users/me/following",
+	{
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": "conn_abc123"
+		}
+	}
+)
+```
+
+</CodeGroup>
+
+## Rate Limiting
+
+The Access API implements per-user rate limiting that varies by subscription
+plan:
+
+### Rate Limits by Plan
+
+**Per connection ID or user ID:**
+
+- **Pay as You Go**: 30 req/min with 50 request burst capacity
+- **Starter**: 60 req/min with 90 request burst capacity
+- **Launch**: 120 req/min with 200 request burst capacity
+- **Scale**: No OFAuth rate limits (OnlyFans limits still apply)
+
+**System Details:**
+
+- **Scope**: Each `x-connection-id` or `user-id` has independent rate limits
+- **Token bucket system**: Continuous refill with burst capacity
+
+<Warning>
+	**Important**: OFAuth does not bypass OnlyFans' native rate limits. Even if
+	you're within OFAuth's rate limits, you may still receive rate limiting
+	responses from OnlyFans.
+</Warning>
+
+### Multiple Users/Connections
+
+<CodeGroup>
+
+```javascript Independent Rate Limits (Connection IDs)
+// These requests are rate limited independently
+const user1Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-connection-id": "conn_user1"
+	}
+})
+
+const user2Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-connection-id": "conn_user2" // Independent rate limit
+	}
+})
+```
+
+```javascript Independent Rate Limits (User IDs)
+// These requests are rate limited independently
+const user1Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"user-id": "12345",
+		"x-bc": "bc_value_1",
+		cookie: "session_1",
+		"user-agent": "Mozilla ..."
+	}
+})
+
+const user2Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"user-id": "67890", // Independent rate limit
+		"x-bc": "bc_value_2",
+		cookie: "session_2",
+		"user-agent": "Mozilla ..."
+	}
+})
+```
+
+</CodeGroup>
+
+### Rate Limit Best Practices
+
+<CardGroup cols={2}>
+	<Card title="Distribute Load" icon="scale-balanced">
+		Use multiple connections to scale request volume
+	</Card>
+	<Card title="Monitor Limits" icon="chart-line">
+		Track rate limit headers in responses
+	</Card>
+	<Card title="Implement Backoff" icon="clock">
+		Use exponential backoff when rate limited
+	</Card>
+	<Card title="Cache Responses" icon="database">
+		Cache responses to reduce API calls
+	</Card>
+</CardGroup>
+
+## Error Handling
+
+The Access API handles various error conditions automatically:
+
+### Session Expired
+
+**For Connection ID Authentication:**
+When a Link connection session expires, the API returns:
+
+```json
+{
+	"error": "Session expired",
+	"code": "SESSION_EXPIRED",
+	"connection_id": "conn_abc123"
+}
+```
+
+**For Session Header Authentication:**
+When provided session headers are invalid or expired:
+
+```json
+{
+	"error": "Invalid session headers",
+	"code": "INVALID_SESSION",
+	"user_id": "12345"
+}
+```
+
+### Authentication Errors
+
+**Missing Authentication:**
+
+```json
+{
+	"error": "No authentication provided",
+	"code": "NO_AUTH",
+	"details": "Provide either x-connection-id or session headers (x-bc, user-id, cookie, user-agent)"
+}
+```
+
+**Incomplete Session Headers:**
+
+```json
+{
+	"error": "Incomplete session headers",
+	"code": "INCOMPLETE_SESSION",
+	"missing": ["x-bc", "cookie"]
+}
+```
+
+### Proxy Errors
+
+If a proxy fails, the API automatically retries with a different proxy:
+
+```json
+{
+	"error": "All proxies failed",
+	"code": "PROXY_ERROR",
+	"retries": 3
+}
+```
+
+### Rules Outdated
+
+When dynamic rules need updating:
+
+```json
+{
+	"error": "Rules outdated, please try again in a moment",
+	"code": "RULES_OUTDATED"
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+
+<Accordion title="429 Rate Limited">
+
+The Access API has variable rate limits based on your subscription plan using a
+token bucket system. Each connection-id or user-id has its own independent rate
+limit.
+
+**Rate limits:**
+
+- Pay as You Go: 30 req/min (burst: 50)
+- Starter: 60 req/min (burst: 90)
+- Launch: 120 req/min (burst: 200)
+- Scale: No OFAuth limits
+
+Implement exponential backoff if you encounter rate limits.
+
+```json
+{
+	"error": "Rate limit exceeded for connection",
+	"code": "RATE_LIMITED",
+	"connection_id": "conn_abc123",
+	"retryAfter": 5
+}
+```
+
+**Solution**: Implement exponential backoff and respect retryAfter seconds. Note
+that other connections are not affected by this rate limit.
+
+</Accordion>
+
+<Accordion title="404 Connection Not Found">
+
+```json
+{
+	"error": "Connection not found",
+	"code": "CONNECTION_NOT_FOUND",
+	"connection_id": "conn_abc123"
+}
+```
+
+**Solution**: Verify connection ID and re-authenticate if needed
+
+</Accordion>
+
+<Accordion title="503 Service Unavailable">
+
+```json
+{
+	"error": "Rules are being updated",
+	"code": "RULES_UPDATING"
+}
+```
+
+**Solution**: Wait 5-10 seconds and retry
+
+</Accordion>
+
+</AccordionGroup>
+
+## Security Considerations
+
+<CardGroup cols={2}>
+	<Card title="Connection Security" icon="shield">
+		Connection IDs are unique per user session and expire automatically for
+		security
+	</Card>
+	<Card title="Data Privacy" icon="eye-slash">
+		OFAuth never stores response content - all requests are proxied
+		transparently
+	</Card>
+	<Card title="API Key Security" icon="key">
+		Use environment variables for API keys and rotate them regularly
+	</Card>
+	<Card title="Session Encryption" icon="lock">
+		Session data is encrypted in transit and at rest
+	</Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card title="Link API Guide" icon="link" href="/api-reference/link/overview">
+		Learn how to establish connections
+	</Card>
+	<Card
+		title="Webhook Configuration"
+		icon="webhook"
+		href="/api-reference/account/overview">
+		Set up event notifications
+	</Card>
+	<Card
+		title="Dynamic Rules"
+		icon="cog"
+		href="/api-reference/dynamic-rules/overview">
+		Advanced request signing
+	</Card>
+</CardGroup>

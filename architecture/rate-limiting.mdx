@@ -1,0 +1,376 @@
+---
+title: "Rate Limiting Architecture"
+description:
+  "Token bucket rate limiting system, limits, and optimization strategies"
+---
+
+## Overview
+
+The OFAuth API implements a sophisticated token bucket rate limiting system
+designed to ensure fair usage while allowing burst capacity for real-time
+applications. This system protects against abuse while providing flexibility for
+legitimate use cases.
+
+## Rate Limiting Architecture
+
+The API implements a sophisticated token bucket rate limiting system designed to
+ensure fair usage while allowing burst capacity for real-time applications.
+
+### Rate Limits by Plan
+
+Rate limits vary based on your subscription plan:
+
+**Access API (per connection):** 
+| Plan | Rate Limit | Burst Capacity | |
+------------ | ------------- | -------------- | 
+| Pay as You Go| 30 req/min | 50 requests | 
+| Starter | 60 req/min | 90 requests | 
+| Launch | 120 req/min | 200 requests | 
+| Scale | No limit* | No limit* |
+
+**Other APIs (per organization):** 
+| API Category | Default Limit | Burst Capacity | | ----------------- | ------------- | -------------- | | **Dynamic
+Rules** | 1 req/min | 3 requests | | **Sign** | 10 req/min | 20 requests | |
+**Link** | No limit | - | | **Account** | No limit | - |
+
+<Warning>
+	*Scale plan has no OFAuth rate limits but is still subject to OnlyFans' native
+	rate limiting. OFAuth does not bypass OnlyFans' rate limits.
+</Warning>
+
+### Token Bucket System
+
+The token bucket algorithm provides several key benefits:
+
+- **Refill Rate**: Tokens refill continuously at the specified rate per second
+- **Burst Capacity**: Allows for immediate bursts of requests up to the bucket
+  size
+- **Scope**: Limits are applied per connection ID for Access API, per
+  organization for others
+- **Headers**: Rate limit information is returned in response headers
+
+```http
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 7
+X-RateLimit-Reset: 1640995200
+```
+
+## How Token Bucket Works
+
+<CardGroup cols={2}>
+	<Card title="Token Refill" icon="arrows-rotate">
+		Tokens are added to the bucket at a constant rate (e.g., 1 token every 6
+		seconds for 10/min limit)
+	</Card>
+	<Card title="Burst Capacity" icon="bolt">
+		The bucket can hold more tokens than the per-minute limit, allowing for
+		short bursts
+	</Card>
+	<Card title="Request Processing" icon="arrow-right">
+		Each request consumes one token from the bucket
+	</Card>
+	<Card title="Limit Enforcement" icon="shield">
+		Requests are rejected when the bucket is empty
+	</Card>
+</CardGroup>
+
+### Token Bucket Example
+
+```javascript
+// Example: 10 requests per minute with 20 token burst capacity
+const bucket = {
+	capacity: 20, // Maximum tokens
+	tokens: 20, // Current tokens
+	refillRate: 1 / 6, // Tokens per second (10/60)
+	lastRefill: Date.now(),
+};
+
+function canMakeRequest() {
+	// Refill tokens based on time elapsed
+	const now = Date.now();
+	const elapsed = (now - bucket.lastRefill) / 1000;
+	const tokensToAdd = elapsed * bucket.refillRate;
+
+	bucket.tokens = Math.min(bucket.capacity, bucket.tokens + tokensToAdd);
+	bucket.lastRefill = now;
+
+	// Check if request can be made
+	if (bucket.tokens >= 1) {
+		bucket.tokens -= 1;
+		return true;
+	}
+
+	return false; // Rate limited
+}
+```
+
+## Rate Limit Scopes
+
+### Per-Connection Limits (Access API)
+
+Each connection ID has its own independent rate limit bucket:
+
+```javascript
+// These requests have separate rate limits
+const user1Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-connection-id": "conn_user1", // Independent bucket
+	},
+});
+
+const user2Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-connection-id": "conn_user2", // Different bucket
+	},
+});
+```
+
+### Per-Organization Limits (Other APIs)
+
+Dynamic Rules and Account APIs are limited per organization:
+
+```javascript
+// These requests share the same rate limit bucket
+const rules = await fetch("https://api.ofauth.com/v2/dynamic-rules", {
+	headers: { apikey: "YOUR_API_KEY" }, // Same org bucket
+});
+
+const account = await fetch("https://api.ofauth.com/v2/account/info", {
+	headers: { apikey: "YOUR_API_KEY" }, // Same org bucket
+});
+```
+
+## Rate Limit Headers
+
+All API responses include rate limit information:
+
+| Header                    | Description                                | Example      |
+| ------------------------- | ------------------------------------------ | ------------ |
+| `X-RateLimit-Limit`       | Requests allowed per time window           | `10`         |
+| `X-RateLimit-Remaining`   | Requests remaining in current window       | `7`          |
+| `X-RateLimit-Reset`       | Unix timestamp when limit resets           | `1640995200` |
+| `X-RateLimit-Retry-After` | Seconds to wait before retrying (429 only) | `30`         |
+
+### Reading Rate Limit Headers
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"x-connection-id": "conn_abc123",
+	},
+});
+
+// Check rate limit status
+const limit = response.headers.get("X-RateLimit-Limit");
+const remaining = response.headers.get("X-RateLimit-Remaining");
+const reset = response.headers.get("X-RateLimit-Reset");
+
+console.log(`${remaining}/${limit} requests remaining`);
+console.log(`Limit resets at ${new Date(reset * 1000)}`);
+
+if (response.status === 429) {
+	const retryAfter = response.headers.get("X-RateLimit-Retry-After");
+	console.log(`Rate limited. Retry after ${retryAfter} seconds`);
+}
+```
+
+## Handling Rate Limits
+
+### Exponential Backoff
+
+Implement exponential backoff when rate limited:
+
+```javascript
+async function apiCallWithBackoff(url, options, maxRetries = 3) {
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		try {
+			const response = await fetch(url, options);
+
+			if (response.status === 429) {
+				// Rate limited - calculate wait time
+				const retryAfter =
+					parseInt(response.headers.get("X-RateLimit-Retry-After")) || 60;
+				const backoffDelay = Math.min(
+					Math.pow(2, attempt) * 1000,
+					retryAfter * 1000,
+				);
+
+				console.log(`Rate limited. Waiting ${backoffDelay / 1000} seconds...`);
+				await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+				continue;
+			}
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			return response;
+		} catch (error) {
+			if (attempt === maxRetries - 1) throw error;
+
+			// Exponential backoff for other errors
+			const delay = Math.pow(2, attempt) * 1000;
+			await new Promise((resolve) => setTimeout(resolve, delay));
+		}
+	}
+}
+```
+
+### Rate Limit Monitoring
+
+Monitor your rate limit usage:
+
+```javascript
+class RateLimitMonitor {
+	constructor() {
+		this.limits = new Map();
+	}
+
+	updateFromResponse(response, scope) {
+		const limit = parseInt(response.headers.get("X-RateLimit-Limit"));
+		const remaining = parseInt(response.headers.get("X-RateLimit-Remaining"));
+		const reset = parseInt(response.headers.get("X-RateLimit-Reset"));
+
+		this.limits.set(scope, {
+			limit,
+			remaining,
+			reset,
+			lastUpdate: Date.now(),
+		});
+
+		// Warn if approaching limit
+		if (remaining < limit * 0.2) {
+			console.warn(
+				`Approaching rate limit for ${scope}: ${remaining}/${limit} remaining`,
+			);
+		}
+	}
+
+	getStatus(scope) {
+		return this.limits.get(scope);
+	}
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+	<Card title="Implement Backoff" icon="clock">
+		Use exponential backoff with jitter when rate limited
+	</Card>
+	<Card title="Monitor Usage" icon="chart-line">
+		Track rate limit headers and plan request patterns
+	</Card>
+	<Card title="Cache Responses" icon="database">
+		Cache API responses to reduce unnecessary requests
+	</Card>
+	<Card title="Distribute Load" icon="scale-balanced">
+		Use multiple connections to scale request volume
+	</Card>
+	<Card title="Batch Requests" icon="layer-group">
+		Combine multiple operations when possible
+	</Card>
+	<Card title="Optimize Timing" icon="stopwatch">
+		Space out requests to avoid bursting limits
+	</Card>
+</CardGroup>
+
+### Caching Strategy
+
+Implement intelligent caching to reduce API calls:
+
+```javascript
+class APICache {
+	constructor(ttl = 300000) {
+		// 5 minutes default
+		this.cache = new Map();
+		this.ttl = ttl;
+	}
+
+	get(key) {
+		const item = this.cache.get(key);
+		if (!item) return null;
+
+		if (Date.now() > item.expires) {
+			this.cache.delete(key);
+			return null;
+		}
+
+		return item.data;
+	}
+
+	set(key, data) {
+		this.cache.set(key, {
+			data,
+			expires: Date.now() + this.ttl,
+		});
+	}
+}
+
+// Usage
+const cache = new APICache();
+
+async function getCachedUserData(connectionId) {
+	const cacheKey = `user_data_${connectionId}`;
+
+	// Check cache first
+	let userData = cache.get(cacheKey);
+	if (userData) {
+		return userData;
+	}
+
+	// Fetch from API
+	const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
+		headers: {
+			apikey: "YOUR_API_KEY",
+			"x-connection-id": connectionId,
+		},
+	});
+
+	userData = await response.json();
+
+	// Cache the result
+	cache.set(cacheKey, userData);
+
+	return userData;
+}
+```
+
+## Custom Rate Limits
+
+Enterprise customers can request custom rate limits based on their use case.
+Contact support with:
+
+- **Expected request volume**
+- **Usage patterns** (bursts vs steady)
+- **Business requirements**
+- **Current plan details**
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card
+		title="Error Handling"
+		icon="exclamation-triangle"
+		href="/architecture/error-handling"
+	>
+		Learn about error codes and debugging
+	</Card>
+	<Card
+		title="Performance"
+		icon="chart-line"
+		href="/architecture/performance"
+	>
+		Optimize API performance and caching
+	</Card>
+	<Card
+		title="Authentication"
+		icon="key"
+		href="/architecture/authentication"
+	>
+		Understand authentication methods
+	</Card>
+</CardGroup>

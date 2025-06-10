@@ -1,0 +1,807 @@
+---
+title: "Messaging"
+description: "API reference for sending direct messages, managing mass messaging campaigns, and handling conversations with the OnlyFans SDK"
+---
+
+## Overview
+
+The Messaging module (`sdk.messages`) provides comprehensive functionality for handling all types of messaging on OnlyFans, including direct messages, mass messaging campaigns, and conversation management. This module supports both text and media messages with advanced features like scheduling and pricing.
+
+<CardGroup cols={3}>
+  <Card title="Direct Messages" icon="message-circle">
+    Send personalized messages to individual users with media attachments
+  </Card>
+  <Card title="Mass Messaging" icon="megaphone">
+    Create campaigns to broadcast messages to subscriber lists
+  </Card>
+  <Card title="Chat Management" icon="messages">
+    Retrieve chat history and manage conversation threads
+  </Card>
+</CardGroup>
+
+## Direct Messaging
+
+### Send Chat Message
+
+#### `sendChatMessage(options)`
+
+Send a direct message to a specific user with optional media attachments and pricing.
+
+<ParamField path="options" type="SendChatMessageOptions" required>
+  Message configuration and authentication.
+</ParamField>
+
+<ParamField path="options.authentication" type="AuthenticationOptions" required>
+  Authentication method - either `{ connectionId: string }` or `{ session: object }`.
+</ParamField>
+
+<ParamField path="options.userId" type="number" required>
+  The OnlyFans user ID to send the message to.
+</ParamField>
+
+<ParamField path="options.params" type="MessageParams" required>
+  Message content and settings.
+  
+  <Expandable title="Message Parameters">
+    <ParamField path="text" type="string" required>
+      The message text content. Supports markdown formatting.
+    </ParamField>
+    
+    <ParamField path="mediaItems" type="string[]">
+      Array of media references (local paths, URLs, or media IDs).
+    </ParamField>
+    
+    <ParamField path="price" type="number">
+      Price for paid messages (in dollars).
+    </ParamField>
+    
+    <ParamField path="isMarkdown" type="boolean" default="false">
+      Whether to interpret the text as markdown.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the sent message.
+</ResponseField>
+
+<ResponseField name="text" type="string" required>
+  The message text content.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 timestamp when the message was sent.
+</ResponseField>
+
+<ResponseField name="price" type="number">
+  Price of the message (if it's a paid message).
+</ResponseField>
+
+<ResponseField name="mediaCount" type="number" required>
+  Number of media attachments included.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Message status (e.g., "sent", "delivered", "read").
+</ResponseField>
+
+<RequestExample>
+```typescript Send Text Message
+const { data: message, error } = await sdk.messages.sendChatMessage({
+  authentication: { session: userData },
+  userId: 123456789,
+  params: {
+    text: "Hey! Thanks for subscribing! 💕",
+    isMarkdown: false
+  }
+})
+
+if (error) {
+  console.error("Failed to send message:", error.message)
+} else {
+  console.log(`Message sent: ${message.id}`)
+  console.log(`Status: ${message.status}`)
+}
+```
+</RequestExample>
+
+<RequestExample>
+```typescript Send Message with Media
+const { data: message, error } = await sdk.messages.sendChatMessage({
+  authentication: { connectionId: "conn_123456789" },
+  userId: 987654321,
+  params: {
+    text: "Check out this ***exclusive*** content! 🔥",
+    isMarkdown: true,
+    mediaItems: [
+      "/path/to/local/photo.jpg",
+      "https://example.com/video.mp4",
+      "media_existing_12345"
+    ],
+    price: 9.99 // Paid message
+  }
+})
+
+if (error) {
+  if (error.type === "bad_request") {
+    console.error("Invalid message data:", error.details)
+  } else {
+    console.error("Send failed:", error.message)
+  }
+} else {
+  console.log(`Paid message sent: $${message.price}`)
+  console.log(`Media attachments: ${message.mediaCount}`)
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success Response
+{
+  "data": {
+    "id": "msg_1234567890",
+    "text": "Check out this exclusive content! 🔥",
+    "createdAt": "2024-01-20T15:30:00Z",
+    "price": 9.99,
+    "mediaCount": 3,
+    "status": "sent"
+  },
+  "error": undefined
+}
+```
+</ResponseExample>
+
+### Get Chat Messages
+
+#### `getChatMessages(options)`
+
+Retrieve chat message history with a specific user.
+
+<ParamField path="options" type="GetChatMessagesOptions" required>
+  User identification and pagination options.
+</ParamField>
+
+<ParamField path="options.authentication" type="AuthenticationOptions" required>
+  Authentication method.
+</ParamField>
+
+<ParamField path="options.userId" type="number" required>
+  The OnlyFans user ID to get messages with.
+</ParamField>
+
+<ParamField path="options.params" type="ChatParams">
+  Optional pagination and filtering parameters.
+  
+  <Expandable title="Chat Parameters">
+    <ParamField path="limit" type="number" default="20">
+      Maximum number of messages to return (1-100).
+    </ParamField>
+    
+    <ParamField path="offset" type="number" default="0">
+      Number of messages to skip for pagination.
+    </ParamField>
+    
+    <ParamField path="beforeId" type="string">
+      Get messages before this message ID (for reverse chronological loading).
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="messages" type="Message[]" required>
+  Array of message objects in chronological order.
+  
+  <Expandable title="Message Object">
+    <ResponseField name="id" type="string" required>
+      Unique message identifier.
+    </ResponseField>
+    
+    <ResponseField name="text" type="string" required>
+      Message text content.
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="string" required>
+      ISO 8601 timestamp when message was sent.
+    </ResponseField>
+    
+    <ResponseField name="fromUser" type="object" required>
+      Information about the sender.
+    </ResponseField>
+    
+    <ResponseField name="price" type="number">
+      Price if it's a paid message.
+    </ResponseField>
+    
+    <ResponseField name="mediaItems" type="array">
+      Array of attached media objects.
+    </ResponseField>
+    
+    <ResponseField name="isPurchased" type="boolean">
+      Whether paid content has been purchased (for paid messages).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="hasMore" type="boolean" required>
+  Whether there are more messages available.
+</ResponseField>
+
+<RequestExample>
+```typescript Get Chat History
+const { data: chat, error } = await sdk.messages.getChatMessages({
+  authentication: { session: userData },
+  userId: 123456789,
+  params: {
+    limit: 50,
+    offset: 0
+  }
+})
+
+if (error) {
+  console.error("Failed to load chat:", error.message)
+} else {
+  console.log(`Loaded ${chat.messages.length} messages`)
+  
+  chat.messages.forEach(message => {
+    const sender = message.fromUser.id === userData.id ? "You" : message.fromUser.name
+    const price = message.price ? ` ($${message.price})` : ""
+    
+    console.log(`[${message.createdAt}] ${sender}: ${message.text}${price}`)
+    
+    if (message.mediaItems?.length > 0) {
+      console.log(`  📎 ${message.mediaItems.length} attachment(s)`)
+    }
+  })
+  
+  if (chat.hasMore) {
+    console.log("More messages available...")
+  }
+}
+```
+</RequestExample>
+
+### Unsend Message
+
+#### `unsendChatMessage(options)`
+
+Remove a previously sent message from the conversation.
+
+<ParamField path="options" type="UnsendMessageOptions" required>
+  Authentication and message identification.
+</ParamField>
+
+<ParamField path="options.authentication" type="AuthenticationOptions" required>
+  Authentication method.
+</ParamField>
+
+<ParamField path="options.messageId" type="string" required>
+  The ID of the message to unsend.
+</ParamField>
+
+<ResponseField name="success" type="boolean" required>
+  Whether the message was successfully removed.
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Confirmation message.
+</ResponseField>
+
+<RequestExample>
+```typescript Unsend Message
+const { data: result, error } = await sdk.messages.unsendChatMessage({
+  authentication: { session: userData },
+  messageId: "msg_1234567890"
+})
+
+if (error) {
+  if (error.type === "not_found") {
+    console.log("Message not found or already deleted")
+  } else {
+    console.error("Failed to unsend:", error.message)
+  }
+} else {
+  console.log("Message unsent:", result.message)
+}
+```
+</RequestExample>
+
+## Mass Messaging
+
+### Create Queued Message
+
+#### `createQueuedMessage(options)`
+
+Create a mass messaging campaign to send to multiple users or lists.
+
+<ParamField path="options" type="CreateQueuedMessageOptions" required>
+  Campaign configuration and targeting.
+</ParamField>
+
+<ParamField path="options.authentication" type="AuthenticationOptions" required>
+  Authentication method.
+</ParamField>
+
+<ParamField path="options.params" type="QueuedMessageParams" required>
+  Campaign content and targeting.
+  
+  <Expandable title="Queued Message Parameters">
+    <ParamField path="text" type="string" required>
+      The message text content.
+    </ParamField>
+    
+    <ParamField path="userLists" type="string[]">
+      System list names to target (e.g., "fans", "following", "recent").
+    </ParamField>
+    
+    <ParamField path="customUserListIds" type="string[]">
+      Custom list IDs to target.
+    </ParamField>
+    
+    <ParamField path="scheduledDate" type="Date">
+      When to send the message (defaults to immediate).
+    </ParamField>
+    
+    <ParamField path="mediaItems" type="string[]">
+      Array of media references to include.
+    </ParamField>
+    
+    <ParamField path="price" type="number">
+      Price for paid mass messages.
+    </ParamField>
+    
+    <ParamField path="isMarkdown" type="boolean" default="false">
+      Whether to interpret text as markdown.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the queued message campaign.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Initial status (e.g., "pending", "scheduled").
+</ResponseField>
+
+<ResponseField name="recipientCount" type="number" required>
+  Estimated number of recipients.
+</ResponseField>
+
+<ResponseField name="scheduledFor" type="string">
+  ISO 8601 timestamp when the message will be sent.
+</ResponseField>
+
+<RequestExample>
+```typescript Create Mass Message
+const { data: campaign, error } = await sdk.messages.createQueuedMessage({
+  authentication: { session: userData },
+  params: {
+    text: "🎉 **Special Announcement!** 🎉\n\nNew content dropping tomorrow!",
+    isMarkdown: true,
+    userLists: ["fans", "following"],
+    customUserListIds: ["list_premium_123"],
+    scheduledDate: new Date("2024-06-01T18:00:00Z"),
+    mediaItems: ["/path/to/teaser/image.jpg"],
+    price: 4.99
+  }
+})
+
+if (error) {
+  console.error("Failed to create campaign:", error.message)
+} else {
+  console.log(`Campaign created: ${campaign.id}`)
+  console.log(`Recipients: ${campaign.recipientCount}`)
+  console.log(`Scheduled for: ${campaign.scheduledFor}`)
+  console.log(`Status: ${campaign.status}`)
+}
+```
+</RequestExample>
+
+<RequestExample>
+```typescript Immediate Mass Message
+const { data: campaign, error } = await sdk.messages.createQueuedMessage({
+  authentication: { connectionId: "conn_123456789" },
+  params: {
+    text: "Thanks for your support! Here's a special gift 💝",
+    userLists: ["fans"],
+    mediaItems: ["media_gift_12345"]
+    // No scheduledDate = sends immediately
+  }
+})
+
+console.log(`Immediate campaign: ${campaign.id}`)
+```
+</RequestExample>
+
+### Get Queued Message Status
+
+#### `getQueuedMessage(options)`
+
+Retrieve status and details of a mass messaging campaign.
+
+<ParamField path="options" type="GetQueuedMessageOptions" required>
+  Authentication and campaign identification.
+</ParamField>
+
+<ParamField path="options.authentication" type="AuthenticationOptions" required>
+  Authentication method.
+</ParamField>
+
+<ParamField path="options.messageId" type="string" required>
+  The queued message campaign ID.
+</ParamField>
+
+<ResponseField name="id" type="string" required>
+  Campaign identifier.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Current status (e.g., "pending", "sending", "completed", "failed").
+</ResponseField>
+
+<ResponseField name="text" type="string" required>
+  The message content.
+</ResponseField>
+
+<ResponseField name="recipientCount" type="number" required>
+  Total number of recipients.
+</ResponseField>
+
+<ResponseField name="sentCount" type="number" required>
+  Number of messages successfully sent.
+</ResponseField>
+
+<ResponseField name="failedCount" type="number" required>
+  Number of failed deliveries.
+</ResponseField>
+
+<ResponseField name="scheduledFor" type="string">
+  When the campaign was/will be sent.
+</ResponseField>
+
+<ResponseField name="completedAt" type="string">
+  When the campaign finished (if completed).
+</ResponseField>
+
+<RequestExample>
+```typescript Check Campaign Status
+const { data: campaign, error } = await sdk.messages.getQueuedMessage({
+  authentication: { session: userData },
+  messageId: "qmsg_1234567890"
+})
+
+if (error) {
+  console.error("Failed to get campaign status:", error.message)
+} else {
+  console.log(`Campaign ${campaign.id}:`)
+  console.log(`  Status: ${campaign.status}`)
+  console.log(`  Recipients: ${campaign.recipientCount}`)
+  console.log(`  Sent: ${campaign.sentCount}`)
+  console.log(`  Failed: ${campaign.failedCount}`)
+  
+  if (campaign.status === "completed") {
+    console.log(`  Completed: ${campaign.completedAt}`)
+    const successRate = (campaign.sentCount / campaign.recipientCount) * 100
+    console.log(`  Success rate: ${successRate.toFixed(1)}%`)
+  }
+}
+```
+</RequestExample>
+
+### Get All Queued Messages
+
+#### `getQueuedMessages(options)`
+
+Retrieve a list of mass messaging campaigns with filtering options.
+
+<ParamField path="options" type="GetQueuedMessagesOptions" required>
+  Authentication and filtering options.
+</ParamField>
+
+<ParamField path="options.authentication" type="AuthenticationOptions" required>
+  Authentication method.
+</ParamField>
+
+<ParamField path="options.params" type="QueuedMessagesParams">
+  Optional filtering parameters.
+  
+  <Expandable title="Queued Messages Parameters">
+    <ParamField path="limit" type="number" default="20">
+      Maximum number of campaigns to return.
+    </ParamField>
+    
+    <ParamField path="offset" type="number" default="0">
+      Number of campaigns to skip for pagination.
+    </ParamField>
+    
+    <ParamField path="status" type="string">
+      Filter by campaign status.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ResponseField name="campaigns" type="QueuedMessage[]" required>
+  Array of campaign objects.
+</ResponseField>
+
+<ResponseField name="total" type="number" required>
+  Total number of campaigns.
+</ResponseField>
+
+<RequestExample>
+```typescript Get Recent Campaigns
+const { data: campaigns, error } = await sdk.messages.getQueuedMessages({
+  authentication: { session: userData },
+  params: {
+    limit: 10,
+    status: "completed"
+  }
+})
+
+if (error) {
+  console.error("Failed to get campaigns:", error.message)
+} else {
+  console.log(`Found ${campaigns.total} total campaigns`)
+  console.log("Recent completed campaigns:")
+  
+  campaigns.campaigns.forEach(campaign => {
+    const successRate = (campaign.sentCount / campaign.recipientCount) * 100
+    console.log(`  ${campaign.id}: ${campaign.sentCount}/${campaign.recipientCount} (${successRate.toFixed(1)}%)`)
+  })
+}
+```
+</RequestExample>
+
+## Advanced Features
+
+### Markdown Message Formatting
+
+The SDK supports rich text formatting using markdown syntax:
+
+```typescript
+const { data: message } = await sdk.messages.sendChatMessage({
+  authentication: { session: userData },
+  userId: 123456789,
+  params: {
+    text: `
+# Welcome to my OnlyFans! 🎉
+
+Thanks for subscribing! Here's what you can expect:
+
+- **Daily content** uploads
+- ***Exclusive*** behind-the-scenes footage  
+- Direct access to me for chats
+
+> "Your support means everything!" 💕
+
+[Check out my latest post here!](https://onlyfans.com/link)
+    `,
+    isMarkdown: true
+  }
+})
+```
+
+### Scheduled Campaign Management
+
+```typescript
+// Schedule a message for future delivery
+const futureDate = new Date()
+futureDate.setHours(futureDate.getHours() + 24) // 24 hours from now
+
+const { data: scheduledCampaign } = await sdk.messages.createQueuedMessage({
+  authentication: { session: userData },
+  params: {
+    text: "Good morning! ☀️ Hope you have an amazing day!",
+    userLists: ["fans"],
+    scheduledDate: futureDate
+  }
+})
+
+console.log(`Message scheduled for: ${scheduledCampaign.scheduledFor}`)
+
+// Check on the campaign later
+setTimeout(async () => {
+  const { data: status } = await sdk.messages.getQueuedMessage({
+    authentication: { session: userData },
+    messageId: scheduledCampaign.id
+  })
+  
+  console.log(`Campaign status: ${status.status}`)
+}, 30000) // Check after 30 seconds
+```
+
+### Batch Message Operations
+
+```typescript
+async function sendWelcomeMessages(
+  newSubscribers: number[],
+  authentication: any
+): Promise<{
+  successful: string[]
+  failed: Array<{ userId: number; error: string }>
+}> {
+  
+  const results = {
+    successful: [],
+    failed: []
+  }
+  
+  // Send welcome messages to each new subscriber
+  const sendPromises = newSubscribers.map(async userId => {
+    const { data: message, error } = await sdk.messages.sendChatMessage({
+      authentication,
+      userId,
+      params: {
+        text: "Welcome! 🎉 Thanks for subscribing! Feel free to message me anytime 💕",
+        mediaItems: ["/path/to/welcome/gif.gif"]
+      }
+    })
+    
+    if (error) {
+      results.failed.push({
+        userId,
+        error: error.message
+      })
+    } else {
+      results.successful.push(message.id)
+    }
+  })
+  
+  await Promise.all(sendPromises)
+  
+  console.log(`Welcome messages: ${results.successful.length} sent, ${results.failed.length} failed`)
+  
+  return results
+}
+
+// Usage
+const newSubs = [123456, 789012, 345678]
+const welcomeResults = await sendWelcomeMessages(newSubs, { session: userData })
+```
+
+## Error Handling
+
+### Message Delivery Failures
+
+```typescript
+async function sendMessageWithRetry(
+  userId: number,
+  messageText: string,
+  authentication: any,
+  maxRetries: number = 3
+): Promise<any> {
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const { data: message, error } = await sdk.messages.sendChatMessage({
+      authentication,
+      userId,
+      params: { text: messageText }
+    })
+    
+    if (!error) {
+      console.log(`Message sent successfully on attempt ${attempt}`)
+      return message
+    }
+    
+    // Handle different error types
+    switch (error.type) {
+      case "not_found":
+        console.error("User not found, cannot retry")
+        return null
+        
+      case "forbidden":
+        console.error("Cannot message this user, cannot retry")
+        return null
+        
+      case "too_many_requests":
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000 // Exponential backoff
+          console.log(`Rate limited, waiting ${delay}ms before retry...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+        break
+        
+      default:
+        if (attempt < maxRetries) {
+          console.log(`Attempt ${attempt} failed, retrying...`)
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          continue
+        }
+    }
+  }
+  
+  console.error(`Failed to send message after ${maxRetries} attempts`)
+  return null
+}
+```
+
+## Best Practices
+
+<Warning>
+  **Rate Limiting**: Messaging endpoints have strict rate limits. Implement proper delays between messages and respect the rate limit headers.
+</Warning>
+
+<Tip>
+  **Media Optimization**: Compress images and videos before uploading to reduce send times and improve user experience.
+</Tip>
+
+<Info>
+  **Personalization**: Use recipient names and personalized content to improve engagement rates in mass messaging campaigns.
+</Info>
+
+### Recommended Message Queue
+
+```typescript
+class MessageQueue {
+  private queue: Array<{
+    operation: () => Promise<any>
+    resolve: (value: any) => void
+    reject: (error: any) => void
+  }> = []
+  
+  private processing = false
+  private messageDelay = 2000 // 2 seconds between messages
+  
+  async addMessage(operation: () => Promise<any>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ operation, resolve, reject })
+      this.processQueue()
+    })
+  }
+  
+  private async processQueue(): Promise<void> {
+    if (this.processing || this.queue.length === 0) {
+      return
+    }
+    
+    this.processing = true
+    
+    while (this.queue.length > 0) {
+      const { operation, resolve, reject } = this.queue.shift()!
+      
+      try {
+        const result = await operation()
+        resolve(result)
+      } catch (error) {
+        reject(error)
+      }
+      
+      // Wait between messages to respect rate limits
+      if (this.queue.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, this.messageDelay))
+      }
+    }
+    
+    this.processing = false
+  }
+}
+
+// Usage
+const messageQueue = new MessageQueue()
+
+// Queue multiple messages
+const userIds = [123456, 789012, 345678]
+const sendPromises = userIds.map(userId =>
+  messageQueue.addMessage(() =>
+    sdk.messages.sendChatMessage({
+      authentication: { session: userData },
+      userId,
+      params: { text: "Queued message" }
+    })
+  )
+)
+
+const results = await Promise.all(sendPromises)
+console.log(`Sent ${results.length} messages through queue`)
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="User Management" icon="user" href="/api-reference/sdk/user-management">
+    Learn how to manage user profiles and subscriber relationships
+  </Card>
+  <Card title="Content Creation" icon="edit" href="/guides/sdk/modules">
+    Explore post creation and media management features
+  </Card>
+</CardGroup> 

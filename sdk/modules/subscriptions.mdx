@@ -1,0 +1,470 @@
+---
+title: "Subscriptions"
+description: "Manage subscribers and lists with complete TypeScript support and automatic parameter validation"
+---
+
+## Overview
+
+The Subscriptions module (`sdk.subscriptions`) handles subscriber relationships, list management, and subscription operations with **full type safety** and **intelligent parameter validation**.
+
+<Card title="Subscriptions Module" icon="users">
+  **sdk.subscriptions** - Subscriber and list management with IntelliSense support
+</Card>
+
+## Why Use the SDK for Subscriptions?
+
+<CardGroup cols={2}>
+  <Card title="Type-Safe Filtering" icon="filter">
+    **Advanced filtering** with compile-time validation for all filter parameters and subscription states
+  </Card>
+  <Card title="Smart Validation" icon="check-circle">
+    **Context-aware validation** ensures correct parameter combinations and prevents invalid API calls
+  </Card>
+</CardGroup>
+
+## Get Subscribers
+
+Retrieve subscriber list with **advanced type-safe filtering**.
+
+```typescript
+// ✅ Full type safety for all filter parameters
+const { data, error } = await sdk.subscriptions.getSubscribers({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    limit: 50,                    // ✅ Number type enforced
+    offset: 0,
+    type: "active",              // ✅ Validates: "all" | "active" | "expired"
+    query: "search term",        // ✅ Optional string search
+    filter: {
+      promoId: "123",            // ✅ String validation
+      trial_id: "456",           // ✅ Consistent naming validated
+      duration: "monthly",       // ✅ Duration options validated
+      tips: "100",               // ✅ Numeric string format
+      total_spent: "500",        // ✅ Spending threshold validation
+      online: "1"                // ✅ Boolean string validation
+    }
+  }
+})
+
+// ✅ Response structure is fully typed
+if (data) {
+  console.log(`Found ${data.list.length} subscribers`)
+  data.list.forEach(subscriber => {
+    console.log(subscriber.username)    // ✅ TypeScript knows structure
+    console.log(subscriber.totalSpent)  // ✅ IntelliSense available
+  })
+}
+```
+
+### Subscription Status Types
+
+<AccordionGroup>
+  <Accordion title="Active Subscribers">
+    ```typescript
+    // Get currently active subscribers with type safety
+    const { data, error } = await sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: {
+        type: "active",           // ✅ TypeScript validates enum
+        filter: {
+          total_spent: "100"      // ✅ Get high-value subscribers
+        },
+        limit: 20
+      }
+    })
+    ```
+  </Accordion>
+  
+  <Accordion title="Expired Subscriptions">
+    ```typescript
+    // Track churned subscribers for re-engagement
+    const { data, error } = await sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: {
+        type: "expired",          // ✅ Find recent churns
+        query: "premium"          // ✅ Search in usernames/notes
+      }
+    })
+    ```
+  </Accordion>
+  
+  <Accordion title="Advanced Filtering">
+    ```typescript
+    // Complex filtering with automatic validation
+    const { data, error } = await sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: {
+        type: "active",
+        filter: {
+          duration: "monthly",    // ✅ Validates subscription type
+          tips: "50",            // ✅ Minimum tip amount
+          online: "1"            // ✅ Currently online users
+        }
+      }
+    })
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<ParamField path="params.type" type="SubscriptionType" default="all">
+  **Type-validated options**: `"all"` | `"active"` | `"expired"`
+</ParamField>
+
+<ParamField path="params.filter" type="SubscriberFilter">
+  **Advanced filtering object** with context-aware validation for all properties
+</ParamField>
+
+## Subscribe to User
+
+Subscribe to another user's content with **automatic parameter validation**.
+
+```typescript
+// ✅ User ID automatically validated as number
+const { data, error } = await sdk.subscriptions.subscribeToUser({
+  authentication: { session: userData },
+  userId: 123456789 // ✅ Must be number, TypeScript prevents strings
+})
+
+if (error) {
+  // ✅ Structured error handling
+  switch (error.type) {
+    case "forbidden":
+      console.log("Cannot subscribe - user may be restricted")
+      break
+    case "bad_request":
+      console.log("Invalid user ID or already subscribed")
+      break
+  }
+}
+```
+
+## List Management
+
+### Get Lists
+
+Retrieve subscription lists with **type-safe pagination**.
+
+```typescript
+// ✅ All parameters validated at compile time
+const { data, error } = await sdk.subscriptions.getLists({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    limit: 20,           // ✅ Number validation
+    offset: 0,           // ✅ Pagination offset
+    query: "VIP Members" // ✅ Optional search string
+  }
+})
+
+// ✅ Response includes typed list metadata
+if (data) {
+  data.list.forEach(list => {
+    console.log(`${list.name}: ${list.userCount} members`) // ✅ Typed properties
+  })
+}
+```
+
+### Create List
+
+Create new subscription lists with **name validation**.
+
+```typescript
+// ✅ List name automatically validated for length and format
+const { data, error } = await sdk.subscriptions.createList({
+  authentication: { session: userData },
+  params: {
+    name: "Premium Subscribers" // ✅ String validation, length limits enforced
+  }
+})
+
+if (data) {
+  console.log(`Created list: ${data.id}`) // ✅ Typed response with list ID
+}
+```
+
+### Update List
+
+Modify existing lists with **parameter validation**.
+
+```typescript
+// ✅ List ID and name both validated
+const { data, error } = await sdk.subscriptions.updateList({
+  authentication: { session: userData },
+  listId: 123,              // ✅ Number type enforced
+  params: {
+    name: "Updated Name"    // ✅ Name format validated
+  }
+})
+```
+
+### Delete List
+
+Remove lists with **ID validation**.
+
+```typescript
+// ✅ List ID must be valid number
+const { data, error } = await sdk.subscriptions.deleteList({
+  authentication: { session: userData },
+  listId: 123 // ✅ TypeScript prevents string IDs
+})
+```
+
+## List User Management
+
+### Get List Users
+
+Retrieve users from specific lists with **system list support**.
+
+```typescript
+// ✅ Supports both numeric IDs and system list names
+const { data, error } = await sdk.subscriptions.getListUsers({
+  authentication: { connectionId: "conn_123" },
+  listId: 123,             // ✅ Or use "fans", "following" - typed unions
+  params: {
+    limit: 50,             // ✅ Pagination validated
+    offset: 0
+  }
+})
+
+// System lists with type safety
+const { data: fansData } = await sdk.subscriptions.getListUsers({
+  authentication: { connectionId },
+  listId: "fans",          // ✅ TypeScript validates system list names
+  params: { limit: 100 }
+})
+```
+
+### Add Users to Lists
+
+Bulk user operations with **array validation**.
+
+```typescript
+// ✅ User ID array automatically validated (all numbers)
+const { data, error } = await sdk.subscriptions.addUsersToList({
+  authentication: { session: userData },
+  listId: 123,                     // ✅ List ID validated
+  userIds: [456, 789, 101112]      // ✅ Array of numbers enforced
+})
+
+// Single user addition with validation
+const { data: singleResult } = await sdk.subscriptions.addUserToList({
+  authentication: { session: userData },
+  listId: 123,           // ✅ Number validation
+  userId: 456            // ✅ Single number validation
+})
+```
+
+### Remove Users from Lists
+
+Remove users with **ID validation**.
+
+```typescript
+// ✅ Both list and user IDs validated
+const { data, error } = await sdk.subscriptions.removeUserFromList({
+  authentication: { session: userData },
+  listId: 123,    // ✅ List ID must be number
+  userId: 456     // ✅ User ID must be number
+})
+```
+
+## List Organization
+
+### Sort Lists
+
+Reorder lists with **array validation**.
+
+```typescript
+// ✅ Array of list IDs validates all elements are numbers
+const { data, error } = await sdk.subscriptions.sortLists({
+  authentication: { session: userData },
+  params: {
+    listIds: [123, 456, 789] // ✅ Order defines sort, all IDs validated
+  }
+})
+```
+
+### Search Lists
+
+Find lists by name with **query validation**.
+
+```typescript
+// ✅ Search query validated for format and length
+const { data, error } = await sdk.subscriptions.searchLists({
+  authentication: { connectionId: "conn_123" },
+  query: "VIP" // ✅ String validation, minimum length enforced
+})
+```
+
+### Get Pinned Users
+
+Retrieve pinned users with **list validation**.
+
+```typescript
+// ✅ List ID automatically validated
+const { data, error } = await sdk.subscriptions.getListPinnedUsers({
+  authentication: { connectionId: "conn_123" },
+  listId: 123 // ✅ Must be valid number
+})
+```
+
+## Advanced Subscription Management
+
+### Type-Safe Subscriber Analysis
+
+```typescript
+// ✅ Complete type safety for subscriber analytics
+async function analyzeSubscribers(connectionId: string) {
+  const [active, expired, highValue] = await Promise.all([
+    sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: { 
+        type: "active",           // ✅ Validated enum
+        limit: 100 
+      }
+    }),
+    sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: { 
+        type: "expired",          // ✅ Validated enum
+        limit: 50 
+      }
+    }),
+    sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: {
+        type: "active",
+        filter: { 
+          total_spent: "500"      // ✅ High-value threshold validated
+        }
+      }
+    })
+  ])
+  
+  // ✅ All responses are fully typed
+  return {
+    activeCount: active.data?.list.length || 0,
+    churnedCount: expired.data?.list.length || 0,
+    highValueCount: highValue.data?.list.length || 0,
+    retentionRate: active.data && expired.data 
+      ? active.data.list.length / (active.data.list.length + expired.data.list.length)
+      : 0
+  }
+}
+```
+
+### List Management with Validation
+
+```typescript
+// ✅ Comprehensive list operations with type safety
+class SubscriberListManager {
+  
+  async createSegmentedLists(connectionId: string) {
+    // ✅ All operations validated at compile time
+    const lists = await Promise.all([
+      sdk.subscriptions.createList({
+        authentication: { connectionId },
+        params: { name: "High Spenders" }      // ✅ Name validated
+      }),
+      sdk.subscriptions.createList({
+        authentication: { connectionId },
+        params: { name: "New Subscribers" }    // ✅ Name validated
+      }),
+      sdk.subscriptions.createList({
+        authentication: { connectionId },
+        params: { name: "Re-engagement" }      // ✅ Name validated
+      })
+    ])
+    
+    return lists.map(list => ({
+      id: list.data?.id,
+      success: !list.error
+    }))
+  }
+  
+  async populateLists(connectionId: string) {
+    // ✅ Complex filtering with automatic validation
+    const highSpenders = await sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: {
+        type: "active",
+        filter: { total_spent: "200" }        // ✅ Spending threshold validated
+      }
+    })
+    
+    const newSubs = await sdk.subscriptions.getSubscribers({
+      authentication: { connectionId },
+      params: {
+        type: "active",
+        filter: { duration: "monthly" }       // ✅ Duration filter validated
+      }
+    })
+    
+    // ✅ Bulk operations with array validation
+    if (highSpenders.data && newSubs.data) {
+      await Promise.all([
+        sdk.subscriptions.addUsersToList({
+          authentication: { connectionId },
+          listId: 1,
+          userIds: highSpenders.data.list.map(s => s.id) // ✅ Array validated
+        }),
+        sdk.subscriptions.addUsersToList({
+          authentication: { connectionId },
+          listId: 2,
+          userIds: newSubs.data.list.map(s => s.id)      // ✅ Array validated
+        })
+      ])
+    }
+  }
+}
+```
+
+## Error Handling
+
+Subscription operations benefit from **comprehensive error typing**:
+
+```typescript
+const result = await sdk.subscriptions.getSubscribers(params)
+
+if (result.error) {
+  // ✅ Error types are fully defined and context-aware
+  switch (result.error.type) {
+    case "unauthorized":
+      console.log("Session expired")
+      break
+    case "forbidden":
+      console.log("Access denied to subscriber data")
+      break
+    case "bad_request":
+      // ✅ TypeScript knows error.details exists for validation errors
+      console.log("Invalid filter parameters:", result.error.details)
+      break
+    case "too_many_requests":
+      console.log("Rate limited - subscriber queries are throttled")
+      break
+  }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Type-Safe Filtering" icon="filter">
+    **Leverage IntelliSense**
+    
+    - Use IDE autocomplete for filter parameters
+    - Trust TypeScript for parameter validation
+    - Let the SDK handle enum validation
+    - Combine filters for precise targeting
+  </Card>
+  <Card title="Efficient List Management" icon="list">
+    **Organize Subscribers**
+    
+    - Create targeted lists for campaigns
+    - Use bulk operations for efficiency
+    - Leverage system lists ("fans", "following")
+    - Implement pagination for large lists
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Rate Limiting**: Subscriber queries are rate-limited. Use the SDK's built-in retry logic and implement appropriate delays between bulk operations.
+</Warning> 

@@ -1,0 +1,419 @@
+---
+title: "SDK Architecture"
+sidebarTitle: "Architecture"
+description: "Understanding the OnlyFans SDK's modular design, type safety, and developer experience principles"
+---
+
+## Design Philosophy
+
+The OnlyFans SDK is built around **developer experience**, **type safety**, and **reliability**. Every design decision prioritizes making the OnlyFans API accessible, predictable, and safe to use.
+
+<CardGroup cols={2}>
+  <Card title="Type Safety First" icon="shield">
+    **Full TypeScript support** with compile-time validation, IntelliSense, and structured error handling
+  </Card>
+  <Card title="Modular Architecture" icon="boxes">
+    **Organized by functionality** - each module handles a specific aspect of the OnlyFans platform
+  </Card>
+</CardGroup>
+
+## Core Architecture
+
+### SDK Instance
+
+The SDK is initialized as a single instance that provides access to all modules:
+
+```typescript
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+// Single SDK instance with global configuration
+const sdk = new OFSDK({
+  mode: "access",           // ✅ Validated mode options
+  ofauthApiKey: "your-key", // ✅ Required for managed access
+  debugLog: false           // ✅ Optional debugging
+})
+
+// Access modules through the instance
+sdk.messages    // 💬 Messaging operations
+sdk.posts       // 📝 Content management
+sdk.user        // 👤 User operations
+sdk.vault       // 🗃️ Media management
+// ... all other modules
+```
+
+### Module Structure
+
+Each module is **self-contained** and focused on a specific domain:
+
+```typescript
+// Each module has consistent method signatures
+interface ModulePattern {
+  // All methods follow the same pattern
+  async operation({
+    authentication: AuthOptions,    // ✅ Required auth context
+    ...specificParams              // ✅ Operation-specific parameters
+  }): Promise<ApiResponse<T>>      // ✅ Typed response
+}
+
+// Example: Messages module
+const result = await sdk.messages.getChatsList({
+  authentication: { connectionId: "conn_123" },
+  params: { limit: 20, offset: 0 }
+})
+```
+
+## Type Safety System
+
+### Automatic Parameter Validation
+
+The SDK validates **all parameters** at compile time and runtime:
+
+```typescript
+// ✅ TypeScript catches invalid parameters before runtime
+const result = await sdk.statistics.getStats({
+  authentication: { connectionId: "conn_123" },
+  statType: "posts",              // ✅ Validates against allowed enum values
+  params: {
+    by: "purchases",              // ✅ Context-aware validation (valid for "posts")
+    startDate: new Date("2024-01-01"), // ✅ Date object validation
+    limit: 20                     // ✅ Number type enforcement
+  }
+})
+
+// ❌ TypeScript prevents invalid combinations at compile time
+const invalid = await sdk.statistics.getStats({
+  statType: "posts",
+  params: {
+    by: "revenue"                 // ❌ Not valid for "posts" statType
+  }
+})
+```
+
+### Response Type Safety
+
+All API responses are **fully typed** with IntelliSense support:
+
+```typescript
+const result = await sdk.messages.getChatsList({ 
+  authentication: { connectionId } 
+})
+
+if (result.data) {
+  // ✅ TypeScript knows the exact structure
+  result.data.list.forEach(chat => {
+    console.log(chat.user.username)    // ✅ IntelliSense available
+    console.log(chat.lastMessage.text) // ✅ Nested properties typed
+    console.log(chat.unreadCount)      // ✅ Number types enforced
+  })
+}
+```
+
+## Authentication Architecture
+
+### Flexible Authentication Options
+
+The SDK supports **multiple authentication modes** with automatic validation:
+
+```typescript
+// Connection-based authentication (recommended)
+const connectionAuth = {
+  authentication: { connectionId: "conn_123" }
+}
+
+// Session-based authentication (for direct access)
+const sessionAuth = {
+  authentication: { 
+    session: {
+      "user-id": "123456789",
+      "user-agent": "...",
+      "cookie": "..."
+    }
+  }
+}
+
+// The SDK automatically validates which auth method is required
+// ✅ Some operations require sessions, others accept connections
+await sdk.subscriptions.subscribeToUser({
+  authentication: { session: userData }, // ✅ Session required for user actions
+  userId: 123456789
+})
+```
+
+### Mode-Based Operation
+
+The SDK adapts its behavior based on the configured mode:
+
+<AccordionGroup>
+  <Accordion title="Access Mode (Recommended)">
+    ```typescript
+    // Uses OFAuth's managed service
+    const sdk = new OFSDK({
+      mode: "access",
+      ofauthApiKey: "your-api-key"
+    })
+    
+    // ✅ Simplified authentication
+    // ✅ Automatic request signing
+    // ✅ Rate limiting handled
+    // ✅ No manual session management
+    ```
+  </Accordion>
+  
+  <Accordion title="Direct Mode">
+    ```typescript
+    // Direct OnlyFans API access
+    const sdk = new OFSDK({
+      mode: "direct",
+      ofauthApiKey: "your-api-key" // For dynamic rules
+    })
+    
+    // ✅ Full control over requests
+    // ✅ Custom session management
+    // ⚠️ Manual rate limiting required
+    // ⚠️ Complex request signing
+    ```
+  </Accordion>
+  
+  <Accordion title="Custom Mode">
+    ```typescript
+    // Custom proxy/middleware
+    const sdk = new OFSDK({
+      mode: "custom",
+      customOptions: {
+        baseUrl: "https://your-proxy.com",
+        signRequests: true,
+        beforeRequest: (url, request) => {
+          // Custom request modification
+          return request
+        }
+      }
+    })
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Error Handling Architecture
+
+### Structured Error Types
+
+All errors follow a **consistent structure** with type safety:
+
+```typescript
+interface ErrorResponse<T = any> {
+  error: {
+    statusCode: number          // ✅ HTTP status
+    type: ErrorType            // ✅ Categorized error types
+    message: string            // ✅ Human-readable message
+    retry: boolean             // ✅ Whether operation can be retried
+    details?: T                // ✅ Context-specific error data
+  }
+}
+
+// Usage with type safety
+const result = await sdk.user.getUserInfo(params)
+
+if (result.error) {
+  switch (result.error.type) {
+    case "unauthorized":
+      // Handle session expiry
+      break
+    case "forbidden":
+      // Handle permission issues
+      break
+    case "bad_request":
+      // result.error.details is typed based on the operation
+      console.log("Validation errors:", result.error.details)
+      break
+  }
+}
+```
+
+## Module Organization
+
+The SDK is organized into **10 focused modules**:
+
+<CardGroup cols={2}>
+  <Card title="Communication" icon="comments">
+    **Messages** - Chat, mass messaging, queued messages
+  </Card>
+  <Card title="Media" icon="folder">
+    **Vault** - File management, media organization, downloads
+  </Card>
+  <Card title="Content" icon="file-text">
+    **Posts** - Content creation, management, scheduling
+  </Card>
+  <Card title="Users" icon="user">
+    **User** - Profile data, user interactions, search
+  </Card>
+  <Card title="Authentication" icon="link">
+    **Link** - Connection management, authentication flows
+  </Card>
+  <Card title="Account" icon="cog">
+    **Account** - Webhooks, account settings
+  </Card>
+  <Card title="Profile" icon="user-circle">
+    **Self** - Own profile management, settings, notifications
+  </Card>
+  <Card title="Subscriptions" icon="users">
+    **Subscriptions** - Subscriber management, lists
+  </Card>
+  <Card title="Analytics" icon="chart-bar">
+    **Statistics** - Performance metrics, earnings data
+  </Card>
+  <Card title="Upload" icon="upload">
+    **Upload** - File uploads, progress tracking
+  </Card>
+</CardGroup>
+
+## Request Flow Architecture
+
+### Unified Request Pipeline
+
+All SDK operations follow the **same request flow**:
+
+```mermaid
+graph LR
+    A[SDK Method Call] --> B[Parameter Validation]
+    B --> C[Authentication Check]
+    C --> D[Request Signing]
+    D --> E[API Request]
+    E --> F[Response Validation]
+    F --> G[Type-Safe Response]
+    
+    B -->|❌ Invalid| H[Compile Error]
+    C -->|❌ Missing Auth| I[Runtime Error]
+    E -->|❌ HTTP Error| J[Structured Error]
+```
+
+### Automatic Request Enhancement
+
+The SDK **automatically enhances** every request:
+
+```typescript
+// What you write
+const result = await sdk.posts.createPost({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    text: "Hello world!",
+    price: 5.00
+  }
+})
+
+// What the SDK does internally:
+// 1. ✅ Validates all parameters (TypeScript + runtime)
+// 2. ✅ Adds required headers (user-agent, content-type, etc.)
+// 3. ✅ Signs request with dynamic rules (if needed)
+// 4. ✅ Handles authentication context
+// 5. ✅ Manages rate limiting
+// 6. ✅ Processes response and provides typed data
+// 7. ✅ Converts errors to structured format
+```
+
+## Development Experience
+
+### IntelliSense and Autocomplete
+
+The SDK provides **comprehensive IDE support**:
+
+```typescript
+// ✅ Autocomplete shows all available modules
+sdk. // → messages, posts, user, vault, etc.
+
+// ✅ Method signatures with parameter descriptions
+sdk.messages.createQueuedMessage({
+  authentication: { connectionId: "..." },
+  params: {
+    // ✅ IntelliSense shows all valid parameters
+    text: "...",        // String - Message content
+    price: 5.00,        // Number - Message price
+    lockedText: "...",  // String - Preview text
+    // ... more parameters with descriptions
+  }
+})
+```
+
+### Runtime Validation
+
+Beyond TypeScript, the SDK provides **runtime safety**:
+
+```typescript
+// Even with TypeScript disabled, the SDK validates:
+// ✅ Required parameters are present
+// ✅ Parameter types are correct
+// ✅ Enum values are valid
+// ✅ Authentication context is appropriate
+// ✅ Date formats are valid
+// ✅ Array elements are correctly typed
+
+const result = await sdk.statistics.getStats({
+  // Runtime validation ensures this is safe
+  statType: userInput,  // Validated against allowed values
+  params: {
+    startDate: new Date(userDateInput)  // Date validation
+  }
+})
+```
+
+## Performance Architecture
+
+### Optimized for Scale
+
+The SDK is designed for **high-performance applications**:
+
+```typescript
+// ✅ Efficient batch operations
+const [messages, posts, stats] = await Promise.all([
+  sdk.messages.getChatsList({ authentication: { connectionId } }),
+  sdk.posts.getMyPosts({ authentication: { connectionId } }),
+  sdk.statistics.getStats({ 
+    authentication: { connectionId },
+    statType: "posts" 
+  })
+])
+
+// ✅ Built-in pagination support
+async function getAllChats(connectionId: string) {
+  let allChats = []
+  let offset = 0
+  const limit = 50  // SDK validates pagination parameters
+  
+  while (true) {
+    const result = await sdk.messages.getChatsList({
+      authentication: { connectionId },
+      params: { limit, offset }
+    })
+    
+    if (!result.data?.list.length) break
+    
+    allChats.push(...result.data.list)
+    offset += limit
+  }
+  
+  return allChats
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Module Focus" icon="bullseye">
+    **Use the Right Module**
+    
+    - Each module has a specific purpose
+    - Don't mix concerns between modules
+    - Leverage module-specific optimizations
+    - Follow TypeScript guidance for parameter validation
+  </Card>
+  <Card title="Error Recovery" icon="refresh">
+    **Handle Errors Gracefully**
+    
+    - Check `result.error` before using `result.data`
+    - Use error types for appropriate responses
+    - Implement retry logic for retriable errors
+    - Log errors with sufficient context
+  </Card>
+</CardGroup>
+
+<Info>
+  **Next Steps**: Now that you understand the architecture, explore individual modules in the API Reference section to see how these principles apply to specific operations.
+</Info> 

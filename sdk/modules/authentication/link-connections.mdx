@@ -1,0 +1,611 @@
+---
+title: "Connection Management"
+description: "API reference for managing OnlyFans connections through the SDK"
+---
+
+## Overview
+
+The Connections module (`sdk.link.connections`) provides methods to manage active OnlyFans connections established through OFAuth Link. These connections represent authenticated relationships between your application and OnlyFans accounts.
+
+<Info>
+  **Link vs Access**: OFAuth Link handles the OAuth-style authentication flow where users securely connect their accounts. Once connected, you use OFAuth Access with these connection IDs to make API calls to OnlyFans endpoints.
+</Info>
+
+<Info>
+  **Connection Lifecycle**: Connections are created when users complete the OFAuth Link authentication flow and can be managed through these SDK methods.
+</Info>
+
+## Get All Connections
+
+### `getAll(options)`
+
+Retrieve a list of connections with optional filtering and pagination.
+
+<ParamField path="options" type="GetConnectionsOptions">
+  Optional filtering and pagination parameters.
+</ParamField>
+
+<ParamField path="options.status" type="'active' | 'expired' | 'error'">
+  Filter connections by their current status.
+</ParamField>
+
+<ParamField path="options.platformUserId" type="number">
+  Filter connections for a specific OnlyFans user ID.
+</ParamField>
+
+<ParamField path="options.limit" type="number" default="20">
+  Maximum number of connections to return (1-100).
+</ParamField>
+
+<ParamField path="options.offset" type="number" default="0">
+  Number of connections to skip for pagination.
+</ParamField>
+
+<ResponseField name="list" type="Connection[]" required>
+  Array of connection objects.
+  
+  <Expandable title="Connection Object">
+    <ResponseField name="id" type="string" required>
+      Unique connection identifier (e.g., "conn_123456789").
+    </ResponseField>
+    
+    <ResponseField name="platformUserId" type="string" required>
+      The OnlyFans user ID associated with this connection.
+    </ResponseField>
+    
+    <ResponseField name="status" type="'active' | 'expired' | 'error'" required>
+      Current status of the connection.
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="string" required>
+      ISO 8601 timestamp when the connection was created.
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="string" required>
+      ISO 8601 timestamp when the connection was last updated.
+    </ResponseField>
+    
+    <ResponseField name="expiresAt" type="string">
+      ISO 8601 timestamp when the connection expires (if applicable).
+    </ResponseField>
+    
+    <ResponseField name="metadata" type="object">
+      Additional connection metadata.
+      
+      <Expandable title="Metadata Fields">
+        <ResponseField name="username" type="string">
+          OnlyFans username for this connection.
+        </ResponseField>
+        
+        <ResponseField name="displayName" type="string">
+          Display name of the connected user.
+        </ResponseField>
+        
+        <ResponseField name="lastActivity" type="string">
+          ISO 8601 timestamp of last activity.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="total" type="number" required>
+  Total number of connections matching the criteria.
+</ResponseField>
+
+<ResponseField name="hasMore" type="boolean" required>
+  Whether there are more connections beyond the current page.
+</ResponseField>
+
+<RequestExample>
+```typescript Get All Active Connections
+const { data: connections, error } = await sdk.link.connections.getAll({
+  status: "active",
+  limit: 50,
+  offset: 0
+})
+
+if (error) {
+  console.error("Failed to get connections:", error.message)
+} else {
+  console.log(`Found ${connections.total} total connections`)
+  console.log(`Showing ${connections.list.length} connections`)
+  
+  connections.list.forEach(connection => {
+    console.log(`Connection ${connection.id}:`)
+    console.log(`  User: ${connection.metadata?.username}`)
+    console.log(`  Status: ${connection.status}`)
+    console.log(`  Created: ${connection.createdAt}`)
+  })
+  
+  if (connections.hasMore) {
+    console.log("More connections available")
+  }
+}
+```
+</RequestExample>
+
+<RequestExample>
+```typescript Get Connections for Specific User
+const { data: userConnections, error } = await sdk.link.connections.getAll({
+  platformUserId: 123456789,
+  status: "active"
+})
+
+if (data) {
+  if (userConnections.list.length > 0) {
+    console.log("User has active connections:")
+    userConnections.list.forEach(conn => {
+      console.log(`  ${conn.id} - ${conn.status}`)
+    })
+  } else {
+    console.log("No active connections for this user")
+  }
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success Response
+{
+  "data": {
+    "list": [
+      {
+        "id": "conn_123456789",
+        "platformUserId": "123456789",
+        "status": "active",
+        "createdAt": "2024-01-15T10:30:00Z",
+        "updatedAt": "2024-01-15T10:30:00Z",
+        "expiresAt": "2024-02-15T10:30:00Z",
+        "metadata": {
+          "username": "example_user",
+          "displayName": "Example User",
+          "lastActivity": "2024-01-20T15:45:00Z"
+        }
+      }
+    ],
+    "total": 1,
+    "hasMore": false
+  },
+  "error": undefined
+}
+```
+</ResponseExample>
+
+## Get Connection by ID
+
+### `getById(connectionId)`
+
+Retrieve details for a specific connection.
+
+<ParamField path="connectionId" type="string" required>
+  The unique connection identifier.
+</ParamField>
+
+<ResponseField name="connection" type="Connection" required>
+  The connection object with full details.
+</ResponseField>
+
+<RequestExample>
+```typescript Get Specific Connection
+const { data: connection, error } = await sdk.link.connections.getById(
+  "conn_123456789"
+)
+
+if (error) {
+  if (error.type === "not_found") {
+    console.log("Connection not found")
+  } else {
+    console.error("Error getting connection:", error.message)
+  }
+} else {
+  console.log("Connection details:")
+  console.log(`  ID: ${connection.id}`)
+  console.log(`  Status: ${connection.status}`)
+  console.log(`  User: ${connection.metadata?.username}`)
+  console.log(`  Created: ${connection.createdAt}`)
+  
+  if (connection.status === "active") {
+    // Use this connection for API calls
+    const { data: profile } = await sdk.self.getMe({
+      authentication: { connectionId: connection.id }
+    })
+    console.log("Profile:", profile?.username)
+  }
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success Response
+{
+  "data": {
+    "id": "conn_123456789",
+    "platformUserId": "123456789",
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-20T15:45:00Z",
+    "expiresAt": "2024-02-15T10:30:00Z",
+    "metadata": {
+      "username": "example_user",
+      "displayName": "Example User",
+      "lastActivity": "2024-01-20T15:45:00Z"
+    }
+  },
+  "error": undefined
+}
+```
+</ResponseExample>
+
+## Delete Connection
+
+### `delete(connectionId)`
+
+Delete a specific connection, revoking access to the associated OnlyFans account.
+
+<ParamField path="connectionId" type="string" required>
+  The unique connection identifier to delete.
+</ParamField>
+
+<ResponseField name="success" type="boolean" required>
+  Whether the deletion was successful.
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Confirmation message about the deletion.
+</ResponseField>
+
+<RequestExample>
+```typescript Delete Connection
+const { data: result, error } = await sdk.link.connections.delete(
+  "conn_123456789"
+)
+
+if (error) {
+  if (error.type === "not_found") {
+    console.log("Connection was already deleted or doesn't exist")
+  } else {
+    console.error("Failed to delete connection:", error.message)
+  }
+} else {
+  console.log("Connection deleted:", result.message)
+  
+  // Remove connection from your local storage/database
+  await removeStoredConnection("conn_123456789")
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success Response
+{
+  "data": {
+    "success": true,
+    "message": "Connection conn_123456789 has been successfully deleted"
+  },
+  "error": undefined
+}
+```
+</ResponseExample>
+
+<Warning>
+  **Permanent Action**: Deleting a connection permanently revokes access to the OnlyFans account. The user would need to re-authenticate through the Link flow to restore access.
+</Warning>
+
+## Connection Status Management
+
+### Understanding Connection Status
+
+Connections can have different statuses that affect their usability:
+
+<Tabs>
+  <Tab title="Active">
+    **Status**: `active`
+    
+    Connection is valid and can be used for API calls.
+    
+    ```typescript
+    if (connection.status === "active") {
+      // Safe to use for API calls
+      const { data } = await sdk.self.getMe({
+        authentication: { connectionId: connection.id }
+      })
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Expired">
+    **Status**: `expired`
+    
+    Connection has expired and cannot be used for API calls.
+    
+    ```typescript
+    if (connection.status === "expired") {
+      console.log("Connection expired, user needs to re-authenticate")
+      // Redirect user to re-authentication flow
+      await initiateReAuthentication(connection.platformUserId)
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Error">
+    **Status**: `error`
+    
+    Connection encountered an error and is temporarily unusable.
+    
+    ```typescript
+    if (connection.status === "error") {
+      console.log("Connection error, may recover automatically")
+      // Check again later or prompt user to re-authenticate
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Monitoring Connection Health
+
+```typescript
+async function checkConnectionHealth(connectionId: string): Promise<boolean> {
+  const { data: connection, error } = await sdk.link.connections.getById(
+    connectionId
+  )
+  
+  if (error) {
+    console.error("Failed to check connection:", error.message)
+    return false
+  }
+  
+  switch (connection.status) {
+    case "active":
+      // Additional verification with a simple API call
+      const { error: apiError } = await sdk.self.getMe({
+        authentication: { connectionId }
+      })
+      
+      if (apiError && apiError.type === "unauthorized") {
+        console.log("Connection appears active but API calls fail")
+        return false
+      }
+      
+      return true
+      
+    case "expired":
+      console.log("Connection expired")
+      return false
+      
+    case "error":
+      console.log("Connection in error state")
+      return false
+      
+    default:
+      console.log("Unknown connection status:", connection.status)
+      return false
+  }
+}
+
+// Usage
+const isHealthy = await checkConnectionHealth("conn_123456789")
+if (!isHealthy) {
+  // Handle unhealthy connection
+  await handleConnectionIssue("conn_123456789")
+}
+```
+
+## Bulk Connection Management
+
+### Managing Multiple Connections
+
+```typescript
+async function getActiveConnectionsForUsers(
+  userIds: number[]
+): Promise<Map<number, string>> {
+  const activeConnections = new Map<number, string>()
+  
+  // Get all active connections
+  const { data: connections, error } = await sdk.link.connections.getAll({
+    status: "active",
+    limit: 100
+  })
+  
+  if (error) {
+    console.error("Failed to get connections:", error.message)
+    return activeConnections
+  }
+  
+  // Map user IDs to connection IDs
+  connections.list.forEach(connection => {
+    const userId = parseInt(connection.platformUserId)
+    if (userIds.includes(userId)) {
+      activeConnections.set(userId, connection.id)
+    }
+  })
+  
+  return activeConnections
+}
+
+// Usage
+const userIds = [123456, 789012, 345678]
+const connectionMap = await getActiveConnectionsForUsers(userIds)
+
+console.log(`Found connections for ${connectionMap.size} users`)
+connectionMap.forEach((connectionId, userId) => {
+  console.log(`User ${userId}: ${connectionId}`)
+})
+```
+
+### Cleanup Expired Connections
+
+```typescript
+async function cleanupExpiredConnections(): Promise<number> {
+  let deletedCount = 0
+  let offset = 0
+  const limit = 50
+  
+  while (true) {
+    const { data: connections, error } = await sdk.link.connections.getAll({
+      status: "expired",
+      limit,
+      offset
+    })
+    
+    if (error) {
+      console.error("Failed to get expired connections:", error.message)
+      break
+    }
+    
+    if (connections.list.length === 0) {
+      break // No more expired connections
+    }
+    
+    // Delete expired connections
+    const deletePromises = connections.list.map(async connection => {
+      const { error: deleteError } = await sdk.link.connections.delete(
+        connection.id
+      )
+      
+      if (!deleteError) {
+        deletedCount++
+        console.log(`Deleted expired connection: ${connection.id}`)
+      } else {
+        console.error(`Failed to delete ${connection.id}:`, deleteError.message)
+      }
+    })
+    
+    await Promise.all(deletePromises)
+    
+    if (!connections.hasMore) {
+      break
+    }
+    
+    offset += limit
+  }
+  
+  return deletedCount
+}
+
+// Run cleanup
+const deleted = await cleanupExpiredConnections()
+console.log(`Cleaned up ${deleted} expired connections`)
+```
+
+## Error Handling
+
+Common error scenarios when working with connections:
+
+### Connection Not Found
+
+```typescript
+const { data, error } = await sdk.link.connections.getById("conn_invalid")
+
+if (error && error.type === "not_found") {
+  console.log("Connection doesn't exist or was already deleted")
+  // Remove from local storage if needed
+  await removeLocalConnection("conn_invalid")
+}
+```
+
+### Permission Errors
+
+```typescript
+const { data, error } = await sdk.link.connections.delete("conn_123456789")
+
+if (error && error.type === "forbidden") {
+  console.log("You don't have permission to delete this connection")
+  // This connection might belong to another application
+}
+```
+
+### Rate Limiting
+
+```typescript
+const { data, error } = await sdk.link.connections.getAll({ limit: 100 })
+
+if (error && error.type === "too_many_requests") {
+  console.log("Rate limited, waiting before retry...")
+  await new Promise(resolve => setTimeout(resolve, 5000))
+  // Retry the request
+}
+```
+
+## Integration Patterns
+
+### Connection-Based User Management
+
+```typescript
+class UserConnectionManager {
+  private connectionCache = new Map<string, any>()
+  
+  async getUserConnection(userId: string): Promise<string | null> {
+    // Check cache first
+    if (this.connectionCache.has(userId)) {
+      const cached = this.connectionCache.get(userId)
+      if (Date.now() - cached.timestamp < 300000) { // 5 min cache
+        return cached.connectionId
+      }
+    }
+    
+    // Find active connection for user
+    const { data: connections, error } = await sdk.link.connections.getAll({
+      platformUserId: parseInt(userId),
+      status: "active",
+      limit: 1
+    })
+    
+    if (error || connections.list.length === 0) {
+      return null
+    }
+    
+    const connectionId = connections.list[0].id
+    
+    // Cache the result
+    this.connectionCache.set(userId, {
+      connectionId,
+      timestamp: Date.now()
+    })
+    
+    return connectionId
+  }
+  
+  async clearUserCache(userId: string): void {
+    this.connectionCache.delete(userId)
+  }
+}
+
+// Usage
+const connectionManager = new UserConnectionManager()
+
+const connectionId = await connectionManager.getUserConnection("123456")
+if (connectionId) {
+  const { data: profile } = await sdk.self.getMe({
+    authentication: { connectionId }
+  })
+  console.log("User profile:", profile)
+} else {
+  console.log("No active connection for user")
+}
+```
+
+## Best Practices
+
+<Tip>
+  **Caching**: Cache connection lookups to avoid repeated API calls, but implement proper cache invalidation.
+</Tip>
+
+<Warning>
+  **Status Monitoring**: Regularly check connection status, especially for long-running applications.
+</Warning>
+
+<Info>
+  **Graceful Degradation**: Handle connection failures gracefully and provide clear feedback to users.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="User Management" icon="user" href="/sdk/user-management">
+    Learn how to manage user profiles and data using active connections
+  </Card>
+  <Card title="Messaging" icon="message-circle" href="/sdk/messaging">
+    Start sending messages and managing conversations
+  </Card>
+</CardGroup> 

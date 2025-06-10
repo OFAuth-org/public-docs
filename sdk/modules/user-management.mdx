@@ -1,0 +1,310 @@
+---
+title: "User Management" 
+description: "Manage user profiles, authentication, and user operations with the OnlyFans SDK"
+---
+
+## Overview
+
+The User Management modules (`sdk.self` and `sdk.user`) handle user profiles, interactions, and settings. The `self` module manages your own profile, while the `user` module handles operations with other users.
+
+<CardGroup cols={2}>
+  <Card title="Self Module" icon="user-circle">
+    **sdk.self** - Current user profile, notifications, settings
+  </Card>
+  <Card title="User Module" icon="users">
+    **sdk.user** - Other users, profiles, search, interactions
+  </Card>
+</CardGroup>
+
+## Self Module (sdk.self)
+
+### Get Current User Profile
+
+Retrieve the authenticated user's profile information.
+
+```typescript
+const { data: profile, error } = await sdk.self.getMe({
+  authentication: { connectionId: "conn_123" }
+})
+
+console.log(`${profile.name} (@${profile.username})`)
+console.log(`Subscribers: ${profile.subscribersCount}`)
+console.log(`Posts: ${profile.postsCount}`)
+```
+
+<ParamField path="authentication" type="AuthenticationOptions" required>
+  Either `{ connectionId: string }` or `{ session: object }`
+</ParamField>
+
+**Returns:** User profile with ID, username, name, email, bio, subscriber/post counts, verification status, and avatar/cover URLs.
+
+### Update Profile
+
+Update the authenticated user's profile information.
+
+```typescript
+const { data: result, error } = await sdk.self.updateProfile({
+  authentication: { session: userData },
+  data: {
+    name: "New Display Name",
+    about: "Updated bio with new information! ✨"
+  }
+})
+```
+
+<ParamField path="data.name" type="string">
+  New display name for the user
+</ParamField>
+
+<ParamField path="data.about" type="string">
+  New bio/about text
+</ParamField>
+
+### Get Notifications
+
+Retrieve notifications for the authenticated user.
+
+```typescript
+const { data: notifications, error } = await sdk.self.getNotifications({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    limit: 50,
+    filter: "unread" // "all", "unread", "tips", "messages"
+  }
+})
+
+console.log(`${notifications.list.length} notifications`)
+```
+
+<ParamField path="params.limit" type="number" default="20">
+  Maximum notifications to return (1-100)
+</ParamField>
+
+<ParamField path="params.filter" type="string" default="all">
+  Filter by type: "all", "unread", "tips", "messages", "subscribers"
+</ParamField>
+
+### Mark Notifications as Read
+
+Mark specific notifications as read.
+
+```typescript
+const { data: result, error } = await sdk.self.markNotificationsRead({
+  authentication: { session: userData },
+  notificationIds: ["notif_123", "notif_456"]
+})
+```
+
+## User Module (sdk.user)
+
+### Get User by ID
+
+Retrieve another user's public profile information.
+
+```typescript
+const { data: user, error } = await sdk.user.getById({
+  authentication: { connectionId: "conn_123" },
+  userId: 987654321
+})
+
+console.log(`${user.name} (@${user.username})`)
+console.log(`Verified: ${user.isVerified}`)
+console.log(`Posts: ${user.postsCount}`)
+```
+
+<ParamField path="userId" type="number" required>
+  OnlyFans user ID to retrieve
+</ParamField>
+
+**Returns:** Public profile information including username, name, bio, post count, verification status, and avatar.
+
+### Search Users
+
+Search for users by username or name.
+
+```typescript
+const { data: results, error } = await sdk.user.search({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    query: "example",
+    limit: 20
+  }
+})
+
+console.log(`Found ${results.users.length} users`)
+```
+
+<ParamField path="params.query" type="string" required>
+  Search term (username or display name)
+</ParamField>
+
+<ParamField path="params.limit" type="number" default="10">
+  Maximum results to return (1-50)
+</ParamField>
+
+### Subscribe to User
+
+Subscribe to another user's content.
+
+```typescript
+const { data: subscription, error } = await sdk.user.subscribe({
+  authentication: { session: userData },
+  userId: 987654321,
+  params: {
+    paymentMethod: "card_123",
+    promocode: "WELCOME10" // Optional
+  }
+})
+```
+
+<ParamField path="params.paymentMethod" type="string" required>
+  Payment method ID for subscription
+</ParamField>
+
+<ParamField path="params.promocode" type="string">
+  Optional promotional code
+</ParamField>
+
+### Unsubscribe from User
+
+Cancel subscription to a user.
+
+```typescript
+const { data: result, error } = await sdk.user.unsubscribe({
+  authentication: { session: userData },
+  userId: 987654321
+})
+```
+
+### Check Subscription Status
+
+Check if you're subscribed to a user.
+
+```typescript
+const { data: status, error } = await sdk.user.getSubscriptionStatus({
+  authentication: { connectionId: "conn_123" },
+  userId: 987654321
+})
+
+console.log(`Subscribed: ${status.isSubscribed}`)
+if (status.isSubscribed) {
+  console.log(`Expires: ${status.expiresAt}`)
+}
+```
+
+### Block/Unblock User
+
+Block or unblock another user.
+
+```typescript
+// Block user
+const { data: blockResult, error } = await sdk.user.block({
+  authentication: { session: userData },
+  userId: 987654321
+})
+
+// Unblock user
+const { data: unblockResult, error } = await sdk.user.unblock({
+  authentication: { session: userData },
+  userId: 987654321
+})
+```
+
+## Response Types
+
+### User Profile Object
+
+```typescript
+interface UserProfile {
+  id: string
+  username: string
+  name: string
+  email?: string // Only for self
+  about?: string
+  subscribersCount: number
+  postsCount: number
+  isVerified: boolean
+  avatar?: string
+  cover?: string
+  subscriptionPrice?: number // For other users
+}
+```
+
+### Notification Object
+
+```typescript
+interface Notification {
+  id: string
+  type: "tip" | "message" | "subscriber" | "like" | "comment"
+  title: string
+  message: string
+  createdAt: string
+  isRead: boolean
+  userId?: string
+  username?: string
+  amount?: number // For tips
+}
+```
+
+### Subscription Status Object
+
+```typescript
+interface SubscriptionStatus {
+  isSubscribed: boolean
+  subscribedAt?: string
+  expiresAt?: string
+  isExpired: boolean
+  renewalPrice?: number
+  isFree: boolean
+}
+```
+
+## Error Handling
+
+Common error scenarios for user operations:
+
+```typescript
+const { data, error } = await sdk.user.subscribe(params)
+
+if (error) {
+  switch (error.type) {
+    case "unauthorized":
+      console.log("Please login to subscribe")
+      break
+    case "forbidden":
+      console.log("Cannot subscribe to this user")
+      break
+    case "bad_request":
+      if (error.details?.paymentMethod) {
+        console.log("Invalid payment method")
+      }
+      break
+    case "not_found":
+      console.log("User not found")
+      break
+  }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Profile Updates" icon="edit">
+    **Update efficiently**
+    
+    - Only send changed fields
+    - Validate data client-side
+    - Handle validation errors gracefully
+  </Card>
+  <Card title="User Interactions" icon="heart">
+    **Respect user privacy**
+    
+    - Check subscription status before actions
+    - Handle blocking/privacy settings
+    - Cache user data appropriately
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Privacy & Permissions**: Always respect user privacy settings and subscription requirements. Some user information is only available to subscribers.
+</Warning> 

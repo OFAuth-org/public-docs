@@ -1,0 +1,262 @@
+---
+title: "Webhook Architecture"
+description: "Event-driven architecture and real-time notifications"
+---
+
+## Overview
+
+OFAuth uses webhooks to provide real-time notifications about connection and system events. This event-driven architecture ensures your application stays synchronized with user account states and system changes without constant polling.
+
+## Webhook Architecture
+
+### Event-Driven Updates
+
+Webhooks deliver real-time notifications when important events occur:
+
+```javascript
+// Webhook payload example
+{
+  "eventType": "connection.expired",
+  "live": true,
+  "data": {
+    "connection": {
+      "id": "conn_abc123",
+      "platformUserId": "12345",
+      "status": "expired"
+    },
+    "clientReferenceId": "user_456"
+  }
+}
+```
+
+### Webhook Benefits
+
+<CardGroup cols={2}>
+	<Card title="Real-Time Updates" icon="bolt">
+		Immediate notifications when events occur, no polling required
+	</Card>
+	<Card title="Reduced API Calls" icon="arrows-minimize">
+		Stay informed without constantly checking connection status
+	</Card>
+	<Card title="Better UX" icon="heart">
+		Proactively handle connection issues and user state changes
+	</Card>
+	<Card title="Scalable Architecture" icon="chart-line">
+		Handle thousands of users with efficient event delivery
+	</Card>
+</CardGroup>
+
+## Supported Events
+
+### Connection Events
+
+| Event Type           | Trigger                    | Data Included                                   |
+| -------------------- | -------------------------- | ----------------------------------------------- |
+| `connection.created` | New connection established | connection details, user data, clientReferenceId |
+| `connection.updated` | Connection details changed | updated connection, user data, clientReferenceId |
+| `connection.expired` | Connection lost/expired    | connection id, status, clientReferenceId        |
+
+### System Events
+
+| Event Type       | Trigger               | Data Included                    |
+| ---------------- | --------------------- | -------------------------------- |
+| `rules.update`   | Dynamic rules changed | complete rules object, revision  |
+
+### Event Payload Structure
+
+All webhook events follow a consistent structure:
+
+```typescript
+interface WebhookEvent {
+	eventType: string // Event type (e.g., "connection.expired")
+	live: boolean // Whether this is from live or test environment
+	data: object // Event-specific data
+}
+```
+
+#### Connection Created Event
+
+```typescript
+interface ConnectionCreatedEvent {
+	eventType: 'connection.created'
+	live: boolean
+	data: {
+		connection: {
+			id: string
+			platformUserId: string
+			userData: {
+				userId: string
+				name: string
+				username: string
+				avatar: string
+			}
+			status: 'active' | 'pending_2fa'
+			permissions: string[]
+		}
+		clientReferenceId: string | null
+	}
+}
+```
+
+#### Connection Updated Event
+
+```typescript
+interface ConnectionUpdatedEvent {
+	eventType: 'connection.updated'
+	live: boolean
+	data: {
+		connection: {
+			id: string
+			platformUserId: string
+			status: 'active'
+			permissions: string[]
+			userData: {
+				userId: string
+				name: string
+				username: string
+				avatar: string
+			}
+		}
+		clientReferenceId: string | null
+	}
+}
+```
+
+#### Connection Expired Event
+
+```typescript
+interface ConnectionExpiredEvent {
+	eventType: 'connection.expired'
+	live: boolean
+	data: {
+		connection: {
+			id: string
+			platformUserId: string
+			status: 'expired'
+		}
+		clientReferenceId: string | null
+	}
+}
+```
+
+#### Rules Update Event
+
+```typescript
+interface RulesUpdateEvent {
+	eventType: 'rules.update'
+	live: boolean
+	data: {
+		rules: {
+			static_param: string
+			format: string
+			start: string
+			end: string
+			prefix: string
+			suffix: string
+			checksum_constant: number
+			checksum_indexes: number[]
+			app_token: string
+			revision: string
+		}
+		revision: string
+	}
+}
+```
+
+## Security
+
+Webhooks are secured with:
+
+- **HTTPS Only**: Encrypted delivery
+- **Authentication**: Webhook endpoints require authentication
+
+## Implementation Example
+
+```javascript
+const express = require("express")
+const app = express()
+
+app.use(express.json())
+
+app.post("/webhooks/ofauth", (req, res) => {
+	// Process webhook event
+	const event = req.body
+
+	switch (event.eventType) {
+		case "connection.expired":
+			handleConnectionExpired(event.data)
+			break
+
+		case "connection.created":
+			handleConnectionCreated(event.data)
+			break
+
+		case "connection.updated":
+			handleConnectionUpdated(event.data)
+			break
+
+		case "rules.update":
+			handleRulesUpdate(event.data)
+			break
+
+		default:
+			console.log("Unknown event type:", event.eventType)
+	}
+
+	res.status(200).send("OK")
+})
+
+function handleConnectionExpired(data) {
+	console.log(`Connection ${data.connection.id} expired`)
+	// Trigger re-authentication flow
+	// Notify user of expired session
+}
+
+function handleConnectionCreated(data) {
+	console.log(`New connection created: ${data.connection.id}`)
+	// Update your database with new connection
+	// Send welcome notification to user
+}
+
+function handleConnectionUpdated(data) {
+	console.log(`Connection ${data.connection.id} updated`)
+	// Update connection details in your database
+}
+
+function handleRulesUpdate(data) {
+	console.log(`Rules updated to revision: ${data.revision}`)
+	// Update your local rules cache
+	// No need to fetch rules separately - they're included in the webhook
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+	<Card title="Handle Idempotency" icon="repeat">
+		Store processed events to prevent duplicate processing
+	</Card>
+	<Card title="Respond Quickly" icon="zap">
+		Return 200 status immediately, process asynchronously if needed
+	</Card>
+	<Card title="Implement Monitoring" icon="chart-line">
+		Track webhook delivery and processing success
+	</Card>
+	<Card title="Cache Rules Updates" icon="database">
+		Store rules from webhook events to avoid additional API calls
+	</Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card
+		title="Error Handling"
+		icon="exclamation-triangle"
+		href="/architecture/error-handling">
+		Implement robust error handling
+	</Card>
+	<Card title="Quick Start" icon="rocket" href="/quickstart">
+		Set up your first webhook endpoint
+	</Card>
+</CardGroup>

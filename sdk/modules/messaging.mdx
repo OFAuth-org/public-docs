@@ -1,0 +1,289 @@
+---
+title: "Messaging"
+description: "Send direct messages, manage mass campaigns, and handle conversations with the OnlyFans SDK"
+---
+
+## Overview
+
+The Messages module (`sdk.messages`) handles all OnlyFans messaging functionality including direct messages, mass campaigns, and conversation management.
+
+<CardGroup cols={3}>
+  <Card title="Direct Messages" icon="message-circle">
+    Send personalized messages with media and pricing
+  </Card>
+  <Card title="Mass Campaigns" icon="megaphone">
+    Create queued messages for subscriber lists
+  </Card>
+  <Card title="Chat Management" icon="messages">
+    Retrieve chat history and conversations
+  </Card>
+</CardGroup>
+
+## Direct Messaging
+
+### Send Chat Message
+
+Send a direct message to a specific user with optional media and pricing.
+
+```typescript
+const { data, error } = await sdk.messages.sendChatMessage({
+  authentication: { connectionId: "conn_123" },
+  userId: 123456789,
+  params: {
+    text: "Hey! Thanks for subscribing! 💕",
+    mediaItems: ["/path/to/photo.jpg", "media_id_123"],
+    price: 9.99, // Optional paid message
+    previewMediaCount: 1 // Number of preview media
+  }
+})
+```
+
+<ParamField path="authentication" type="AuthenticationOptions" required>
+  Either `{ connectionId: string }` or `{ session: object }`
+</ParamField>
+
+<ParamField path="userId" type="number" required>
+  OnlyFans user ID to send message to
+</ParamField>
+
+<ParamField path="params.text" type="string" required>
+  Message text content (supports markdown)
+</ParamField>
+
+<ParamField path="params.mediaItems" type="string[]">
+  Array of media references (paths, URLs, or IDs)
+</ParamField>
+
+<ParamField path="params.price" type="number">
+  Price for paid messages (in dollars)
+</ParamField>
+
+### Get Chat Messages
+
+Retrieve message history with a specific user.
+
+```typescript
+const { data, error } = await sdk.messages.getChatMessages({
+  authentication: { connectionId: "conn_123" },
+  userId: 123456789,
+  params: {
+    limit: 50,
+    offset: 0,
+    query: "search term" // Optional search
+  }
+})
+
+console.log(`Found ${data.list.length} messages`)
+```
+
+### Get Specific Message
+
+Get details for a specific chat message.
+
+```typescript
+const { data, error } = await sdk.messages.getChatMessage({
+  authentication: { connectionId: "conn_123" },
+  userId: 123456789,
+  messageId: 789012
+})
+```
+
+## Mass Messaging
+
+### Create Queued Message
+
+Create a mass message to be sent to multiple users or lists.
+
+```typescript
+const { data, error } = await sdk.messages.createQueuedMessage({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    text: "New content available! 🔥",
+    mediaItems: ["/path/to/promo.jpg"],
+    price: 5.00,
+    userIds: [123, 456, 789], // Specific users
+    userLists: [1, 2], // User list IDs
+    excludeUserLists: [3], // Exclude these lists
+    scheduledDate: new Date("2024-01-25T15:00:00Z"), // Optional scheduling
+    subscribedAfterDate: new Date("2024-01-01") // Users who subscribed after this date
+  }
+})
+```
+
+<ParamField path="params.userIds" type="number[]">
+  Array of specific user IDs to send to
+</ParamField>
+
+<ParamField path="params.userLists" type="number[]">
+  Array of user list IDs to send to
+</ParamField>
+
+<ParamField path="params.scheduledDate" type="Date">
+  Optional scheduled send time
+</ParamField>
+
+### Smart Message Sending
+
+Automatically choose between individual or mass messaging.
+
+```typescript
+const { data, error } = await sdk.messages.sendMessage({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    text: "Hello everyone!",
+    userIds: [123456], // If single user, sends direct message
+    mediaItems: ["media_123"]
+  }
+})
+```
+
+### Get Queued Messages
+
+Retrieve your queued/scheduled messages.
+
+```typescript
+const { data, error } = await sdk.messages.getQueueMessages({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    limit: 20,
+    offset: 0,
+    type: "scheduled" // "sent", "unsent", "scheduled"
+  }
+})
+```
+
+### Get Specific Queued Message
+
+```typescript
+const { data, error } = await sdk.messages.getQueuedMessage({
+  authentication: { connectionId: "conn_123" },
+  queueMessageId: 123456
+})
+```
+
+## Chat Management
+
+### Get Chat List
+
+Retrieve your active conversations.
+
+```typescript
+const { data, error } = await sdk.messages.getChatsList({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    limit: 20,
+    order: "recent", // "recent" or "old"
+    filter: "priority", // "priority", "who_tipped", "unread"
+    userListId: 123,
+    query: "search term"
+  }
+})
+```
+
+## Message Management
+
+### Update Queued Message
+
+Modify a queued message before it's sent.
+
+```typescript
+const { data, error } = await sdk.messages.updateQueuedMessage({
+  authentication: { connectionId: "conn_123" },
+  queueMessageId: 123456,
+  params: {
+    text: "Updated message text",
+    scheduledDate: new Date("2024-06-01")
+  }
+})
+```
+
+### Delete Messages
+
+Delete a message (for direct messages, include userId).
+
+```typescript
+// Delete direct message
+const { data, error } = await sdk.messages.deleteMessage({
+  authentication: { connectionId: "conn_123" },
+  messageId: 123456,
+  userId: 789 // Required for direct messages
+})
+
+// Delete queued message
+const { data, error } = await sdk.messages.deleteMessage({
+  authentication: { connectionId: "conn_123" },
+  messageId: 123456,
+  isQueuedMessage: true
+})
+```
+
+### Unsend Messages
+
+Unsend already sent messages.
+
+```typescript
+// Unsend chat message
+const { data, error } = await sdk.messages.unsendChatMessage({
+  authentication: { connectionId: "conn_123" },
+  messageId: 123456,
+  userId: 789
+})
+
+// Unsend queued message
+const { data, error } = await sdk.messages.unsendQueueMessage({
+  authentication: { connectionId: "conn_123" },
+  queueMessageId: 123456
+})
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Message Quality" icon="heart">
+    **Engaging Content**
+    
+    - Use markdown formatting for rich text
+    - Include relevant media
+    - Personalize messages when possible
+    - Test pricing strategies
+  </Card>
+  <Card title="Mass Messaging" icon="users">
+    **Smart Campaigns**
+    
+    - Segment audiences using lists
+    - Schedule messages for optimal times
+    - Monitor delivery and engagement
+    - Respect subscriber preferences
+  </Card>
+</CardGroup>
+
+## Error Handling
+
+Common error scenarios and handling:
+
+```typescript
+const { data, error } = await sdk.messages.sendChatMessage(params)
+
+if (error) {
+  switch (error.type) {
+    case "unauthorized":
+      console.log("Session expired")
+      break
+    case "forbidden":
+      console.log("Cannot message this user")
+      break
+    case "too_many_requests":
+      console.log("Rate limited - wait before sending more")
+      break
+    case "bad_request":
+      console.log("Invalid message parameters:", error.details)
+      break
+    default:
+      console.log("Message failed:", error.message)
+  }
+}
+```
+
+<Warning>
+  **Rate Limiting**: OnlyFans has strict rate limits for messaging. Space out your messages and use the SDK's built-in retry logic.
+</Warning> 

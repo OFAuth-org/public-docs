@@ -1,0 +1,306 @@
+---
+title: "Analytics"
+description: "Track performance metrics and earnings with full TypeScript support and automatic parameter validation"
+---
+
+## Overview
+
+The Statistics module (`sdk.statistics`) provides comprehensive analytics for content performance, earnings, and audience insights with **complete type safety** and **automatic parameter validation**.
+
+<Card title="Statistics Module" icon="chart-bar">
+  **sdk.statistics** - Analytics, earnings, and performance tracking with IntelliSense support
+</Card>
+
+## Why Use the SDK for Analytics?
+
+<CardGroup cols={2}>
+  <Card title="Type Safety" icon="shield">
+    **Full TypeScript definitions** with autocomplete, IntelliSense, and compile-time validation for all parameters
+  </Card>
+  <Card title="Parameter Validation" icon="check-circle">
+    **Automatic validation** ensures correct parameter types, date formats, and enum values before API calls
+  </Card>
+</CardGroup>
+
+## Get Statistics
+
+Get detailed statistics for different content types with **compile-time parameter validation**.
+
+```typescript
+// ✅ Full type safety - IDE will autocomplete statType options
+const { data, error } = await sdk.statistics.getStats({
+  authentication: { connectionId: "conn_123" },
+  statType: "posts", // TypeScript validates: 'posts' | 'streams' | 'stories' | etc.
+  params: {
+    startDate: new Date("2024-01-01"), // ✅ Automatic Date validation
+    endDate: new Date("2024-01-31"),   // ✅ Ensures proper date format
+    by: "purchases", // ✅ Validates against allowed values for 'posts'
+    limit: 20,       // ✅ Type-checked as number
+    offset: 0
+  }
+})
+
+// ✅ Response is fully typed
+if (data) {
+  console.log(data.total)    // TypeScript knows this exists
+  console.log(data.breakdown) // IntelliSense shows available properties
+}
+```
+
+### Available Statistics Types
+
+<AccordionGroup>
+  <Accordion title="Posts Analytics">
+    ```typescript
+    // Posts performance metrics
+    const { data, error } = await sdk.statistics.getStats({
+      authentication: { connectionId },
+      statType: "posts",
+      params: {
+        by: "purchases" | "tips" | "views" | "likes" | "comments", // ✅ Validated
+        startDate: new Date("2024-01-01"),
+        endDate: new Date("2024-01-31"),
+        limit: 20
+      }
+    })
+    ```
+  </Accordion>
+  
+  <Accordion title="Mass Messages Analytics">
+    ```typescript
+    // Message campaign performance
+    const { data, error } = await sdk.statistics.getStats({
+      authentication: { connectionId },
+      statType: "mass_messages",
+      params: {
+        startDate: new Date("2024-01-01"),
+        endDate: new Date("2024-01-31")
+      }
+    })
+    ```
+  </Accordion>
+  
+  <Accordion title="Visitor Analytics">
+    ```typescript
+    // Geographic visitor data
+    const { data, error } = await sdk.statistics.getStats({
+      authentication: { connectionId },
+      statType: "visitor_countries",
+      params: {
+        startDate: new Date("2024-01-01"),
+        endDate: new Date("2024-01-31")
+      }
+    })
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<ParamField path="statType" type="StatType" required>
+  **Type-validated options**: `"posts"` | `"streams"` | `"stories"` | `"visitor_countries"` | `"mass_messages"` | `"promotions"` | `"trials"` | `"campaigns"`
+</ParamField>
+
+<ParamField path="params.by" type="string">
+  **Context-aware validation**: Available options change based on `statType` (TypeScript enforces correct combinations)
+</ParamField>
+
+## Chart Statistics
+
+Get visualization-ready chart data with **automatic date validation**.
+
+```typescript
+// ✅ TypeScript ensures chartType matches available options
+const { data, error } = await sdk.statistics.getChartStats({
+  authentication: { connectionId: "conn_123" },
+  chartType: "earnings", // Autocomplete shows: 'posts' | 'streams' | 'earnings' | etc.
+  params: {
+    startDate: new Date("2024-01-01"), // ✅ Date objects validated automatically
+    endDate: new Date("2024-01-31"),
+    withTotal: true,                   // ✅ Boolean type enforced
+    by: "purchases"                    // ✅ Context-aware validation
+  }
+})
+
+// ✅ Typed response - no guessing about data structure
+if (data) {
+  data.forEach(item => {
+    console.log(item.date)   // TypeScript knows structure
+    console.log(item.value)  // IntelliSense shows properties
+  })
+}
+```
+
+## Transaction History
+
+Retrieve detailed transaction data with **enum validation** for transaction types.
+
+```typescript
+// ✅ Transaction types are fully validated
+const { data, error } = await sdk.statistics.getTransactions({
+  authentication: { connectionId: "conn_123" },
+  params: {
+    startDate: new Date("2024-01-01"),
+    type: "chat_messages", // ✅ Validated: 'chat_messages' | 'post' | 'stream' | 'subscribes' | 'tips'
+    tipsSource: "chat"     // ✅ Context-validated: only valid when type is 'tips'
+  }
+})
+```
+
+### Transaction Type Validation
+
+The SDK automatically validates transaction parameters based on context:
+
+```typescript
+// ✅ TypeScript prevents invalid combinations
+const tipsTransaction = await sdk.statistics.getTransactions({
+  authentication: { connectionId },
+  params: {
+    type: "tips",
+    tipsSource: "chat" // ✅ Required and validated when type is 'tips'
+  }
+})
+
+// ❌ TypeScript error - tipsSource not valid for this type
+const invalidTransaction = await sdk.statistics.getTransactions({
+  authentication: { connectionId },
+  params: {
+    type: "chat_messages",
+    tipsSource: "chat" // ❌ Compile-time error!
+  }
+})
+```
+
+## Post-Specific Analytics
+
+Get statistics for individual posts with **automatic ID validation**.
+
+```typescript
+// ✅ Post ID type-checked as number
+const { data, error } = await sdk.statistics.getPostStatsById({
+  authentication: { connectionId: "conn_123" },
+  postId: 123456 // ✅ Must be number, not string
+})
+
+// ✅ Response includes comprehensive post metrics
+if (data) {
+  console.log(`Views: ${data.views}`)
+  console.log(`Likes: ${data.likes}`) 
+  console.log(`Revenue: $${data.revenue}`)
+}
+```
+
+## Advanced Analytics Integration
+
+### Type-Safe Revenue Analysis
+
+```typescript
+// ✅ Complete type safety throughout the analytics pipeline
+async function analyzeRevenue(connectionId: string): Promise<{
+  totalRevenue: number;
+  topPosts: Array<{ id: number; revenue: number }>;
+  period: string;
+} | null> {
+  
+  const earningsResult = await sdk.statistics.getStats({
+    authentication: { connectionId },
+    statType: "posts",  // ✅ TypeScript validates
+    params: {
+      startDate: new Date("2024-01-01"),
+      endDate: new Date("2024-01-31"), 
+      by: "purchases",  // ✅ Valid for 'posts' statType
+      limit: 10
+    }
+  })
+  
+  if (earningsResult.error) {
+    console.error("Analytics error:", earningsResult.error.message)
+    return null
+  }
+  
+  // ✅ earningsResult.data is fully typed
+  return {
+    totalRevenue: earningsResult.data.total,
+    topPosts: earningsResult.data.breakdown,
+    period: "January 2024"
+  }
+}
+```
+
+### Batch Analytics with Type Safety
+
+```typescript
+// ✅ All API calls are type-validated
+async function createAnalyticsDashboard(connectionId: string) {
+  const [posts, messages, earnings] = await Promise.all([
+    sdk.statistics.getStats({
+      authentication: { connectionId },
+      statType: "posts",
+      params: { by: "views", limit: 5 }    // ✅ Validated combination
+    }),
+    sdk.statistics.getStats({
+      authentication: { connectionId },
+      statType: "mass_messages"            // ✅ No 'by' param needed for messages
+    }),
+    sdk.statistics.getChartStats({
+      authentication: { connectionId },
+      chartType: "earnings",
+      params: { withTotal: true }          // ✅ Boolean type enforced
+    })
+  ])
+  
+  // ✅ All responses are fully typed
+  return {
+    topPosts: posts.data?.breakdown || [],
+    messageStats: messages.data?.total || 0,
+    earningsChart: earnings.data || []
+  }
+}
+```
+
+## Error Handling with Type Safety
+
+Analytics operations benefit from **structured error types**:
+
+```typescript
+const result = await sdk.statistics.getStats(params)
+
+if (result.error) {
+  // ✅ Error types are fully defined
+  switch (result.error.type) {
+    case "unauthorized":
+      console.log("Session expired")
+      break
+    case "bad_request":
+      // ✅ TypeScript knows error.details exists for bad_request
+      console.log("Invalid parameters:", result.error.details)
+      break
+    case "too_many_requests":
+      console.log("Rate limited - retry available:", result.error.retry)
+      break
+  }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Type Safety First" icon="code">
+    **Leverage TypeScript**
+    
+    - Use IDE autocomplete for all parameters
+    - Let TypeScript catch invalid combinations
+    - Trust the type definitions for response structure
+    - Enable strict mode for maximum safety
+  </Card>
+  <Card title="Parameter Validation" icon="check-square">
+    **Trust the SDK**
+    
+    - No manual date format validation needed
+    - Enum values are automatically checked
+    - Required parameters enforced at compile time
+    - Context-aware parameter validation
+  </Card>
+</CardGroup>
+
+<Warning>
+  **Performance**: When requesting large date ranges, use pagination parameters to avoid timeouts. The SDK validates these automatically.
+</Warning> 

@@ -1,0 +1,926 @@
+---
+title: "API Mode - Link API"
+description: "Programmatic OnlyFans authentication with full UX control"
+---
+
+## Overview
+
+API Mode provides programmatic authentication for OnlyFans integration, allowing you to handle the entire authentication flow within your application. This gives you complete control over the user experience while maintaining security.
+
+<Warning>
+	**Requires Approval**: API Mode access requires approval from OFAuth support.
+	Contact [support@ofauth.com](mailto:support@ofauth.com) to request access.
+</Warning>
+
+
+
+## How It Works
+
+1. **Initialize**: Create a link session with API mode configuration
+2. **Collect**: Gather OnlyFans credentials in your application
+3. **Submit**: Send credentials to OFAuth for authentication
+4. **Handle 2FA**: Process two-factor authentication if required
+5. **Complete**: Receive connection details and session data
+
+## Base URL
+
+```
+https://api.ofauth.com/v2/link
+```
+
+## Authentication
+
+All requests require your API key:
+
+```http
+apikey: YOUR_API_KEY
+```
+
+## Core Endpoints
+
+### Initialize API Session
+
+Create a new API mode authentication session.
+
+<Expandable title="POST /init">
+
+```http
+POST /v2/link/init
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+- `Content-Type`: application/json
+
+**Request Body:**
+
+```json
+{
+	"mode": "api",
+	"clientReferenceId": "user_123",
+	"connectionId": "conn_existing_123",
+	"options": {
+		"returnRawSession": true
+	}
+}
+```
+
+**Parameters:**
+
+| Parameter                  | Type    | Required | Description                                                |
+| -------------------------- | ------- | -------- | ---------------------------------------------------------- |
+| `mode`                     | string  | Yes      | Set to "api" for programmatic authentication               |
+| `clientReferenceId`        | string  | No       | Your internal user identifier for webhook correlation      |
+| `connectionId`             | string  | No       | Existing connection ID to reconnect to                     |
+| `options.returnRawSession` | boolean | No       | Return raw session data (requires approval, default: true) |
+
+**Response:**
+
+```json
+{
+	"clientSecret": "cs_abc123def456",
+	"expiresAt": "2024-01-15T10:30:00Z"
+}
+```
+
+</Expandable>
+
+### Submit Credentials
+
+Submit OnlyFans credentials for programmatic authentication.
+
+<Expandable title="POST /{clientSecret}">
+
+```http
+POST /v2/link/{clientSecret}
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+- `Content-Type`: application/json
+
+**Request Body:**
+
+```json
+{
+	"email": "user@example.com",
+	"password": "base64_encoded_password",
+	"proxy": {
+		"geo": {
+			"country": "US",
+			"city": "New York",
+			"state": "NY"
+		},
+		"url": "http://username:password@proxy.example.com:8080"
+	}
+}
+```
+
+**Parameters:**
+
+| Parameter           | Type   | Required | Description                                         |
+| ------------------- | ------ | -------- | --------------------------------------------------- |
+| `email`             | string | Yes      | OnlyFans account email                              |
+| `password`          | string | Yes      | OnlyFans account password (base64 encoded)          |
+| `proxy.geo.country` | string | No       | Country to proxy from (defaults to request country) |
+| `proxy.geo.city`    | string | No       | City to proxy from                                  |
+| `proxy.geo.state`   | string | No       | State to proxy from                                 |
+| `proxy.url`         | string | No       | Custom proxy URL (HTTP or SOCKS5)                   |
+
+**Response (Success):**
+
+```json
+{
+	"success": true,
+	"data": {
+		"status": "processing"
+	}
+}
+```
+
+**Response (Error):**
+
+```json
+{
+	"success": false,
+	"error": "Email and password are required"
+}
+```
+
+</Expandable>
+
+### Submit Two-Factor Code
+
+Complete two-factor authentication for API mode sessions.
+
+<Expandable title="POST /{clientSecret}/2fa/code">
+
+```http
+POST /v2/link/{clientSecret}/2fa/code
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+- `Content-Type`: application/json
+
+**Request Body:**
+
+```json
+{
+	"code": "123456"
+}
+```
+
+**Parameters:**
+
+| Parameter | Type   | Required | Description                 |
+| --------- | ------ | -------- | --------------------------- |
+| `code`    | string | Yes      | 6-digit authentication code |
+
+**Response (Success):**
+
+```json
+{
+	"success": true,
+	"status": "completed",
+	"connection": {
+		"id": "conn_xyz789",
+		"platformUserId": "12345",
+		"userData": {
+			"userId": "12345",
+			"name": "Jane Doe",
+			"username": "janedoe",
+			"avatar": "https://example.com/avatar.jpg"
+		},
+		"permissions": ["read:all", "write:all"],
+		"status": "active"
+	}
+}
+```
+
+**Response (Invalid Code):**
+
+```json
+{
+	"success": false,
+	"status": "awaiting_2fa"
+}
+```
+
+</Expandable>
+
+### Request Phone 2FA Code
+
+Request a new 2FA code to be sent via SMS.
+
+<Expandable title="POST /{clientSecret}/2fa/request-phone">
+
+```http
+POST /v2/link/{clientSecret}/2fa/request-phone
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+
+**Response (Success):**
+
+```json
+{
+	"success": true,
+	"data": {
+		"phoneLast4": "1234",
+		"requestAttemptsLeft": 2
+	}
+}
+```
+
+**Response (Error):**
+
+```json
+{
+	"success": false,
+	"error": "Phone 2FA is not available for this session"
+}
+```
+
+</Expandable>
+
+### Retrieve Session Status
+
+Check the current status of an API mode session.
+
+<Expandable title="GET /{clientSecret}">
+
+```http
+GET /v2/link/{clientSecret}
+```
+
+**Parameters:**
+
+- `clientSecret`: The client secret from the init response
+
+**Response (Different Status States):**
+
+```json
+// Initial state (before credentials submitted)
+{
+	"status": "initialized"
+}
+
+// Processing credentials
+{
+	"status": "processing"
+}
+
+// Awaiting 2FA
+{
+	"status": "awaiting_2fa",
+	"data": {
+		"twoFactorState": {
+			"options": ["app", "phone"],
+			"phoneLast4": "1234",
+			"phoneCode": {
+				"requestAttemptsLeft": 3
+			}
+		}
+	}
+}
+
+// Completed with raw session data
+{
+	"status": "active",
+	"data": {
+		"id": "conn_xyz789",
+		"sessionData": {
+			"user-id": "12345",
+			"user-agent": "Mozilla/5.0...",
+			"cookie": "sess=...",
+			"x-bc": "..."
+		},
+		"platformUserId": "12345",
+		"userData": {
+			"userId": "12345",
+			"name": "Jane Doe",
+			"username": "janedoe",
+			"avatar": "https://example.com/avatar.jpg"
+		},
+		"permissions": ["read:all", "write:all"],
+		"status": "active"
+	}
+}
+```
+
+**Status Values:**
+
+- `initialized`: Session created, waiting for credentials
+- `processing`: Credentials being processed
+- `awaiting_2fa`: Waiting for two-factor authentication code
+- `active`: Authentication successful and connection active
+- `failed`: Authentication failed
+- `invalid_credentials`: Invalid email/password provided
+- `not_found`: Session expired or doesn't exist
+
+</Expandable>
+
+### Delete Session
+
+Delete an API session to clean up resources.
+
+<Expandable title="DELETE /{clientSecret}">
+
+```http
+DELETE /v2/link/{clientSecret}
+```
+
+**Headers:**
+
+- `apikey`: Your API key (required)
+
+**Response:**
+
+```json
+{
+	"success": true
+}
+```
+
+</Expandable>
+
+## Implementation Guide
+
+### Step 1: Initialize the API Session
+
+<CodeGroup>
+
+```javascript JavaScript
+const initResponse = await fetch("https://api.ofauth.com/v2/link/init", {
+	method: "POST",
+	headers: {
+		apikey: "YOUR_API_KEY",
+		"Content-Type": "application/json"
+	},
+	body: JSON.stringify({
+		mode: "api",
+		clientReferenceId: "user_123",
+		options: {
+			returnRawSession: true
+		}
+	})
+})
+
+const { clientSecret } = await initResponse.json()
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/link/init",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "Content-Type": "application/json"
+    },
+    json={
+        "mode": "api",
+        "clientReferenceId": "user_123",
+        "options": {
+            "returnRawSession": True
+        }
+    }
+)
+
+data = response.json()
+client_secret = data["clientSecret"]
+```
+
+```php PHP
+$response = file_get_contents("https://api.ofauth.com/v2/link/init", false, stream_context_create([
+    'http' => [
+        'method' => 'POST',
+        'header' => [
+            'apikey: YOUR_API_KEY',
+            'Content-Type: application/json'
+        ],
+        'content' => json_encode([
+            'mode' => 'api',
+            'clientReferenceId' => 'user_123',
+            'options' => [
+                'returnRawSession' => true
+            ]
+        ])
+    ]
+]));
+
+$data = json_decode($response, true);
+$clientSecret = $data['clientSecret'];
+```
+
+</CodeGroup>
+
+### Step 2: Collect User Credentials
+
+Build a form in your application to collect OnlyFans credentials:
+
+```javascript
+// Example React form component
+function OnlyFansLoginForm({ onSubmit }) {
+	const [credentials, setCredentials] = useState({
+		email: "",
+		password: ""
+	})
+
+	const handleSubmit = (e) => {
+		e.preventDefault()
+		onSubmit({
+			email: credentials.email,
+			password: btoa(credentials.password) // Base64 encode
+		})
+	}
+
+	return (
+		<form onSubmit={handleSubmit}>
+			<input
+				type="email"
+				placeholder="OnlyFans Email"
+				value={credentials.email}
+				onChange={(e) =>
+					setCredentials({
+						...credentials,
+						email: e.target.value
+					})
+				}
+				required
+			/>
+			<input
+				type="password"
+				placeholder="Password"
+				value={credentials.password}
+				onChange={(e) =>
+					setCredentials({
+						...credentials,
+						password: e.target.value
+					})
+				}
+				required
+			/>
+			<button type="submit">Connect Account</button>
+		</form>
+	)
+}
+```
+
+### Step 3: Submit Credentials and Handle Authentication
+
+<CodeGroup>
+
+```javascript JavaScript
+async function authenticateUser(clientSecret, credentials) {
+	// Submit user credentials
+	const credentialsResponse = await fetch(
+		`https://api.ofauth.com/v2/link/${clientSecret}`,
+		{
+			method: "POST",
+			headers: {
+				apikey: "YOUR_API_KEY",
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				email: credentials.email,
+				password: credentials.password, // Already base64 encoded
+				proxy: {
+					geo: {
+						country: "US"
+					}
+				}
+			})
+		}
+	)
+
+	const credentialsResult = await credentialsResponse.json()
+
+	if (!credentialsResult.success) {
+		throw new Error(credentialsResult.error)
+	}
+
+	// Poll for status
+	let status
+	do {
+		await new Promise((resolve) => setTimeout(resolve, 2000)) // Wait 2 seconds
+
+		const statusResponse = await fetch(
+			`https://api.ofauth.com/v2/link/${clientSecret}`,
+			{
+				headers: { apikey: "YOUR_API_KEY" }
+			}
+		)
+
+		status = await statusResponse.json()
+
+		if (status.status === "awaiting_2fa") {
+			// Handle two-factor authentication
+			const twoFactorCode = await promptUserForTwoFactor(
+				status.data.twoFactorState
+			)
+
+			const twoFactorResponse = await fetch(
+				`https://api.ofauth.com/v2/link/${clientSecret}/2fa/code`,
+				{
+					method: "POST",
+					headers: {
+						apikey: "YOUR_API_KEY",
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						code: twoFactorCode
+					})
+				}
+			)
+
+			const twoFactorResult = await twoFactorResponse.json()
+			if (twoFactorResult.success) {
+				status = { status: "active", data: twoFactorResult.connection }
+				break
+			}
+		}
+	} while (status.status === "processing" || status.status === "awaiting_2fa")
+
+	if (status.status === "active") {
+		return status.data // Connection data with session information
+	} else {
+		throw new Error("Authentication failed")
+	}
+}
+
+async function promptUserForTwoFactor(twoFactorState) {
+	// Your UI logic to collect 2FA code
+	return prompt("Enter your 2FA code:")
+}
+```
+
+```python Python
+import requests
+import time
+
+def authenticate_user(client_secret, credentials):
+    # Submit user credentials
+    credentials_response = requests.post(
+        f"https://api.ofauth.com/v2/link/{client_secret}",
+        headers={
+            "apikey": "YOUR_API_KEY",
+            "Content-Type": "application/json"
+        },
+        json={
+            "email": credentials["email"],
+            "password": credentials["password"],
+            "proxy": {
+                "geo": {
+                    "country": "US"
+                }
+            }
+        }
+    )
+
+    credentials_result = credentials_response.json()
+
+    if not credentials_result.get("success"):
+        raise Exception(credentials_result.get("error"))
+
+    # Poll for status
+    while True:
+        time.sleep(2)  # Wait 2 seconds
+
+        status_response = requests.get(
+            f"https://api.ofauth.com/v2/link/{client_secret}",
+            headers={"apikey": "YOUR_API_KEY"}
+        )
+
+        status = status_response.json()
+
+        if status["status"] == "awaiting_2fa":
+            # Handle two-factor authentication
+            two_factor_code = input("Enter your 2FA code: ")  # Your UI logic
+
+            two_factor_response = requests.post(
+                f"https://api.ofauth.com/v2/link/{client_secret}/2fa/code",
+                headers={
+                    "apikey": "YOUR_API_KEY",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "code": two_factor_code
+                }
+            )
+
+            two_factor_result = two_factor_response.json()
+            if two_factor_result.get("success"):
+                return two_factor_result["connection"]
+
+        elif status["status"] == "active":
+            return status["data"]
+        elif status["status"] not in ["processing", "awaiting_2fa"]:
+            raise Exception("Authentication failed")
+```
+
+</CodeGroup>
+
+### Step 4: Handle Two-Factor Authentication
+
+When 2FA is required, present the appropriate UI based on available methods:
+
+```javascript
+function TwoFactorForm({ twoFactorState, onSubmit }) {
+	const [code, setCode] = useState("")
+	const [method, setMethod] = useState(twoFactorState.options[0])
+
+	const requestPhoneCode = async () => {
+		const response = await fetch(
+			`https://api.ofauth.com/v2/link/${clientSecret}/2fa/request-phone`,
+			{
+				method: "POST",
+				headers: { apikey: "YOUR_API_KEY" }
+			}
+		)
+
+		const result = await response.json()
+		if (result.success) {
+			alert(`Code sent to phone ending in ${result.data.phoneLast4}`)
+		}
+	}
+
+	return (
+		<div>
+			<h3>Two-Factor Authentication Required</h3>
+
+			{twoFactorState.options.length > 1 && (
+				<div>
+					<label>
+						<input
+							type="radio"
+							value="app"
+							checked={method === "app"}
+							onChange={(e) => setMethod(e.target.value)}
+						/>
+						Authenticator App
+					</label>
+					<label>
+						<input
+							type="radio"
+							value="phone"
+							checked={method === "phone"}
+							onChange={(e) => setMethod(e.target.value)}
+						/>
+						SMS to {twoFactorState.phoneLast4}
+					</label>
+				</div>
+			)}
+
+			{method === "phone" && (
+				<button onClick={requestPhoneCode}>Send SMS Code</button>
+			)}
+
+			<input
+				type="text"
+				placeholder="Enter 6-digit code"
+				value={code}
+				onChange={(e) => setCode(e.target.value)}
+				maxLength={6}
+			/>
+			<button onClick={() => onSubmit(code)}>Verify</button>
+		</div>
+	)
+}
+```
+
+## Complete Integration Example
+
+Here's a complete React component that handles the full API mode flow:
+
+```javascript
+import { useState } from "react"
+
+function OnlyFansAPIAuth({ onSuccess }) {
+	const [step, setStep] = useState("credentials") // credentials, 2fa, success
+	const [clientSecret, setClientSecret] = useState("")
+	const [twoFactorState, setTwoFactorState] = useState(null)
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState("")
+
+	const initializeSession = async () => {
+		const response = await fetch("https://api.ofauth.com/v2/link/init", {
+			method: "POST",
+			headers: {
+				apikey: "YOUR_API_KEY",
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				mode: "api",
+				clientReferenceId: "user_123"
+			})
+		})
+
+		const data = await response.json()
+		setClientSecret(data.clientSecret)
+	}
+
+	const submitCredentials = async (credentials) => {
+		setIsLoading(true)
+		setError("")
+
+		try {
+			if (!clientSecret) {
+				await initializeSession()
+			}
+
+			const response = await fetch(
+				`https://api.ofauth.com/v2/link/${clientSecret}`,
+				{
+					method: "POST",
+					headers: {
+						apikey: "YOUR_API_KEY",
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						email: credentials.email,
+						password: btoa(credentials.password)
+					})
+				}
+			)
+
+			const result = await response.json()
+
+			if (!result.success) {
+				setError(result.error)
+				return
+			}
+
+			// Start polling for status
+			pollStatus()
+		} catch (err) {
+			setError(err.message)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const pollStatus = async () => {
+		const response = await fetch(
+			`https://api.ofauth.com/v2/link/${clientSecret}`,
+			{
+				headers: { apikey: "YOUR_API_KEY" }
+			}
+		)
+
+		const status = await response.json()
+
+		if (status.status === "awaiting_2fa") {
+			setTwoFactorState(status.data.twoFactorState)
+			setStep("2fa")
+		} else if (status.status === "active") {
+			onSuccess(status.data)
+			setStep("success")
+		} else if (status.status === "processing") {
+			// Continue polling
+			setTimeout(pollStatus, 2000)
+		} else {
+			setError("Authentication failed")
+		}
+	}
+
+	const submit2FA = async (code) => {
+		setIsLoading(true)
+
+		try {
+			const response = await fetch(
+				`https://api.ofauth.com/v2/link/${clientSecret}/2fa/code`,
+				{
+					method: "POST",
+					headers: {
+						apikey: "YOUR_API_KEY",
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ code })
+				}
+			)
+
+			const result = await response.json()
+
+			if (result.success) {
+				onSuccess(result.connection)
+				setStep("success")
+			} else {
+				setError("Invalid 2FA code")
+			}
+		} catch (err) {
+			setError(err.message)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	// Render based on current step...
+	return (
+		<div>
+			{step === "credentials" && (
+				<CredentialsForm onSubmit={submitCredentials} />
+			)}
+			{step === "2fa" && (
+				<TwoFactorForm twoFactorState={twoFactorState} onSubmit={submit2FA} />
+			)}
+			{step === "success" && <div>✅ Successfully connected!</div>}
+			{error && <div style={{ color: "red" }}>{error}</div>}
+			{isLoading && <div>Loading...</div>}
+		</div>
+	)
+}
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+	<Card title="Credential Handling" icon="shield-check">
+		Never store OnlyFans credentials. Process them immediately and discard.
+	</Card>
+	<Card title="HTTPS Only" icon="lock">
+		Always use HTTPS for credential transmission and API communications
+	</Card>
+	<Card title="Session Security" icon="database">
+		Store session data securely and encrypt sensitive information
+	</Card>
+	<Card title="Error Handling" icon="exclamation-triangle">
+		Don't expose detailed error messages to end users
+	</Card>
+</CardGroup>
+
+## Error Handling
+
+<AccordionGroup>
+
+<Accordion title="Invalid Credentials">
+```json
+{
+  "success": false,
+  "error": "Invalid email or password",
+  "code": "INVALID_CREDENTIALS"
+}
+```
+**Solution**: Prompt user to enter correct credentials
+</Accordion>
+
+<Accordion title="Invalid Two-Factor Code">
+```json
+{
+  "success": false,
+  "error": "Invalid two-factor authentication code",
+  "code": "INVALID_2FA_CODE"
+}
+```
+**Solution**: Prompt user to enter the correct 6-digit code
+</Accordion>
+
+<Accordion title="Session Expired">
+```json
+{
+  "error": "Session expired",
+  "code": "SESSION_EXPIRED",
+  "expiresAt": "2024-01-15T10:30:00Z"
+}
+```
+**Solution**: Create a new session with `/init`
+</Accordion>
+
+<Accordion title="Access Denied">
+```json
+{
+  "error": "API Mode access not approved",
+  "code": "ACCESS_DENIED"
+}
+```
+**Solution**: Contact [support@ofauth.com](mailto:support@ofauth.com) to request API Mode access
+</Accordion>
+
+</AccordionGroup>
+
+## Testing
+
+<Info>
+	**Development Mode**: Use test API keys for development. Contact support for
+	test credentials that work with API mode.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card title="Access API" icon="key" href="/api-reference/access/overview">
+		Use connection IDs and session data to access OnlyFans data
+	</Card>
+	<Card title="Webhooks" icon="webhook" href="/api-reference/account/overview">
+		Get notified of connection events
+	</Card>
+	<Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
+		Want simpler integration? Try hosted mode
+	</Card>
+</CardGroup>

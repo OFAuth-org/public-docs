@@ -1,0 +1,211 @@
+---
+title: "SDK Quickstart"
+sidebarTitle: "Quick Start"
+description: "Set up the OnlyFans SDK in your Node.js project with complete configuration options"
+---
+
+## Prerequisites
+
+Before installing the OnlyFans SDK, ensure your development environment meets these requirements:
+
+<Tabs>
+  <Tab title="Node.js">
+    **Minimum Version**: Node.js 16.0 or higher
+    
+    ```bash
+    # Check your Node.js version
+    node --version
+    
+    # Should output v16.0.0 or higher
+    ```
+  </Tab>
+  
+  <Tab title="TypeScript">
+    **Recommended**: TypeScript 4.5 or higher for full type support
+    
+    ```bash
+    # Install TypeScript globally if needed
+    npm install -g typescript
+    
+    # Check TypeScript version
+    tsc --version
+    ```
+  </Tab>
+  
+  <Tab title="Package Manager">
+    Any modern package manager:
+    - **npm** (comes with Node.js)
+    - **pnpm** (recommended for speed)
+    - **yarn** (v1 or v2+)
+  </Tab>
+</Tabs>
+
+## Installation
+
+Choose your preferred package manager to install the OnlyFans SDK:
+
+<CodeGroup>
+```bash npm
+npm install @ofauth/onlyfans-sdk
+```
+
+```bash pnpm
+pnpm add @ofauth/onlyfans-sdk
+```
+
+```bash yarn
+yarn add @ofauth/onlyfans-sdk
+```
+</CodeGroup>
+
+<Check>
+  The SDK package includes TypeScript definitions out of the box, so no additional `@types/` packages are needed.
+</Check>
+
+## Basic Setup
+
+### 1. Import the SDK
+
+<CodeGroup>
+```typescript ES Modules (TypeScript/Modern Node.js)
+import OFSDK from "@ofauth/onlyfans-sdk"
+```
+
+```javascript CommonJS (Legacy Node.js)
+const OFSDK = require("@ofauth/onlyfans-sdk")
+```
+</CodeGroup>
+
+### 2. Initialize the SDK
+
+The SDK supports three different modes. Choose the one that best fits your use case:
+
+<Tabs>
+  <Tab title="Access Mode (Recommended)">
+    **Best for**: Most applications, managed API calls through OFAuth
+    
+    ```typescript
+    import OFSDK from "@ofauth/onlyfans-sdk"
+
+    const sdk = new OFSDK({
+      mode: "access",
+      ofauthApiKey: process.env.OFAUTH_API_KEY,
+      debugLog: false // Enable for development
+    })
+    ```
+    
+    <Info>
+      Access mode uses OFAuth's managed infrastructure to handle OnlyFans API complexities automatically.
+    </Info>
+  </Tab>
+  
+  <Tab title="Direct Mode">
+    **Best for**: Full control over API requests, custom session management, local debugging (without incurring usage costs)
+    
+    ```typescript
+    import OFSDK from "@ofauth/onlyfans-sdk"
+
+    const sdk = new OFSDK({
+      mode: "direct",
+      ofauthApiKey: process.env.OFAUTH_API_KEY, // Required for request signing
+      debugLog: true // Helpful for debugging direct API calls
+    })
+    ```
+    
+    <Warning>
+      Direct mode requires manual session management and handling of OnlyFans API changes.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Custom Mode">
+    **Best for**: Enterprise setups with custom proxy infrastructure
+    
+    ```typescript
+    import OFSDK from "@ofauth/onlyfans-sdk"
+
+    const sdk = new OFSDK({
+      mode: "custom",
+      customOptions: {
+        baseUrl: "https://your-api-proxy.com",
+        signRequests: false, // Set to true if using OFAuth signing
+        beforeRequest: (url, request) => {
+          // Add custom headers or modify requests
+          request.headers = {
+            ...request.headers,
+            "X-Custom-Header": "your-value"
+          }
+          return request
+        }
+      },
+      ofauthApiKey: process.env.OFAUTH_API_KEY // Required if signRequests: true
+    })
+    ```
+    
+    <Tip>
+      Custom mode is perfect for enterprise environments where requests need to go through internal proxies or custom infrastructure.
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Verify Installation
+
+Create a simple test to verify the SDK is working correctly:
+
+```typescript test-sdk.ts
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+async function testSDK() {
+  try {
+    // Initialize SDK
+    const sdk = new OFSDK({
+      mode: "access",
+      ofauthApiKey: process.env.OFAUTH_API_KEY,
+      debugLog: true
+    })
+    
+    console.log("✅ SDK initialized successfully")
+    
+    // Test a simple operation (requires valid connection)
+    // This will fail if no valid connection exists, which is expected
+    const { data, error } = await sdk.link.connections.getAll({
+      limit: 1
+    })
+    
+    if (error && error.type === "unauthorized") {
+      console.log("✅ SDK is working (authentication required for actual data)")
+    } else if (data) {
+      console.log("✅ SDK is working and authenticated")
+    } else {
+      console.error("❌ Unexpected error:", error)
+    }
+    
+  } catch (error) {
+    console.error("❌ SDK initialization failed:", error.message)
+  }
+}
+
+testSDK()
+```
+
+Run the test:
+
+```bash
+npx tsx test-sdk.ts
+# or if using regular JavaScript
+node test-sdk.js
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/sdk/core-concepts/configuration">
+    Explore detailed configuration options and SDK modes for your use case
+  </Card>
+  <Card title="Authentication Setup" icon="key" href="/sdk/core-concepts/authentication">
+    Configure authentication modes and establish secure connections to OnlyFans
+  </Card>
+</CardGroup>
+
+<Info>
+  **Need Help?** If you encounter issues during installation, check our [troubleshooting guide](/sdk/advanced/error-handling) or reach out to [support](mailto:support@ofauth.com).
+</Info> 

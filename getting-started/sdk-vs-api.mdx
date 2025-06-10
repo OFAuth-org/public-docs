@@ -1,0 +1,247 @@
+---
+title: "SDK vs Direct API"
+description: "Choose the right integration approach for your OnlyFans project"
+---
+
+## Overview
+
+OFAuth provides two main ways to integrate with OnlyFans: our **Node.js SDK** and **Direct API access**. This guide helps you choose the right approach for your project.
+
+<CardGroup cols={2}>
+  <Card title="OnlyFans SDK" icon="code" href="/sdk">
+    **TypeScript/Node.js Library**
+    
+    Higher-level abstraction with built-in best practices
+  </Card>
+  <Card title="Direct APIs" icon="api" href="/guides/access">
+    **REST API Endpoints**
+    
+    Maximum flexibility for any programming language
+  </Card>
+</CardGroup>
+
+## Quick Comparison
+
+| Factor | OnlyFans SDK | Direct APIs |
+|--------|-------------|-------------|
+| **Languages** | Node.js/TypeScript only | Any language |
+| **Learning Curve** | 🟢 Easy | 🟡 Moderate |
+| **Type Safety** | ✅ Full TypeScript support | ⚠️ Manual typing |
+| **Error Handling** | ✅ Built-in patterns | 🔨 Manual implementation |
+| **Documentation** | 📚 Method-level docs | 📖 Endpoint docs |
+| **Best Practices** | ✅ Built-in | 🔨 Manual implementation |
+| **Maintenance** | 🔄 Auto-updates | 🔨 Manual API changes |
+
+## When to Choose the SDK
+
+<AccordionGroup>
+  <Accordion title="✅ Perfect for Node.js Projects">
+    If you're building with Node.js, TypeScript, or JavaScript frameworks (Next.js, Express, etc.), the SDK provides the smoothest development experience.
+  </Accordion>
+  
+  <Accordion title="✅ Faster Development">
+    Pre-built methods, error handling, and TypeScript definitions significantly reduce development time and bugs.
+  </Accordion>
+  
+  <Accordion title="✅ Built-in Best Practices">
+    Automatic retry logic, rate limiting, session management, and error handling follow production-tested patterns.
+  </Accordion>
+  
+  <Accordion title="✅ Better Developer Experience">
+    IDE autocomplete, inline documentation, and type checking catch errors before runtime.
+  </Accordion>
+</AccordionGroup>
+
+## When to Choose Direct APIs
+
+<AccordionGroup>
+  <Accordion title="✅ Non-Node.js Languages">
+    Building with Python, PHP, Ruby, Go, Java, C#, or other languages? Direct APIs provide maximum compatibility.
+  </Accordion>
+  
+  <Accordion title="✅ Custom Requirements">
+    Need specific request handling, custom authentication flows, or unique error handling? Direct APIs offer full control.
+  </Accordion>
+  
+  <Accordion title="✅ Lightweight Integration">
+    Simple use cases or microservices that only need a few endpoints may prefer the minimal overhead of direct API calls.
+  </Accordion>
+  
+  <Accordion title="✅ Existing Architecture">
+    Already have robust HTTP client infrastructure, error handling, and API patterns in place.
+  </Accordion>
+</AccordionGroup>
+
+## Code Comparison
+
+### User Profile Fetch
+
+<Tabs>
+  <Tab title="SDK (Node.js)">
+    ```typescript
+    import OFSDK from "@ofauth/onlyfans-sdk"
+    
+    const sdk = new OFSDK({
+      mode: "access",
+      ofauthApiKey: process.env.OFAUTH_API_KEY
+    })
+    
+    // Type-safe method with built-in error handling
+    const { data, error } = await sdk.self.getMe({
+      authentication: { connectionId: "conn_123" }
+    })
+    
+    if (error) {
+      console.error("Error:", error.message)
+      return
+    }
+    
+    // Full TypeScript typing
+    console.log(`Username: ${data.username}`)
+    console.log(`Subscribers: ${data.subscribersCount}`)
+    ```
+  </Tab>
+  
+  <Tab title="Direct API (Any Language)">
+    ```javascript
+    // Manual HTTP request
+    const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
+      headers: {
+        "apikey": process.env.OFAUTH_API_KEY,
+        "x-connection-id": "conn_123"
+      }
+    })
+    
+    // Manual error handling
+    if (!response.ok) {
+      const error = await response.json()
+      console.error("API Error:", error)
+      return
+    }
+    
+    // Manual type handling
+    const userData = await response.json()
+    console.log(`Username: ${userData.username}`)
+    console.log(`Subscribers: ${userData.subscribersCount}`)
+    ```
+  </Tab>
+</Tabs>
+
+### Message Sending
+
+<Tabs>
+  <Tab title="SDK (Node.js)">
+    ```typescript
+    // Rich method with validation and retry logic
+    const { data, error } = await sdk.messages.sendChatMessage({
+      authentication: { connectionId: "conn_123" },
+      userId: 123456,
+      params: {
+        text: "Hello! Here's your custom content.",
+        mediaItems: ["/path/to/image.jpg"],
+        price: 10.00
+      }
+    })
+    
+    if (error) {
+      // Structured error handling
+      if (error.type === "unauthorized") {
+        // Handle auth refresh
+      } else if (error.retry) {
+        // Automatic retry suggestion
+      }
+      return
+    }
+    
+    console.log(`Message sent: ${data.id}`)
+    ```
+  </Tab>
+  
+  <Tab title="Direct API (Any Language)">
+    ```javascript
+    // Manual request construction
+    const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/messages", {
+      method: "POST",
+      headers: {
+        "apikey": process.env.OFAUTH_API_KEY,
+        "x-connection-id": "conn_123",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        text: "Hello! Here's your custom content.",
+        mediaItems: ["/path/to/image.jpg"],
+        price: 10.00
+      })
+    })
+    
+    // Manual response handling
+    const result = await response.json()
+    if (response.ok) {
+      console.log(`Message sent: ${result.id}`)
+    } else {
+      console.error("Send failed:", result)
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Migration Path
+
+### Starting with Direct APIs
+
+Many developers start with direct APIs for quick prototyping or specific requirements:
+
+```javascript
+// Direct API prototype
+const posts = await fetch("https://api.ofauth.com/v2/access/users/me/posts", {
+  headers: { apikey: API_KEY, "x-connection-id": connectionId }
+})
+```
+
+### Upgrading to SDK
+
+When projects grow or need better maintainability, migrating to the SDK is straightforward:
+
+```typescript
+// SDK equivalent with added benefits
+const { data: posts, error } = await sdk.posts.getAll({
+  authentication: { connectionId },
+  limit: 20,
+  order: "publish_date_desc"
+})
+```
+
+## Recommendations
+
+<CardGroup cols={2}>
+  <Card title="Choose SDK if:" icon="thumbs-up">
+    - Building with Node.js/TypeScript
+    - Want faster development
+    - Need production reliability
+    - Prefer guided development experience
+  </Card>
+  <Card title="Choose Direct APIs if:" icon="settings">
+    - Using other programming languages
+    - Have specific integration requirements
+    - Building lightweight services
+    - Have existing API infrastructure
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+<Steps>
+  <Step title="Assess Your Stack">
+    Consider your programming language, project requirements, and team expertise.
+  </Step>
+  <Step title="Start Simple">
+    Both approaches can begin with the same account setup and authentication flows.
+  </Step>
+  <Step title="Scale Appropriately">
+    You can always switch approaches as your project evolves and requirements change.
+  </Step>
+</Steps>
+
+<Info>
+  **Not sure?** Start with our [Quick Start guide](/quickstart) which covers both approaches, or check out the [SDK overview](/sdk) for a hands-on introduction.
+</Info> 
