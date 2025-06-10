@@ -6,7 +6,7 @@
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.ico",
   "colors": {
     "primary": "#5668DE",
     "light": "#A3B0FF",
@@ -25,10 +25,24 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://ofauth.com/platform"
+      "href": "https://ofauth.com"
     }
   },
   "navigation": {
+    "global":  {
+    "anchors": [
+      {
+         "anchor": "LLMs.txt (Overview)",
+         "icon": "robot",
+         "href": "https://docs-next.ofauth.com/llms.txt"
+      },
+      {
+         "anchor": "LLMs.txt (Full)",
+         "icon": "robot",
+         "href": "https://docs-next.ofauth.com/llms-full.txt"
+      }
+    ]
+  },
     "dropdowns": [
       {
         "dropdown": "Documentation",
