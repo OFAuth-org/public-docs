@@ -32,38 +32,15 @@ The OFAuth API is designed for high performance with intelligent caching,
 optimized request handling, and global infrastructure. Understanding these
 systems helps you build faster, more efficient integrations.
 
-## Rate Limits by Plan
+## Rate Limits
 
-OFAuth enforces different rate limits based on your subscription plan:
-
-<CardGroup cols={2}>
-	<Card title="Pay as You Go" icon="credit-card">
-		**30 requests/minute** with burst capacity up to 50 requests
-	</Card>
-	<Card title="Starter Plan" icon="rocket">
-		**60 requests/minute** with burst capacity up to 90 requests
-	</Card>
-	<Card title="Launch Plan" icon="trending-up">
-		**120 requests/minute** with burst capacity up to 200 requests
-	</Card>
-	<Card title="Scale Plan" icon="chart-line">
-		**No OFAuth rate limits** - only subject to OnlyFans' native rate limits
-	</Card>
-</CardGroup>
+OFAuth enforces different rate limits based on your subscription plan and API endpoint. For full details—including per-endpoint, per-plan, and burst capacity—see the [Rate Limiting Architecture](/architecture/rate-limiting) documentation.
 
 <Warning>
-	**Important**: OFAuth does not bypass OnlyFans' native rate limits. Even if
-	you're within OFAuth's rate limits, you may still receive rate limiting
-	responses from OnlyFans depending on their current restrictions.
+	Rate limits apply per connection or organization depending on the API. OFAuth does not bypass OnlyFans' native rate limits. You may still receive rate limiting responses from OnlyFans even when within OFAuth limits.
 </Warning>
 
-### Rate Limiting Best Practices
-
-- **Implement exponential backoff** for 429 responses
-- **Use multiple connections** for higher throughput when needed
-- **Cache responses aggressively** to reduce API calls
-- **Monitor your usage** to stay within plan limits
-- **Consider upgrading** if you frequently hit rate limits
+For best practices on handling rate limits, see the [Rate Limiting Architecture](/architecture/rate-limiting) page.
 
 ## Caching Strategy
 

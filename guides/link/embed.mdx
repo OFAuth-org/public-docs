@@ -1,0 +1,498 @@
+---
+title: "Link Embed Library"
+description: "Drop-in components for seamless OnlyFans authentication integration"
+---
+
+## Overview
+
+The OFAuth Link Embed library provides pre-built components and a seamless popup flow for hosted link account authentication. Instead of redirecting users away from your application, the embed library allows users to authenticate within your site using popups, iframes, or web components.
+
+<Info>
+	**Best User Experience**: The Embed library provides the most seamless authentication experience for your users while maintaining the security benefits of hosted mode.
+</Info>
+
+## Features
+
+- **Popup Integration**: Open authentication in a popup window without leaving your application
+- **Multiple Implementation Options**: JavaScript library, global script, or web component
+- **Theme Support**: Light and dark themes to match your application
+- **Event Handling**: Rich event system for handling authentication success, errors, and user interactions
+- **TypeScript Support**: Full TypeScript definitions for better development experience
+- **Framework Agnostic**: Works with React, Vue, Svelte, vanilla JavaScript, and more
+
+## Installation
+
+### NPM Package
+
+```bash
+npm install @ofauth/link-embed
+```
+
+### CDN (Global Script)
+
+```html
+<script
+	src="https://unpkg.com/@ofauth/link-embed/dist/embed.global.js"
+	defer
+	data-auto-init
+></script>
+```
+
+## Implementation Options
+
+The embed library offers three implementation approaches to fit different use cases:
+
+<CardGroup cols={3}>
+	<Card title="JavaScript Library" icon="code" href="#javascript-library-recommended">
+		**Advanced Control** - Full programmatic control with TypeScript support. Perfect for React, Vue, or complex applications.
+	</Card>
+	<Card title="Global Script" icon="globe" href="#global-script-integration">
+		**Quick Integration** - Simple HTML attributes for rapid implementation on any website.
+	</Card>
+	<Card title="Web Component" icon="puzzle-piece" href="#web-component">
+		**Modern Standard** - Use as a native web component in any framework or vanilla HTML.
+	</Card>
+</CardGroup>
+
+## JavaScript Library (Recommended)
+
+The JavaScript library provides the most control and is perfect for modern web applications.
+
+### Basic Usage
+
+```javascript
+import { OFAuthLinkEmbed } from '@ofauth/link-embed';
+
+// Create a handler for a specific link session
+const handler = OFAuthLinkEmbed.create({
+	url: 'https://link.ofauth.com/cs_xxxxxxxxx',
+	theme: 'auto',
+	onSuccess: (metadata) => {
+		console.log('Authentication successful:', metadata);
+		if (metadata.redirect) {
+			window.location.href = metadata.successUrl;
+		}
+	},
+	onExit: (metadata) => {
+		console.log('Authentication exit:', metadata);
+		if (metadata.error) {
+			console.error('Error:', metadata.error.error_message);
+		}
+	},
+	onLoad: () => {
+		console.log('Authentication iframe loaded and ready');
+	}
+});
+
+// Open the authentication popup
+handler.open();
+```
+
+### Handler API
+
+The `create()` method returns a handler object with the following interface:
+
+```typescript
+interface LinkHandler {
+	open(): void;                           // Opens the authentication popup
+	exit(options?: { force?: boolean }): void;  // Closes the authentication popup
+	destroy(): void;                        // Destroys the handler and cleans up resources
+	ready: boolean;                         // True when the iframe is fully loaded
+}
+```
+
+### Configuration Options
+
+| Option      | Type                              | Required | Description                                               |
+| ----------- | --------------------------------- | -------- | --------------------------------------------------------- |
+| `url`       | `string`                          | ✅       | The Link client session URL from your backend            |
+| `theme`     | `'light' \| 'dark' \| 'auto'`     | ❌       | Theme for the authentication interface (default: 'auto') |
+| `onSuccess` | `(metadata: SuccessMetadata) => void` | ❌       | Callback when authentication succeeds                     |
+| `onExit`    | `(metadata: ExitMetadata) => void`    | ❌       | Callback when user exits without success                  |
+| `onLoad`    | `() => void`                      | ❌       | Callback when the iframe is fully loaded                 |
+
+## Global Script Integration
+
+For quick integration without a build process, use the global script approach with HTML data attributes.
+
+### Basic Usage
+
+```html
+<!-- Authentication trigger button -->
+<a
+	data-ofauth-link
+	href="https://link.ofauth.com/cs_xxxxxxxxx"
+	data-ofauth-theme="auto"
+	class="auth-button"
+>
+	Connect OnlyFans Account
+</a>
+
+<!-- Include the embed script -->
+<script
+	src="https://unpkg.com/@ofauth/link-embed/dist/embed.global.js"
+	defer
+	data-auto-init
+></script>
+```
+
+### Event Handling
+
+```javascript
+// Listen for authentication events
+document.querySelector('[data-ofauth-link]').addEventListener('success', (event) => {
+	const metadata = event.detail.metadata;
+	console.log('Authentication successful:', metadata);
+	
+	if (metadata.redirect) {
+		window.location.href = metadata.successUrl;
+	}
+});
+
+document.querySelector('[data-ofauth-link]').addEventListener('exit', (event) => {
+	const metadata = event.detail.metadata;
+	console.log('Authentication exit:', metadata);
+});
+```
+
+### Global Script Attributes
+
+| Attribute             | Description                                      | Required |
+| --------------------- | ------------------------------------------------ | -------- |
+| `data-ofauth-link`    | Marks the element as an authentication trigger  | ✅       |
+| `href`                | The Link client session URL                     | ✅       |
+| `data-ofauth-theme`   | Theme: 'light', 'dark', or 'auto' (default: 'auto') | ❌       |
+
+## Web Component
+
+Use the embed as a native web component in any framework or vanilla HTML.
+
+### Basic Usage
+
+```javascript
+// Import the component
+import '@ofauth/link-embed/component';
+```
+
+```html
+<ofauth-link
+	url="https://link.ofauth.com/cs_xxxxxxxxx"
+	theme="auto"
+	label="Connect OnlyFans Account"
+></ofauth-link>
+```
+
+### Event Handling
+
+```javascript
+const authComponent = document.querySelector('ofauth-link');
+
+authComponent.addEventListener('success', (event) => {
+	const metadata = event.detail.metadata;
+	console.log('Authentication successful:', metadata);
+});
+
+authComponent.addEventListener('exit', (event) => {
+	const metadata = event.detail.metadata;
+	console.log('Authentication exit:', metadata);
+});
+```
+
+### Web Component Attributes
+
+| Attribute | Type                        | Required | Description                              |
+| --------- | --------------------------- | -------- | ---------------------------------------- |
+| `url`     | `string`                    | ✅       | The Link client session URL             |
+| `theme`   | `'light' \| 'dark' \| 'auto'` | ❌       | Theme (default: 'auto')                |
+| `label`   | `string`                    | ❌       | Button text (default: 'Connect Account') |
+
+## Framework Examples
+
+Complete working examples are available for popular frameworks:
+
+<CardGroup cols={3}>
+	<Card title="React Example" icon="react" href="https://github.com/OFAuth-org/link-embed/tree/main/examples/react-example">
+		Full React integration with hooks, state management, and TypeScript support.
+	</Card>
+	<Card title="Svelte Example" icon="code" href="https://github.com/OFAuth-org/link-embed/tree/main/examples/svelte-example">
+		Svelte 5 implementation with runes, showing all three integration patterns.
+	</Card>
+	<Card title="Web Component Example" icon="puzzle-piece" href="https://github.com/OFAuth-org/link-embed/tree/main/examples/web-component-example">
+		Pure HTML/JavaScript example with no build tools required.
+	</Card>
+</CardGroup>
+
+Each example includes:
+- Complete setup instructions
+- Best practices for the specific framework
+- Event handling patterns
+- Error handling
+- TypeScript support (where applicable)
+
+## Integration with Backend
+
+### Step 1: Initialize Link Session
+
+Create a Link session on your backend and pass the URL to the frontend:
+
+```javascript
+// Backend: Initialize session
+const response = await fetch("https://api.ofauth.com/v2/link/init", {
+	method: "POST",
+	headers: {
+		"apikey": "YOUR_API_KEY",
+		"Content-Type": "application/json"
+	},
+	body: JSON.stringify({
+		mode: "hosted",
+		hosted: {
+			returnUrl: "https://yourapp.com/cancel",
+			successUrl: "https://yourapp.com/success"
+		},
+		clientReferenceId: "user_123"
+	})
+});
+
+const { url } = await response.json();
+```
+
+### Step 2: Handle Success Events
+
+```javascript
+// Frontend: Handle successful authentication
+const handler = OFAuthLinkEmbed.create({
+	url: authUrl, // URL from your backend
+	onSuccess: (metadata) => {
+		// Use the connection data in your application
+		const connection = {
+			user: metadata.connection.userData,
+			connectionId: metadata.connection.id
+		};
+		
+		// The data is also sent to your backend via webhook
+	}
+});
+```
+
+## Event Data Types
+
+### SuccessMetadata
+
+```typescript
+interface SuccessMetadata {
+	successUrl: string;     // as supplied to the /v2/link/init request
+	redirect: boolean;      // if redirect should occur based on your configuration
+	connection: {
+		id: string;
+		userData: {
+			id: string;
+			name: string;
+			username: string;
+			avatar: string;
+		};
+	};
+	// @deprecated - Use connection.userData instead
+	user: {
+		name: string;
+		avatar: string;
+		id: string;
+		username: string;
+	};
+}
+```
+
+### ExitMetadata
+
+```typescript
+interface ExitMetadata {
+	type: 'user_exit' | 'error' | 'forced_exit';
+	step?: 'pre-login' | 'login' | '2fa' | 'approval' | 'success' | 'error';
+	error: {
+		error_type: string;
+		error_message: string;
+	} | null;
+}
+```
+
+## Global Script Events
+
+| Event     | Detail Type               | Description                         |
+| --------- | ------------------------- | ----------------------------------- |
+| `success` | `{ metadata: SuccessMetadata }` | Fired when authentication succeeds  |
+| `exit`    | `{ metadata: ExitMetadata }`    | Fired when user exits without success |
+| `loaded`  | `null`                    | Fired when the iframe is ready      |
+
+## Styling and Themes
+
+### Built-in Themes
+
+The embed library includes three built-in themes:
+
+- **Light Theme**: Clean, bright interface suitable for light backgrounds
+- **Dark Theme**: Modern dark interface for dark mode applications
+- **Auto Theme**: Automatically adapts to system preference
+
+### Custom Styling
+
+The trigger elements can be styled with regular CSS. For web components, use CSS parts:
+
+```css
+/* Style web component button */
+ofauth-link::part(button) {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	border: none;
+	padding: 14px 28px;
+	border-radius: 8px;
+	font-size: 16px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
+ofauth-link::part(button):hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+```
+
+## Error Handling
+
+### Common Scenarios
+
+```javascript
+const handler = OFAuthLinkEmbed.create({
+	url: authUrl,
+	onSuccess: (metadata) => {
+		console.log('Success:', metadata);
+	},
+	onExit: (metadata) => {
+		if (metadata.error) {
+			console.error('Authentication error:', metadata.error);
+		} else {
+			console.log('User cancelled at step:', metadata.step);
+		}
+	}
+});
+```
+
+### Session Expiry
+
+Link sessions expire after 1 hour. Handle expired sessions gracefully:
+
+```javascript
+const handler = OFAuthLinkEmbed.create({
+	url: authUrl,
+	onExit: (metadata) => {
+		if (metadata.error && metadata.error.error_type === 'session_expired') {
+			// Handle session expiry - redirect to get new session
+			window.location.reload();
+		}
+	}
+});
+```
+
+## Browser Support
+
+The Link Embed library supports all modern browsers:
+
+- **Chrome/Edge**: Latest versions
+- **Firefox**: Latest versions  
+- **Safari**: Latest versions
+- **Mobile Browsers**: iOS Safari, Chrome Mobile
+
+<Info>
+	**Internet Explorer**: Not supported. The library uses modern web APIs that are not available in IE.
+</Info>
+
+## Performance Optimization
+
+### Preloading
+
+The handler API provides better performance by pre-initializing the authentication iframe:
+
+```javascript
+// The iframe is created and loaded when create() is called
+const handler = OFAuthLinkEmbed.create({
+	url: authUrl,
+	// ... configuration
+});
+
+// Opening is instant since the iframe is already loaded
+handler.open();
+```
+
+### Resource Management
+
+Always clean up handlers when they're no longer needed:
+
+```javascript
+// In React useEffect cleanup
+useEffect(() => {
+	const handler = createHandler();
+	
+	return () => {
+		handler.destroy(); // Removes iframe and cleans up event listeners
+	};
+}, []);
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+
+<Accordion title="Popup Blocked by Browser">
+	Some browsers may block popups. Ensure the authentication trigger is initiated by a user action (click event).
+	
+	```javascript
+	// Good: Triggered by user click
+	button.addEventListener('click', () => {
+		handler.open();
+	});
+	
+	// Bad: Automatic popup (may be blocked)
+	setTimeout(() => {
+		handler.open();
+	}, 1000);
+	```
+</Accordion>
+
+<Accordion title="Handler Not Ready">
+	Wait for the handler to be ready before opening:
+	
+	```javascript
+	const handler = OFAuthLinkEmbed.create(config);
+	
+	if (!handler.ready) {
+		// Wait for ready state or listen for load event
+		config.onLoad = () => {
+			handler.open();
+		};
+	} else {
+		handler.open();
+	}
+	```
+</Accordion>
+
+<Accordion title="CORS Issues">
+	The embed library handles CORS automatically. If you encounter issues, ensure:
+	- Your domain is properly configured in your OFAuth dashboard
+	- You're using HTTPS in production
+	- The session URL is valid and not expired
+</Accordion>
+
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+	<Card title="Hosted Mode Guide" icon="external-link" href="/guides/link/hosted">
+		Learn about the full hosted authentication flow
+	</Card>
+	<Card title="API Reference" icon="code" href="/api-reference/link">
+		Detailed API documentation for Link endpoints
+	</Card>
+	<Card title="Access API" icon="key" href="/guides/access">
+		Use connection IDs to access OnlyFans data
+	</Card>
+</CardGroup> 

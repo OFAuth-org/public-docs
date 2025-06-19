@@ -32,10 +32,14 @@ Please reach out to [support@ofauth.com](mailto:support@ofauth.com) to request t
 
 ## Choose Your Integration
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
 	<Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
-		Simple redirect or popup-based authentication with optional Embed SDK.
+		Simple redirect-based authentication flow.
 		**Available immediately** to all users.
+	</Card>
+	<Card title="Link Embed" icon="window" href="/guides/link/embed">
+		Drop-in popup components for seamless authentication without redirects.
+		**Best user experience**.
 	</Card>
 	<Card title="API Mode" icon="code" href="/guides/link/api-mode">
 		Full control over UX with programmatic authentication. **Requires
@@ -217,12 +221,18 @@ const connectionData = await getSessionStatus(clientSecret)
 
 ## Next Steps
 
-<CardGroup cols={3}>
+<CardGroup cols={4}>
 	<Card
 		title="Hosted Mode Guide"
 		icon="external-link"
 		href="/guides/link/hosted">
 		Complete guide for redirect-based authentication
+	</Card>
+	<Card
+		title="Link Embed Guide"
+		icon="window"
+		href="/guides/link/embed">
+		Drop-in components for seamless popup authentication
 	</Card>
 	<Card title="API Mode Guide" icon="code" href="/guides/link/api-mode">
 		Full programmatic authentication documentation

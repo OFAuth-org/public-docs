@@ -90,7 +90,7 @@ interface ConnectionCreatedEvent {
 				username: string
 				avatar: string
 			}
-			status: 'active' | 'pending_2fa'
+			status: 'active' | 'awaiting_2fa'
 			permissions: string[]
 		}
 		clientReferenceId: string | null
