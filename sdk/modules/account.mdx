@@ -24,7 +24,7 @@ const { data, error } = await sdk.account.setWebhook(
     "connection.created",
     "connection.updated", 
     "connection.expired",
-    "rules.update"
+    "rules.updated"
   ]
 )
 
@@ -44,7 +44,7 @@ if (error) {
   - `connection.created` - New connection established
   - `connection.updated` - Connection status changed
   - `connection.expired` - Connection expired
-  - `rules.update` - API rules updated
+  - `rules.updated` - API rules updated
 </ParamField>
 
 ### Get Webhook Configuration
@@ -103,7 +103,7 @@ if (error) {
     **connection.expired** - Connection expired
   </Card>
   <Card title="System Events" icon="refresh">
-    **rules.update** - API rules updated
+    **rules.updated** - API rules updated
   </Card>
 </CardGroup>
 
@@ -176,7 +176,7 @@ async function setupWebhooks() {
         "connection.created",
         "connection.updated", 
         "connection.expired",
-        "rules.update"
+        "rules.updated"
       ]
     );
 
@@ -223,7 +223,7 @@ function handleWebhookEvent(event: any) {
       onConnectionExpired(event.data);
       break;
       
-    case "rules.update":
+    case "rules.updated":
       console.log("API rules updated");
       // Handle rules update
       onRulesUpdate(event.data);

@@ -13,12 +13,13 @@ The OFAuth Link Embed library provides pre-built components and a seamless popup
 
 ## Features
 
-- **Popup Integration**: Open authentication in a popup window without leaving your application
-- **Multiple Implementation Options**: JavaScript library, global script, or web component
-- **Theme Support**: Light and dark themes to match your application
-- **Event Handling**: Rich event system for handling authentication success, errors, and user interactions
-- **TypeScript Support**: Full TypeScript definitions for better development experience
-- **Framework Agnostic**: Works with React, Vue, Svelte, vanilla JavaScript, and more
+- **Popup Integration**: Open authentication in a popup window without leaving your application.
+- **Multiple Implementation Options**: JavaScript library, global script, or web component.
+- **Theme Support**: Light and dark themes to match your application.
+- **Async Event Handling**: Rich event system for handling success, close, and invalid session events, with support for `async` callbacks.
+- **Automatic Session Renewal**: Built-in `onInvalidSession` callback to handle expired sessions gracefully.
+- **TypeScript Support**: Full TypeScript definitions for a better development experience.
+- **Framework Agnostic**: Works with React, Vue, Svelte, vanilla JavaScript, and more.
 
 ## Installation
 
@@ -63,29 +64,37 @@ The JavaScript library provides the most control and is perfect for modern web a
 ```javascript
 import { OFAuthLinkEmbed } from '@ofauth/link-embed';
 
-// Create a handler for a specific link session
+// 1. Create a handler (URL is not required at creation)
 const handler = OFAuthLinkEmbed.create({
-	url: 'https://link.ofauth.com/cs_xxxxxxxxx',
 	theme: 'auto',
-	onSuccess: (metadata) => {
+	async onSuccess(metadata) {
 		console.log('Authentication successful:', metadata);
-		if (metadata.redirect) {
-			window.location.href = metadata.successUrl;
-		}
+		// You can perform async actions here before the embed closes
+		await fetch('/api/notify-success', {
+			method: 'POST',
+			body: JSON.stringify({ user: metadata.connection.userData.id })
+		});
 	},
-	onExit: (metadata) => {
-		console.log('Authentication exit:', metadata);
-		if (metadata.error) {
-			console.error('Error:', metadata.error.error_message);
-		}
+	onClose(metadata) {
+		console.log('Authentication closed:', metadata);
 	},
-	onLoad: () => {
-		console.log('Authentication iframe loaded and ready');
-	}
+	async onInvalidSession() {
+        console.log("Session invalid, creating a new one...");
+        const response = await fetch("/api/create-link-session");
+        const { url } = await response.json();
+        handler.open(url);
+    }
 });
 
-// Open the authentication popup
-handler.open();
+// 2. Open the authentication popup with a session URL from your backend
+async function startAuth() {
+    const response = await fetch("/api/create-link-session");
+    const { url } = await response.json();
+	handler.open(url);
+}
+
+// Call startAuth() when you're ready, e.g., on a button click
+// startAuth();
 ```
 
 ### Handler API
@@ -94,10 +103,10 @@ The `create()` method returns a handler object with the following interface:
 
 ```typescript
 interface LinkHandler {
-	open(): void;                           // Opens the authentication popup
-	exit(options?: { force?: boolean }): void;  // Closes the authentication popup
-	destroy(): void;                        // Destroys the handler and cleans up resources
-	ready: boolean;                         // True when the iframe is fully loaded
+	open(url?: string): void;               // Opens the authentication popup. Can be called with a new URL.
+	close(options?: { force?: boolean }): void; // Closes and destroys the authentication popup.
+	setUrl(url: string): void;              // Sets or updates the URL for the next time `open()` is called.
+	cleanup(): void;                         // Optional, used to cleanup html elements manually. Called automatically when embed has closed.
 }
 ```
 
@@ -105,11 +114,12 @@ interface LinkHandler {
 
 | Option      | Type                              | Required | Description                                               |
 | ----------- | --------------------------------- | -------- | --------------------------------------------------------- |
-| `url`       | `string`                          | ✅       | The Link client session URL from your backend            |
-| `theme`     | `'light' \| 'dark' \| 'auto'`     | ❌       | Theme for the authentication interface (default: 'auto') |
-| `onSuccess` | `(metadata: SuccessMetadata) => void` | ❌       | Callback when authentication succeeds                     |
-| `onExit`    | `(metadata: ExitMetadata) => void`    | ❌       | Callback when user exits without success                  |
-| `onLoad`    | `() => void`                      | ❌       | Callback when the iframe is fully loaded                 |
+| `url`       | `string`                          | ❌       | Optional default Link session URL. Can be passed to `open()`. |
+| `theme`     | `'light' \| 'dark' \| 'auto'`     | ❌       | Theme for the authentication interface (default: 'auto'). |
+| `onSuccess` | `(metadata: SuccessMetadata) => void` | ❌       | Callback when authentication succeeds. Can be `async`. |
+| `onClose`    | `(metadata: CloseMetadata) => void`    | ❌       | Callback when user closes the embed. Can be `async`. |
+| `onLoad`    | `() => void`                      | ❌       | Callback when the iframe is fully loaded. Can be `async`. |
+| `onInvalidSession` | `() => void` | ❌ | Callback when the session is invalid. Can be `async`. |
 
 ## Global Script Integration
 
@@ -138,20 +148,25 @@ For quick integration without a build process, use the global script approach wi
 
 ### Event Handling
 
+With the global script, you can listen for DOM events on the trigger element.
+
 ```javascript
+const authButton = document.querySelector('[data-ofauth-link]');
+
 // Listen for authentication events
-document.querySelector('[data-ofauth-link]').addEventListener('success', (event) => {
+authButton.addEventListener('success', (event) => {
 	const metadata = event.detail.metadata;
 	console.log('Authentication successful:', metadata);
-	
-	if (metadata.redirect) {
-		window.location.href = metadata.successUrl;
-	}
 });
 
-document.querySelector('[data-ofauth-link]').addEventListener('exit', (event) => {
+authButton.addEventListener('close', (event) => {
 	const metadata = event.detail.metadata;
-	console.log('Authentication exit:', metadata);
+	console.log('Authentication closed:', metadata);
+});
+
+authButton.addEventListener('invalid_session', (event) => {
+	console.log('The link session is invalid or has expired.');
+    // You might want to refresh the page or get a new link
 });
 ```
 
@@ -192,9 +207,14 @@ authComponent.addEventListener('success', (event) => {
 	console.log('Authentication successful:', metadata);
 });
 
-authComponent.addEventListener('exit', (event) => {
+authComponent.addEventListener('close', (event) => {
 	const metadata = event.detail.metadata;
-	console.log('Authentication exit:', metadata);
+	console.log('Authentication closed:', metadata);
+});
+
+authComponent.addEventListener('invalid_session', (event) => {
+	console.log('The link session is invalid or has expired.');
+    // You might want to get a new link and update the component's url property
 });
 ```
 
@@ -206,72 +226,33 @@ authComponent.addEventListener('exit', (event) => {
 | `theme`   | `'light' \| 'dark' \| 'auto'` | ❌       | Theme (default: 'auto')                |
 | `label`   | `string`                    | ❌       | Button text (default: 'Connect Account') |
 
-## Framework Examples
 
-Complete working examples are available for popular frameworks:
+## Session Expiry & Renewal
 
-<CardGroup cols={3}>
-	<Card title="React Example" icon="react" href="https://github.com/OFAuth-org/link-embed/tree/main/examples/react-example">
-		Full React integration with hooks, state management, and TypeScript support.
-	</Card>
-	<Card title="Svelte Example" icon="code" href="https://github.com/OFAuth-org/link-embed/tree/main/examples/svelte-example">
-		Svelte 5 implementation with runes, showing all three integration patterns.
-	</Card>
-	<Card title="Web Component Example" icon="puzzle-piece" href="https://github.com/OFAuth-org/link-embed/tree/main/examples/web-component-example">
-		Pure HTML/JavaScript example with no build tools required.
-	</Card>
-</CardGroup>
-
-Each example includes:
-- Complete setup instructions
-- Best practices for the specific framework
-- Event handling patterns
-- Error handling
-- TypeScript support (where applicable)
-
-## Integration with Backend
-
-### Step 1: Initialize Link Session
-
-Create a Link session on your backend and pass the URL to the frontend:
+Link sessions expire after 6 hours. The embed library makes it easy to handle this by listening for the `onInvalidSession` event when using the JavaScript library.
 
 ```javascript
-// Backend: Initialize session
-const response = await fetch("https://api.ofauth.com/v2/link/init", {
-	method: "POST",
-	headers: {
-		"apikey": "YOUR_API_KEY",
-		"Content-Type": "application/json"
-	},
-	body: JSON.stringify({
-		mode: "hosted",
-		hosted: {
-			returnUrl: "https://yourapp.com/cancel",
-			successUrl: "https://yourapp.com/success"
-		},
-		clientReferenceId: "user_123"
-	})
-});
-
-const { url } = await response.json();
-```
-
-### Step 2: Handle Success Events
-
-```javascript
-// Frontend: Handle successful authentication
 const handler = OFAuthLinkEmbed.create({
-	url: authUrl, // URL from your backend
-	onSuccess: (metadata) => {
-		// Use the connection data in your application
-		const connection = {
-			user: metadata.connection.userData,
-			connectionId: metadata.connection.id
-		};
-		
-		// The data is also sent to your backend via webhook
-	}
+	async onInvalidSession() {
+        console.log("Session is invalid or expired, creating a new one...");
+        const response = await fetch("/api/create-link-session"); // Your backend endpoint
+        const { url } = await response.json();
+        
+        // Re-open the embed with the new session URL
+        handler.open(url);
+    },
+    onClose: (metadata) => {
+        // This will still fire after an invalid session is handled
+        console.log('Embed closed. Type:', metadata.type);
+    }
 });
+
+// When user clicks "Connect"
+async function start() {
+    const response = await fetch("/api/create-link-session");
+    const { url } = await response.json();
+    handler.open(url);
+}
 ```
 
 ## Event Data Types
@@ -291,20 +272,13 @@ interface SuccessMetadata {
 			avatar: string;
 		};
 	};
-	// @deprecated - Use connection.userData instead
-	user: {
-		name: string;
-		avatar: string;
-		id: string;
-		username: string;
-	};
 }
 ```
 
-### ExitMetadata
+### CloseMetadata
 
 ```typescript
-interface ExitMetadata {
+interface CloseMetadata {
 	type: 'user_exit' | 'error' | 'forced_exit';
 	step?: 'pre-login' | 'login' | '2fa' | 'approval' | 'success' | 'error';
 	error: {
@@ -319,8 +293,9 @@ interface ExitMetadata {
 | Event     | Detail Type               | Description                         |
 | --------- | ------------------------- | ----------------------------------- |
 | `success` | `{ metadata: SuccessMetadata }` | Fired when authentication succeeds  |
-| `exit`    | `{ metadata: ExitMetadata }`    | Fired when user exits without success |
+| `close`   | `{ metadata: CloseMetadata }`    | Fired when user closes the embed     |
 | `loaded`  | `null`                    | Fired when the iframe is ready      |
+| `invalid_session` | `null`				| Fired if the session is not valid 	|
 
 ## Styling and Themes
 
@@ -366,7 +341,7 @@ const handler = OFAuthLinkEmbed.create({
 	onSuccess: (metadata) => {
 		console.log('Success:', metadata);
 	},
-	onExit: (metadata) => {
+	onClose: (metadata) => {
 		if (metadata.error) {
 			console.error('Authentication error:', metadata.error);
 		} else {
@@ -378,16 +353,13 @@ const handler = OFAuthLinkEmbed.create({
 
 ### Session Expiry
 
-Link sessions expire after 1 hour. Handle expired sessions gracefully:
+Link sessions expire after 6 hours. Handle expired sessions gracefully:
 
 ```javascript
 const handler = OFAuthLinkEmbed.create({
-	url: authUrl,
-	onExit: (metadata) => {
-		if (metadata.error && metadata.error.error_type === 'session_expired') {
-			// Handle session expiry - redirect to get new session
-			window.location.reload();
-		}
+	onInvalidSession: async () => {
+		const url = await createLinkSession();
+		handler.open(url);
 	}
 });
 ```

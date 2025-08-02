@@ -591,7 +591,7 @@ class RulesManager {
 app.post('/webhook/rules-updated', (req, res) => {
 	const { eventType, live, data } = req.body
 	
-	if (eventType === 'rules.update') {
+	if (eventType === 'rules.updated') {
 		console.log('Rules update webhook received:', data.revision)
 		// Update cached rules directly from webhook payload
 		rulesManager.updateRulesFromWebhook(data)
@@ -638,7 +638,7 @@ class WebhookRulesManager extends RulesManager {
 
 ```json
 {
-  "eventType": "rules.update",
+  "eventType": "rules.updated",
   "live": true,
   "data": {
     "rules": {

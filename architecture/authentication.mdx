@@ -7,16 +7,25 @@ description: "Authentication methods, connection management, and security archit
 
 ### API Key Authentication
 
-All API requests require authentication using your API key in the header:
+All API requests require authentication using your API key and platform ID in the headers:
 
 ```http
 apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
 ```
+
+<Note>
+	**Platform ID**: The `x-platform-id` header is required for optimal performance. This identifies your platform/organization and enables fast API key validation. You can find your Platform ID in your OFAuth dashboard.
+</Note>
 
 <Warning>
 	**Security**: Keep your API keys secure. Never expose them in client-side
 	code, commit them to version control, or share them publicly.
 </Warning>
+
+<Info>
+	**Legacy Support**: If you're unable to provide the `x-platform-id` header immediately, the API will still work but with slightly higher latency as it needs to look up your platform from the database. We strongly recommend including this header for best performance.
+</Info>
 
 ### Connection-Based Access
 

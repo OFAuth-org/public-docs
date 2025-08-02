@@ -60,7 +60,7 @@ Webhooks deliver real-time notifications when important events occur:
 
 | Event Type       | Trigger               | Data Included                    |
 | ---------------- | --------------------- | -------------------------------- |
-| `rules.update`   | Dynamic rules changed | complete rules object, revision  |
+| `rules.updated`   | Dynamic rules changed | complete rules object, revision  |
 
 ### Event Payload Structure
 
@@ -143,7 +143,7 @@ interface ConnectionExpiredEvent {
 
 ```typescript
 interface RulesUpdateEvent {
-	eventType: 'rules.update'
+	eventType: 'rules.updated'
 	live: boolean
 	data: {
 		rules: {
@@ -195,7 +195,7 @@ app.post("/webhooks/ofauth", (req, res) => {
 			handleConnectionUpdated(event.data)
 			break
 
-		case "rules.update":
+		case "rules.updated":
 			handleRulesUpdate(event.data)
 			break
 
