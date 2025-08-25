@@ -205,21 +205,56 @@ POST /v2/link/{clientSecret}/2fa/code
 
 ```json
 {
-	"success": false,
-	"status": "awaiting_2fa"
+    "success": false,
+    "status": "awaiting_2fa",
+    "error": "Invalid code",
+    "data": {
+        "twoFactorState": {
+            "options": ["phone", "app"],
+            "phoneLast4": "1234",
+            "phoneCode": {
+                "checkAttemptsLeft": 2,
+                "checkAttemptsLimit": 3,
+                "expirationDate": "2025-02-13T07:20:11+00:00",
+                "expirationSeconds": 300,
+                "lastSentDate": "2025-02-13T07:15:11+00:00",
+                "requestAttemptsLeft": 2,
+                "requestAttemptsLimit": 3
+            }
+        }
+    }
+}
+```
+
+**Response (Invalid Session State):**
+
+```json
+{
+    "success": false,
+    "error": "Session is not in 2FA state"
+}
+```
+
+**Response (Server Error):**
+
+```json
+{
+    "success": false,
+    "status": "failed",
+    "error": "Unexpected error occurred, please contact support."
 }
 ```
 
 </Expandable>
 
-### Request Phone 2FA Code
+### Request SMS 2FA Code
 
 Request a new 2FA code to be sent via SMS.
 
-<Expandable title="POST /{clientSecret}/2fa/request-phone">
+<Expandable title="GET /{clientSecret}/2fa/request-sms-code">
 
 ```http
-POST /v2/link/{clientSecret}/2fa/request-phone
+GET /v2/link/{clientSecret}/2fa/request-sms-code
 ```
 
 **Headers:**
@@ -232,8 +267,18 @@ POST /v2/link/{clientSecret}/2fa/request-phone
 {
 	"success": true,
 	"data": {
-		"phoneLast4": "1234",
-		"requestAttemptsLeft": 2
+        "twoFactorState": {
+            "phoneLast4": "1234",
+            "phoneCode": {
+                "checkAttemptsLeft": 2,
+                "checkAttemptsLimit": 3,
+                "expirationDate": "2025-02-13T07:20:11+00:00",
+                "expirationSeconds": 300,
+                "lastSentDate": "2025-02-13T07:15:11+00:00",
+                "requestAttemptsLeft": 2,
+                "requestAttemptsLimit": 3
+            }
+        }
 	}
 }
 ```
@@ -638,17 +683,17 @@ function TwoFactorForm({ twoFactorState, onSubmit }) {
 
 	const requestPhoneCode = async () => {
 		const response = await fetch(
-			`https://api.ofauth.com/v2/link/${clientSecret}/2fa/request-phone`,
+			`https://api.ofauth.com/v2/link/${clientSecret}/2fa/request-sms-code`,
 			{
-				method: "POST",
+				method: "GET",
 				headers: { apikey: "YOUR_API_KEY" }
 			}
 		)
 
-		const result = await response.json()
-		if (result.success) {
-			alert(`Code sent to phone ending in ${result.data.phoneLast4}`)
-		}
+        const result = await response.json()
+        if (result.success) {
+            alert(`Code sent to phone ending in ${result.data.twoFactorState.phoneLast4}`)
+        }
 	}
 
 	return (

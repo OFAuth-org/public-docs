@@ -97,9 +97,9 @@ apikey: YOUR_API_KEY
 
 Access to dynamic rules is controlled by your subscription plan:
 
-- **Exclusive Access**: Latest rules available immediately (requires `latest_rules` permission)
-- **Early Access**: Rules available with slight delay (requires `preview_rules` permission)  
-- **Public Access**: Rules available after longer delay (no special permissions required)
+- **Current Rules**: Latest rules available to all users (no special permissions required)
+- **Early Access**: Preview rules available with slight delay (requires `preview_rules` permission)  
+- **Public Rules**: Older stable rules available to everyone (no permissions required)
 
 ## Core Endpoints
 
@@ -135,8 +135,7 @@ GET /v2/dynamic-rules
 	},
 	"is_current": true,
 	"is_public": false,
-	"is_early_access": true,
-	"is_exclusive_access": false
+	"is_early_access": false
 }
 ```
 
@@ -152,10 +151,9 @@ GET /v2/dynamic-rules
 | `rules.checksum_indexes` | number[] | Array indexes used in checksum |
 | `rules.app_token` | string | Current app token |
 | `rules.revision` | string | Rules revision identifier |
-| `is_current` | boolean | Whether rules are current |
+| `is_current` | boolean | Whether rules are current and usable |
 | `is_public` | boolean | Whether rules are in public tier |
 | `is_early_access` | boolean | Whether rules are in early access tier |
-| `is_exclusive_access` | boolean | Whether rules are in exclusive tier |
 
 </Expandable>
 
@@ -204,8 +202,7 @@ POST /v2/dynamic-rules/sign
 		"x-of-rev": "202501150001-abcdef"
 	},
 	"is_public": false,
-	"is_early_access": true,
-	"is_exclusive_access": false
+	"is_early_access": false
 }
 ```
 
@@ -275,8 +272,7 @@ GET /v2/dynamic-rules/status
 	"early_access_revision": "202401150001", 
 	"public_revision": "202401140003",
 	"is_current": true,
-	"is_early_access": true,
-	"is_exclusive_access": false,
+	"is_early_access": false,
 	"is_public": false,
 	"access_granted": true
 }
@@ -291,7 +287,6 @@ GET /v2/dynamic-rules/status
 | `public_revision` | string | Public rules revision |
 | `is_current` | boolean | Whether rules are current and usable |
 | `is_early_access` | boolean | Whether rules are in early access tier |
-| `is_exclusive_access` | boolean | Whether rules are in exclusive tier |
 | `is_public` | boolean | Whether rules are in public tier |
 | `access_granted` | boolean | Whether your API key has access to current rules |
 
@@ -617,8 +612,7 @@ class WebhookRulesManager extends RulesManager {
 			rules,
 			is_current: true,
 			is_public: false, // Set based on your access level
-			is_early_access: true,
-			is_exclusive_access: false
+			is_early_access: false
 		}
 		
 		console.log(`Rules updated via webhook to revision: ${revision}`)
@@ -750,8 +744,7 @@ if (response.status === 400) {
   "error": "You don't have access to the latest rules, please upgrade your plan.",
   "is_current": true,
   "is_public": false,
-  "is_early_access": false,
-  "is_exclusive_access": true
+  "is_early_access": true
 }
 ```
 
@@ -766,7 +759,6 @@ if (response.status === 400) {
   "is_current": false,
   "is_public": true,
   "is_early_access": false,
-  "is_exclusive_access": false
 }
 ```
 

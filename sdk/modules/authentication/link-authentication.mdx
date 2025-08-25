@@ -175,7 +175,19 @@ if (loginResult.status === "completed") {
 {
   "status": "awaiting_2fa",
   "data": {
-    "message": "Two-factor authentication required"
+    "twoFactorState": {
+      "options": ["app", "phone"],
+      "phoneLast4": "1234",
+      "phoneCode": {
+        "checkAttemptsLeft": 2,
+        "checkAttemptsLimit": 3,
+        "expirationDate": "2025-02-13T07:20:11+00:00",
+        "expirationSeconds": 300,
+        "lastSentDate": "2025-02-13T07:15:11+00:00",
+        "requestAttemptsLeft": 2,
+        "requestAttemptsLimit": 3
+      }
+    }
   }
 }
 ```
