@@ -170,12 +170,12 @@ const stories = await fetch("https://api.ofauth.com/v2/access/users/12345/storie
 
 </CodeGroup>
 
-### Messages & Conversations
+### Messages & Conversations (Managed)
 
 <CodeGroup>
 
 ```javascript Get Conversations List
-const conversations = await fetch("https://api.ofauth.com/v2/access/chats/rooms", {
+const conversations = await fetch("https://api.ofauth.com/v2/access/chats", {
 	headers: {
 		apikey: "YOUR_API_KEY",
 		"x-platform-id": "YOUR_PLATFORM_ID",
@@ -188,8 +188,8 @@ console.log("Conversations:", chats);
 ```
 
 ```javascript Get Messages from Conversation
-const roomId = "123";
-const messages = await fetch(`https://api.ofauth.com/v2/access/chats/rooms/${roomId}/messages`, {
+const userId = "123";
+const messages = await fetch(`https://api.ofauth.com/v2/access/chat/${userId}/messages`, {
 	headers: {
 		apikey: "YOUR_API_KEY",
 		"x-platform-id": "YOUR_PLATFORM_ID",

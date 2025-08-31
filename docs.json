@@ -150,7 +150,22 @@
           {
             "group": "Access",
             "pages": [
-              "api-reference/access"
+              "api-reference/access",
+              { "page": "Messages", "openapi": { "tags": ["Messages"] } },
+              { "page": "Posts", "openapi": { "tags": ["Posts"] } },
+              { "page": "Users", "openapi": { "tags": ["Users"] } },
+              { "page": "Vault", "openapi": { "tags": ["Vault"] } },
+              { "page": "Upload", "openapi": { "tags": ["Upload"] } },
+              { "page": "Self", "openapi": { "tags": ["Self"] } },
+              { "page": "Statistics", "openapi": { "tags": ["Statistics"] } },
+              { "page": "Stories", "openapi": { "tags": ["Stories"] } },
+              { "page": "Subscriptions", "openapi": { "tags": ["Subscriptions"] } }
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              { "page": "Webhooks", "openapi": { "tags": ["Webhooks"] } }
             ]
           }
         ]

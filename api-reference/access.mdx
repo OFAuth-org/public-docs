@@ -9,35 +9,35 @@ description: 'The Access API acts as a transparent proxy to OnlyFans, allowing y
 
 <CodeGroup>
 ```http GET
-GET /v2/access/{path}
+GET /v2/access/proxy/{path}
 ```
 
 ```http POST  
-POST /v2/access/{path}
+POST /v2/access/proxy/{path}
 ```
 
 ```http PUT
-PUT /v2/access/{path}
+PUT /v2/access/proxy/{path}
 ```
 
 ```http PATCH
-PATCH /v2/access/{path}
+PATCH /v2/access/proxy/{path}
 ```
 
 ```http DELETE
-DELETE /v2/access/{path}
+DELETE /v2/access/proxy/{path}
 ```
 </CodeGroup>
 
 <RequestExample>
 ```bash Connection ID
-curl -X GET 'https://api.ofauth.com/v2/access/users/me' \
+curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_abc123'
 ```
 
 ```bash Session Headers
-curl -X GET 'https://api.ofauth.com/v2/access/users/me' \
+curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'user-id: 12345' \
   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...' \
@@ -46,7 +46,7 @@ curl -X GET 'https://api.ofauth.com/v2/access/users/me' \
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.ofauth.com/v2/access/users/me', {
+const response = await fetch('https://api.ofauth.com/v2/access/proxy/users/me', {
   headers: {
     'apikey': 'YOUR_API_KEY',
     'x-connection-id': 'conn_abc123'
@@ -60,7 +60,7 @@ const userData = await response.json();
 import requests
 
 response = requests.get(
-    'https://api.ofauth.com/v2/access/users/me',
+    'https://api.ofauth.com/v2/access/proxy/users/me',
     headers={
         'apikey': 'YOUR_API_KEY',
         'x-connection-id': 'conn_abc123'
@@ -71,7 +71,7 @@ user_data = response.json()
 ```
 
 ```bash Connection ID POST
-curl -X POST 'https://api.ofauth.com/v2/access/chats/rooms/123/messages' \
+curl -X POST 'https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_abc123' \
   -H 'Content-Type: application/json' \
@@ -79,7 +79,7 @@ curl -X POST 'https://api.ofauth.com/v2/access/chats/rooms/123/messages' \
 ```
 
 ```javascript JavaScript POST
-const response = await fetch('https://api.ofauth.com/v2/access/chats/rooms/123/messages', {
+const response = await fetch('https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages', {
   method: 'POST',
   headers: {
     'apikey': 'YOUR_API_KEY',

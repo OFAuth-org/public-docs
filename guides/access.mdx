@@ -5,7 +5,10 @@ description: "Seamless, proxied access to OnlyFans data with automatic session m
 
 ## Overview
 
-The Access API (`/v2/access`) provides seamless, proxied access to OnlyFans data while handling authentication, session management, and proxy optimization automatically. This API acts as a transparent proxy, allowing you to make requests as if directly to OnlyFans while OFAuth handles all the complexity.
+The Access API provides two flavors of access:
+
+- Managed endpoints under `/v2/access/*` for common operations (users, posts, messages, uploads, statistics, subscriptions, vault). These are stable, typed routes.
+- Proxy endpoints under `/v2/access/proxy/*` for arbitrary OnlyFans API paths. These transparently forward requests to OnlyFans.
 
 **Two Authentication Methods:**
 
@@ -20,10 +23,12 @@ The Access API (`/v2/access`) provides seamless, proxied access to OnlyFans data
 	**Production Deployment?** Review our [Production Considerations](/getting-started/production-considerations) guide for critical information about building reliable OnlyFans integrations.
 </Info>
 
-## Base URL
+## Base URLs
 
 ```
-https://api.ofauth.com/v2/access
+Managed: `https://api.ofauth.com/v2/access`
+
+Proxy: `https://api.ofauth.com/v2/access/proxy`
 ```
 
 ## Authentication
@@ -63,7 +68,7 @@ user-agent: ONLYFANS_USER_AGENT
 
 The Access API accepts any HTTP method and forwards requests to OnlyFans with the appropriate authentication and proxying.
 
-### Basic Request Structure
+### Basic Request Structure (Managed)
 
 ```http
 GET /v2/access/users/me HTTP/1.1
@@ -137,13 +142,13 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
 
 </CodeGroup>
 
-### Messages
+### Messages (Managed)
 
 <CodeGroup>
 
 ```javascript Get Conversations
 const conversations = await fetch(
-	"https://api.ofauth.com/v2/access/chats/rooms",
+	"https://api.ofauth.com/v2/access/chats",
 	{
 		headers: {
 			apikey: "YOUR_API_KEY",
@@ -155,7 +160,7 @@ const conversations = await fetch(
 
 ```javascript Get Messages
 const messages = await fetch(
-	"https://api.ofauth.com/v2/access/chats/rooms/123/messages",
+	"https://api.ofauth.com/v2/access/chat/123/messages",
 	{
 		headers: {
 			apikey: "YOUR_API_KEY",
@@ -167,7 +172,7 @@ const messages = await fetch(
 
 </CodeGroup>
 
-### Content
+### Content (Managed)
 
 <CodeGroup>
 
@@ -197,7 +202,7 @@ const stories = await fetch(
 
 </CodeGroup>
 
-### Subscriptions
+### Subscriptions (Managed)
 
 <CodeGroup>
 
@@ -216,6 +221,21 @@ const subscriptions = await fetch(
 ```javascript Get Following List
 const following = await fetch(
 	"https://api.ofauth.com/v2/access/users/me/following",
+
+### Proxy Examples
+
+Use `/v2/access/proxy/*` to hit any OnlyFans API route:
+
+```javascript Any OF path via proxy
+// Conversations
+await fetch("https://api.ofauth.com/v2/access/proxy/chats/rooms", { headers })
+
+// Messages in a room
+await fetch("https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages", { headers })
+
+// Users
+await fetch("https://api.ofauth.com/v2/access/proxy/users/me", { headers })
+```
 	{
 		headers: {
 			apikey: "YOUR_API_KEY",

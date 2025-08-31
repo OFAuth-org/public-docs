@@ -33,8 +33,8 @@ Production-ready TypeScript SDKs that eliminate 90% of OnlyFans integration comp
 
 ### Before: Raw API Calls
 ```javascript
-// Manual HTTP requests with lots of boilerplate
-const response = await fetch("https://api.ofauth.com/v2/access/chats/123/messages", {
+// Manual HTTP requests with lots of boilerplate (proxy example)
+const response = await fetch("https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages", {
   method: "POST",
   headers: {
     "apikey": process.env.OFAUTH_API_KEY,
