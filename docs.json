@@ -145,27 +145,14 @@
       {
         "dropdown": "API Reference",
         "icon": "square-terminal",
-        "openapi": "https://api-next.ofauth.com/openapi.json",
+        "openapi": "https://api-next.ofauth.com/openapi-core.json",
         "groups": [
           {
             "group": "Access",
+            "openapi": "https://api-next.ofauth.com/openapi-access.json",
             "pages": [
-              "api-reference/access",
-              { "page": "Messages", "openapi": { "tags": ["Messages"] } },
-              { "page": "Posts", "openapi": { "tags": ["Posts"] } },
-              { "page": "Users", "openapi": { "tags": ["Users"] } },
-              { "page": "Vault", "openapi": { "tags": ["Vault"] } },
-              { "page": "Upload", "openapi": { "tags": ["Upload"] } },
-              { "page": "Self", "openapi": { "tags": ["Self"] } },
-              { "page": "Statistics", "openapi": { "tags": ["Statistics"] } },
-              { "page": "Stories", "openapi": { "tags": ["Stories"] } },
-              { "page": "Subscriptions", "openapi": { "tags": ["Subscriptions"] } }
-            ]
-          },
-          {
-            "group": "Webhooks",
-            "pages": [
-              { "page": "Webhooks", "openapi": { "tags": ["Webhooks"] } }
+              "api-reference/proxy",
+              "api-reference/managed"
             ]
           }
         ]

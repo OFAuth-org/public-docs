@@ -173,6 +173,27 @@ The OnlyFans API path to proxy to. This can be any valid OnlyFans API endpoint p
 
 </Panel>
 
+## Authentication
+
+- Api key header: include your OFAuth API key on every request.
+  - Header: `apikey: YOUR_API_KEY`
+- Platform header (optional but recommended): identify your platform/organization.
+  - Header: `x-platform-id: YOUR_PLATFORM_ID`
+  - Required when using service-level keys; otherwise used for attribution and analytics.
+
+<CodeGroup>
+```http Headers
+apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
+```
+
+```bash cURL
+curl -H 'apikey: YOUR_API_KEY' \
+     -H 'x-platform-id: YOUR_PLATFORM_ID' \
+     'https://api.ofauth.com/v2/access/proxy/users/me'
+```
+</CodeGroup>
+
 <Tabs>
 <Tab title="Connection ID (Recommended)">
 Use OFAuth's Link API connection ID for automatic session management.

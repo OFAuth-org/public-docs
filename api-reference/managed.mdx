@@ -1,0 +1,46 @@
+---
+title: "Managed Access Authentication"
+description: "Headers required to call managed Access endpoints under /v2/access/*"
+---
+
+Managed endpoints are the typed, stable routes under `/v2/access/*` (e.g., `/v2/access/users/{userId}`, `/v2/access/posts`). They require an OFAuth API key and either a Link connection ID or full session headers.
+
+## Authentication
+
+- Api key header: include your OFAuth API key on every request.
+  - Header: `apikey: YOUR_API_KEY`
+- Platform header (optional but recommended): identify your platform/organization.
+  - Header: `x-platform-id: YOUR_PLATFORM_ID`
+  - Required when using service-level keys; otherwise used for attribution and analytics.
+- Choose one of the following for user authentication:
+  - Link connection (recommended): `x-connection-id: CONNECTION_ID`
+  - Session headers (advanced): `user-id`, `x-bc`, `cookie`, `user-agent`
+
+<CodeGroup>
+```http Headers
+apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
+x-connection-id: conn_abc123
+```
+
+```bash cURL (Users profile)
+curl -H 'apikey: YOUR_API_KEY' \
+     -H 'x-platform-id: YOUR_PLATFORM_ID' \
+     -H 'x-connection-id: conn_abc123' \
+     'https://api.ofauth.com/v2/access/users/me'
+```
+
+```bash cURL (Posts)
+curl -X POST 'https://api.ofauth.com/v2/access/posts' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-platform-id: YOUR_PLATFORM_ID' \
+  -H 'x-connection-id: conn_abc123' \
+  -H 'Content-Type: application/json' \
+  -d '{"text": "Hello from OFAuth!"}'
+```
+</CodeGroup>
+
+<Tip>
+Use Link connection IDs whenever possible. They handle session lifecycle and reduce implementation complexity.
+</Tip>
+
