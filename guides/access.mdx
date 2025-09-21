@@ -256,10 +256,10 @@ plan:
 
 **Per connection ID or user ID:**
 
-- **Pay as You Go**: 30 req/min with 50 request burst capacity
-- **Starter**: 60 req/min with 90 request burst capacity
-- **Launch**: 120 req/min with 200 request burst capacity
-- **Scale**: No OFAuth rate limits (OnlyFans limits still apply)
+- **Pay as You Go**: 30 Access req/min with 50 request burst capacity
+- **Starter**: Standard Access rate limits (60 Access req/min with 90 request burst capacity)
+- **Launch**: 120 Access req/min with 200 request burst capacity
+- **Scale**: No Access rate limits (OnlyFans limits still apply)
 
 **System Details:**
 
@@ -268,7 +268,7 @@ plan:
 
 <Warning>
 	**Important**: OFAuth does not bypass OnlyFans' native rate limits. Even if
-	you're within OFAuth's rate limits, you may still receive rate limiting
+	you're within OFAuth's Access rate limits, you may still receive rate limiting
 	responses from OnlyFans.
 </Warning>
 
