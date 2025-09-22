@@ -1,262 +1,52 @@
 ---
 title: "Webhook Architecture"
-description: "Event-driven architecture and real-time notifications"
+description: "How OFAuth delivers webhook events reliably and securely."
 ---
 
 ## Overview
 
-OFAuth uses webhooks to provide real-time notifications about connection and system events. This event-driven architecture ensures your application stays synchronized with user account states and system changes without constant polling.
+OFAuth webhooks notify your application about account state changes, authentication lifecycle events, and access updates. This page explains the delivery pipeline so you can integrate the system confidently and design for resilience.
 
-## Webhook Architecture
+## Delivery Pipeline
 
-### Event-Driven Updates
+1. **Event creation** – Internal services emit events when OnlyFans data changes or a link session transitions state.
+2. **Queueing** – Events are durably stored in a multi-region queue before any customer delivery attempts begin.
+3. **Fan-out workers** – Regional workers read from the queue and push batched deliveries to subscribed webhook endpoints.
+4. **Delivery attempts** – Each request includes authentication headers, a signature, and metadata for traceability.
 
-Webhooks deliver real-time notifications when important events occur:
+<Info>
+  All webhook requests come from static IP ranges published in the dashboard. Allowlist them to avoid rate limiting or firewalls dropping traffic.
+</Info>
 
-```javascript
-// Webhook payload example
-{
-  "eventType": "connection.expired",
-  "live": true,
-  "data": {
-    "connection": {
-      "id": "conn_abc123",
-      "platformUserId": "12345",
-      "status": "expired"
-    },
-    "clientReferenceId": "user_456"
-  }
-}
-```
+## Retries and Ordering
 
-### Webhook Benefits
+- OFAuth uses exponential backoff with jitter for retries. The default policy makes up to 10 attempts across a 24 hour window.
+- Events are ordered per connection. We guarantee in-order delivery for the same `connectionId`; cross-connection ordering is best effort.
+- Poison events that fail all retries are moved to a dead-letter queue. Contact support to replay dead-lettered batches.
 
-<CardGroup cols={2}>
-	<Card title="Real-Time Updates" icon="bolt">
-		Immediate notifications when events occur, no polling required
-	</Card>
-	<Card title="Reduced API Calls" icon="arrows-minimize">
-		Stay informed without constantly checking connection status
-	</Card>
-	<Card title="Better UX" icon="heart">
-		Proactively handle connection issues and user state changes
-	</Card>
-	<Card title="Scalable Architecture" icon="chart-line">
-		Handle thousands of users with efficient event delivery
-	</Card>
-</CardGroup>
+## Security Model
 
-## Supported Events
+- Each webhook request includes an `OFAuth-Signature` header (HMAC SHA-256) derived from your signing secret.
+- Signatures include a timestamp to prevent replay attacks. Reject requests older than 5 minutes.
+- Rotate webhook secrets from the dashboard without downtime. The platform supports overlapping secrets during rotation.
 
-### Connection Events
+## Operational Guidance
 
-| Event Type           | Trigger                    | Data Included                                   |
-| -------------------- | -------------------------- | ----------------------------------------------- |
-| `connection.created` | New connection established | connection details, user data, clientReferenceId |
-| `connection.updated` | Connection details changed | updated connection, user data, clientReferenceId |
-| `connection.expired` | Connection lost/expired    | connection id, status, clientReferenceId        |
-
-### System Events
-
-| Event Type       | Trigger               | Data Included                    |
-| ---------------- | --------------------- | -------------------------------- |
-| `rules.updated`   | Dynamic rules changed | complete rules object, revision  |
-
-### Event Payload Structure
-
-All webhook events follow a consistent structure:
-
-```typescript
-interface WebhookEvent {
-	eventType: string // Event type (e.g., "connection.expired")
-	live: boolean // Whether this is from live or test environment
-	data: object // Event-specific data
-}
-```
-
-#### Connection Created Event
-
-```typescript
-interface ConnectionCreatedEvent {
-	eventType: 'connection.created'
-	live: boolean
-	data: {
-		connection: {
-			id: string
-			platformUserId: string
-			userData: {
-				userId: string
-				name: string
-				username: string
-				avatar: string
-			}
-			status: 'active' | 'awaiting_2fa'
-			permissions: string[]
-		}
-		clientReferenceId: string | null
-	}
-}
-```
-
-#### Connection Updated Event
-
-```typescript
-interface ConnectionUpdatedEvent {
-	eventType: 'connection.updated'
-	live: boolean
-	data: {
-		connection: {
-			id: string
-			platformUserId: string
-			status: 'active'
-			permissions: string[]
-			userData: {
-				userId: string
-				name: string
-				username: string
-				avatar: string
-			}
-		}
-		clientReferenceId: string | null
-	}
-}
-```
-
-#### Connection Expired Event
-
-```typescript
-interface ConnectionExpiredEvent {
-	eventType: 'connection.expired'
-	live: boolean
-	data: {
-		connection: {
-			id: string
-			platformUserId: string
-			status: 'expired'
-		}
-		clientReferenceId: string | null
-	}
-}
-```
-
-#### Rules Update Event
-
-```typescript
-interface RulesUpdateEvent {
-	eventType: 'rules.updated'
-	live: boolean
-	data: {
-		rules: {
-			static_param: string
-			format: string
-			start: string
-			end: string
-			prefix: string
-			suffix: string
-			checksum_constant: number
-			checksum_indexes: number[]
-			app_token: string
-			revision: string
-		}
-		revision: string
-	}
-}
-```
-
-## Security
-
-Webhooks are secured with:
-
-- **HTTPS Only**: Encrypted delivery
-- **Authentication**: Webhook endpoints require authentication
-
-## Implementation Example
-
-```javascript
-const express = require("express")
-const app = express()
-
-app.use(express.json())
-
-app.post("/webhooks/ofauth", (req, res) => {
-	// Process webhook event
-	const event = req.body
-
-	switch (event.eventType) {
-		case "connection.expired":
-			handleConnectionExpired(event.data)
-			break
-
-		case "connection.created":
-			handleConnectionCreated(event.data)
-			break
-
-		case "connection.updated":
-			handleConnectionUpdated(event.data)
-			break
-
-		case "rules.updated":
-			handleRulesUpdate(event.data)
-			break
-
-		default:
-			console.log("Unknown event type:", event.eventType)
-	}
-
-	res.status(200).send("OK")
-})
-
-function handleConnectionExpired(data) {
-	console.log(`Connection ${data.connection.id} expired`)
-	// Trigger re-authentication flow
-	// Notify user of expired session
-}
-
-function handleConnectionCreated(data) {
-	console.log(`New connection created: ${data.connection.id}`)
-	// Update your database with new connection
-	// Send welcome notification to user
-}
-
-function handleConnectionUpdated(data) {
-	console.log(`Connection ${data.connection.id} updated`)
-	// Update connection details in your database
-}
-
-function handleRulesUpdate(data) {
-	console.log(`Rules updated to revision: ${data.revision}`)
-	// Update your local rules cache
-	// No need to fetch rules separately - they're included in the webhook
-}
-```
-
-## Best Practices
-
-<CardGroup cols={2}>
-	<Card title="Handle Idempotency" icon="repeat">
-		Store processed events to prevent duplicate processing
-	</Card>
-	<Card title="Respond Quickly" icon="zap">
-		Return 200 status immediately, process asynchronously if needed
-	</Card>
-	<Card title="Implement Monitoring" icon="chart-line">
-		Track webhook delivery and processing success
-	</Card>
-	<Card title="Cache Rules Updates" icon="database">
-		Store rules from webhook events to avoid additional API calls
-	</Card>
-</CardGroup>
+- Respond with a `2xx` status code within 10 seconds to acknowledge delivery. Longer processing should be offloaded to background workers.
+- Log the `eventId` header to correlate webhook deliveries with OFAuth support if you need assistance.
+- Monitor DLQ metrics in the dashboard; a rising DLQ count signals downstream instability.
 
 ## Next Steps
 
-<CardGroup cols={3}>
-	<Card
-		title="Error Handling"
-		icon="exclamation-triangle"
-		href="/architecture/error-handling">
-		Implement robust error handling
-	</Card>
-	<Card title="Quick Start" icon="rocket" href="/quickstart">
-		Set up your first webhook endpoint
-	</Card>
+<CardGroup cols={2}>
+  <Card title="Implementation Guide" icon="code" href="/guides/webhooks">
+    Step-by-step instructions for verifying signatures and handling retries.
+  </Card>
+  <Card title="Account API" icon="user" href="/api-reference/account/overview">
+    Use the Account API to reconcile webhook events with live data.
+  </Card>
 </CardGroup>
+
+<Info>
+  Need help validating your webhook architecture? Email [support@ofauth.com](mailto:support@ofauth.com) for a design review.
+</Info>

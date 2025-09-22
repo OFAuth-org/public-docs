@@ -72,7 +72,6 @@
               "architecture/authentication",
               "architecture/rate-limiting",
               "architecture/error-handling",
-              "architecture/performance",
               "architecture/webhooks"
             ]
           },
@@ -85,13 +84,13 @@
                 "pages": [
                   "guides/link/overview",
                   "guides/link/hosted",
-                  "guides/link/embed",
-                  "guides/link/api-mode"
+                  "guides/link/embed"
                 ]
               },
               "guides/access",
               "guides/dynamic-rules",
-              "guides/account"
+              "guides/account",
+              "guides/webhooks"
             ]
           }
         ]
@@ -148,11 +147,30 @@
         "openapi": "https://api-next.ofauth.com/openapi-core.json",
         "groups": [
           {
+            "group": "Link",
+            "pages": [
+              "api-reference/link/overview"
+            ]
+          },
+          {
             "group": "Access",
             "openapi": "https://api-next.ofauth.com/openapi-access.json",
             "pages": [
-              "api-reference/proxy",
-              "api-reference/managed"
+              "api-reference/access/overview",
+              "api-reference/access/managed",
+              "api-reference/access/proxy"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": [
+              "api-reference/account/overview"
+            ]
+          },
+          {
+            "group": "Dynamic Rules",
+            "pages": [
+              "api-reference/dynamic-rules/overview"
             ]
           }
         ]

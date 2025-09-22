@@ -12,17 +12,10 @@ systematic approach helps developers quickly identify and resolve issues.
 
 ## Error Response Format
 
-All API errors return a consistent JSON structure:
-
-```json
-{
-	"error": "Human-readable error description",
-	"code": "MACHINE_READABLE_ERROR_CODE",
-	"details": {
-		"field": "Additional context when applicable"
-	}
-}
-```
+All API errors return a consistent JSON structure with three core fields:
+- `error`: a human-readable description of what went wrong
+- `code`: a machine-readable identifier you can branch on in your client
+- `details`: optional contextual information such as the affected field
 
 ### Error Response Fields
 
@@ -120,185 +113,27 @@ All API errors return a consistent JSON structure:
 
 ### Basic Error Handling
 
-```javascript
-async function handleApiCall(url, options) {
-	try {
-		const response = await fetch(url, options);
-
-		if (!response.ok) {
-			const errorData = await response.json();
-
-			// Handle specific error types
-			switch (errorData.code) {
-				case "AUTH_CONNECTION_NOT_FOUND":
-					console.log("User needs to re-authenticate");
-					redirectToAuth();
-					break;
-
-				case "RATE_LIMIT_EXCEEDED":
-					console.log("Rate limited, waiting...");
-					await waitAndRetry(response.headers.get("X-RateLimit-Retry-After"));
-					break;
-
-				case "UPSTREAM_UNAVAILABLE":
-					console.log("OnlyFans API unavailable, retrying...");
-					return retryWithBackoff(url, options);
-
-				default:
-					console.error("API Error:", errorData.error);
-					throw new Error(errorData.error);
-			}
-		}
-
-		return response.json();
-	} catch (error) {
-		console.error("Request failed:", error);
-		throw error;
-	}
-}
-```
+Follow these practices when calling the API from client code:
+- Check `response.ok` before parsing the body and surface the HTTP status in your logs.
+- Parse the JSON payload and branch on `errorData.code` to determine the recovery path.
+- Redirect users to re-authentication when you receive connection or session errors.
+- Respect the `X-RateLimit-Retry-After` header and pause before retrying rate-limited calls.
+- Bubble up unexpected errors so they can be reported to your monitoring stack.
 
 ### Advanced Error Handler Class
 
-```javascript
-class ApiErrorHandler {
-	constructor() {
-		this.retryableErrors = [
-			"UPSTREAM_UNAVAILABLE",
-			"UPSTREAM_TIMEOUT",
-			"RULES_OUTDATED",
-			"RATE_LIMIT_EXCEEDED",
-		];
-	}
-
-	async handleError(response, originalRequest) {
-		const errorData = await response.json();
-
-		// Log error for debugging
-		console.error(`API Error ${response.status}:`, errorData);
-
-		// Handle specific error patterns
-		if (this.isRetryableError(errorData.code)) {
-			return this.handleRetryableError(errorData, originalRequest);
-		}
-
-		if (this.isAuthError(errorData.code)) {
-			return this.handleAuthError(errorData);
-		}
-
-		if (this.isValidationError(errorData.code)) {
-			return this.handleValidationError(errorData);
-		}
-
-		// Generic error handling
-		throw new ApiError(errorData.error, errorData.code, response.status);
-	}
-
-	isRetryableError(code) {
-		return this.retryableErrors.includes(code);
-	}
-
-	isAuthError(code) {
-		return code.startsWith("AUTH_") || code.startsWith("CONNECTION_");
-	}
-
-	isValidationError(code) {
-		return code.startsWith("VALIDATION_");
-	}
-
-	async handleRetryableError(errorData, originalRequest) {
-		// Implement exponential backoff
-		const delay = this.calculateRetryDelay(errorData);
-		await new Promise((resolve) => setTimeout(resolve, delay));
-
-		// Retry original request
-		return fetch(originalRequest.url, originalRequest.options);
-	}
-
-	handleAuthError(errorData) {
-		// Trigger re-authentication flow
-		this.triggerReauth(errorData.code);
-		throw new AuthError(errorData.error, errorData.code);
-	}
-
-	handleValidationError(errorData) {
-		// Extract validation details for user-friendly messages
-		const fieldErrors = this.extractFieldErrors(errorData.details);
-		throw new ValidationError(errorData.error, fieldErrors);
-	}
-
-	calculateRetryDelay(errorData) {
-		if (errorData.code === "RATE_LIMIT_EXCEEDED") {
-			// Use Retry-After header if available
-			return (errorData.retryAfter || 60) * 1000;
-		}
-
-		// Exponential backoff for other errors
-		return Math.min(Math.pow(2, this.retryCount) * 1000, 30000);
-	}
-}
-
-// Custom error classes
-class ApiError extends Error {
-	constructor(message, code, status) {
-		super(message);
-		this.name = "ApiError";
-		this.code = code;
-		this.status = status;
-	}
-}
-
-class AuthError extends ApiError {
-	constructor(message, code) {
-		super(message, code, 401);
-		this.name = "AuthError";
-	}
-}
-
-class ValidationError extends ApiError {
-	constructor(message, fieldErrors) {
-		super(message);
-		this.name = "ValidationError";
-		this.fieldErrors = fieldErrors;
-	}
-}
-```
+Build a reusable error-handling helper so every request is treated consistently. The helper should:
+- Centralize logging of HTTP status codes, request identifiers, and the parsed error payload.
+- Categorize errors (retryable, authentication, validation) to route them to the right recovery logic.
+- Apply backoff to retryable errors and honour server-provided retry hints.
+- Trigger re-authentication flows when connection or session errors are detected.
+- Raise typed exceptions (for example `ApiError`, `AuthError`, `ValidationError`) so downstream code can react precisely.
 
 ### Validation Error Details
 
-Validation errors include specific field information:
+Validation errors include specific field information. Expect `details.field` to identify the problematic input, `details.message` to describe the issue, and `details.value` (when provided) to show what was rejected.
 
-```json
-{
-	"error": "Validation failed",
-	"code": "VALIDATION_REQUIRED_FIELD",
-	"details": {
-		"field": "email",
-		"message": "Email address is required",
-		"value": null
-	}
-}
-```
-
-Handle validation errors with user-friendly messages:
-
-```javascript
-function handleValidationError(errorData) {
-	const fieldErrors = {};
-
-	if (errorData.details) {
-		fieldErrors[errorData.details.field] = errorData.details.message;
-	}
-
-	// Display field-specific errors in UI
-	Object.entries(fieldErrors).forEach(([field, message]) => {
-		const fieldElement = document.getElementById(field);
-		if (fieldElement) {
-			showFieldError(fieldElement, message);
-		}
-	});
-}
-```
+Handle validation errors with user-friendly messages by mapping the fields in `details` to UI controls, highlighting the inputs that need attention, and surfacing the descriptive message inline for the user.
 
 ## Debugging Tips
 
@@ -319,104 +154,21 @@ function handleValidationError(errorData) {
 
 ### Error Monitoring
 
-Implement error tracking for production applications:
-
-```javascript
-class ErrorMonitor {
-	constructor() {
-		this.errorCounts = new Map();
-		this.errorLog = [];
-	}
-
-	logError(error, context) {
-		const errorEntry = {
-			timestamp: new Date().toISOString(),
-			error: error.message,
-			code: error.code,
-			status: error.status,
-			context,
-			stack: error.stack,
-		};
-
-		this.errorLog.push(errorEntry);
-
-		// Update error counts
-		const count = this.errorCounts.get(error.code) || 0;
-		this.errorCounts.set(error.code, count + 1);
-
-		// Alert if error rate is high
-		if (count > 10) {
-			this.alertHighErrorRate(error.code, count);
-		}
-
-		// Send to monitoring service
-		this.sendToMonitoring(errorEntry);
-	}
-
-	getErrorStats() {
-		return {
-			totalErrors: this.errorLog.length,
-			errorCounts: Object.fromEntries(this.errorCounts),
-			recentErrors: this.errorLog.slice(-10),
-		};
-	}
-}
-```
+Implement error tracking for production applications by storing structured error metadata, tracking frequency per error code, sending alerts when thresholds are exceeded, and forwarding enriched events (timestamp, status, stack trace, and request context) to your monitoring platform.
 
 ## Common Error Scenarios
 
 ### Authentication Issues
 
-```javascript
-// Handling expired connections
-try {
-	const response = await fetch("/v2/access/users/me", {
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": connectionId,
-		},
-	});
-
-	if (!response.ok) {
-		const error = await response.json();
-
-		if (error.code === "CONNECTION_EXPIRED") {
-			// Redirect to re-authentication
-			window.location.href = "/auth/reconnect";
-			return;
-		}
-	}
-} catch (error) {
-	console.error("Failed to fetch user data:", error);
-}
-```
+When you receive authentication or connection errors:
+- Inspect the response body for `CONNECTION_EXPIRED`, `AUTH_SESSION_EXPIRED`, or related codes.
+- Inform the user that they must reconnect and send them through the hosted re-authentication flow.
+- Clear cached credentials so the next attempt starts with a fresh session.
+- Log the status, code, and affected connection ID for support follow-up.
 
 ### Rate Limiting
 
-```javascript
-// Handling rate limits with exponential backoff
-async function apiCallWithRetry(url, options, maxRetries = 3) {
-	for (let attempt = 0; attempt < maxRetries; attempt++) {
-		try {
-			const response = await fetch(url, options);
-
-			if (response.status === 429) {
-				const retryAfter =
-					parseInt(response.headers.get("X-RateLimit-Retry-After")) || 60;
-				const delay = Math.min(Math.pow(2, attempt) * 1000, retryAfter * 1000);
-
-				console.log(`Rate limited. Waiting ${delay / 1000} seconds...`);
-				await new Promise((resolve) => setTimeout(resolve, delay));
-				continue;
-			}
-
-			return response;
-		} catch (error) {
-			if (attempt === maxRetries - 1) throw error;
-		}
-	}
-}
-```
+Handle rate limits by adopting exponential backoff. Read the `X-RateLimit-Retry-After` header (it defaults to 60 seconds when missing), pause before the next attempt, and stop retrying once the maximum retry count has been reached. Track cumulative failures so you know when to surface a persistent outage to the user.
 
 ## Next Steps
 
