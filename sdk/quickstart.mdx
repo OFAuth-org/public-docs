@@ -8,37 +8,29 @@ description: "Set up the OnlyFans SDK in your Node.js project with complete conf
 
 Before installing the OnlyFans SDK, ensure your development environment meets these requirements:
 
-<Tabs>
-  <Tab title="Node.js">
-    **Minimum Version**: Node.js 16.0 or higher
-    
-    ```bash
-    # Check your Node.js version
-    node --version
-    
-    # Should output v16.0.0 or higher
-    ```
-  </Tab>
-  
-  <Tab title="TypeScript">
-    **Recommended**: TypeScript 4.5 or higher for full type support
-    
-    ```bash
-    # Install TypeScript globally if needed
-    npm install -g typescript
-    
-    # Check TypeScript version
-    tsc --version
-    ```
-  </Tab>
-  
-  <Tab title="Package Manager">
-    Any modern package manager:
-    - **npm** (comes with Node.js)
-    - **pnpm** (recommended for speed)
-    - **yarn** (v1 or v2+)
-  </Tab>
-</Tabs>
+- **Node.js** — Minimum version 16.0 or higher.
+
+  ```bash
+  # Check your Node.js version
+  node --version
+
+  # Should output v16.0.0 or higher
+  ```
+
+- **TypeScript** — Recommended 4.5 or higher for full type support.
+
+  ```bash
+  # Install TypeScript globally if needed
+  npm install -g typescript
+
+  # Check TypeScript version
+  tsc --version
+  ```
+
+- **Package Manager** — Use any modern option:
+  - npm (bundled with Node.js)
+  - pnpm (recommended for speed)
+  - yarn (v1 or v2+)
 
 ## Installation
 
@@ -80,72 +72,64 @@ const OFSDK = require("@ofauth/onlyfans-sdk")
 
 The SDK supports three different modes. Choose the one that best fits your use case:
 
-<Tabs>
-  <Tab title="Access Mode (Recommended)">
-    **Best for**: Most applications, managed API calls through OFAuth
-    
-    ```typescript
-    import OFSDK from "@ofauth/onlyfans-sdk"
+- **Access Mode (recommended)** — Managed API calls through OFAuth, ideal for most applications.
 
-    const sdk = new OFSDK({
-      mode: "access",
-      ofauthApiKey: process.env.OFAUTH_API_KEY,
-      debugLog: false // Enable for development
-    })
-    ```
-    
-    <Info>
-      Access mode uses OFAuth's managed infrastructure to handle OnlyFans API complexities automatically.
-    </Info>
-  </Tab>
-  
-  <Tab title="Direct Mode">
-    **Best for**: Full control over API requests, custom session management, local debugging (without incurring usage costs)
-    
-    ```typescript
-    import OFSDK from "@ofauth/onlyfans-sdk"
+  ```typescript
+  import OFSDK from "@ofauth/onlyfans-sdk"
 
-    const sdk = new OFSDK({
-      mode: "direct",
-      ofauthApiKey: process.env.OFAUTH_API_KEY, // Required for request signing
-      debugLog: true // Helpful for debugging direct API calls
-    })
-    ```
-    
-    <Warning>
-      Direct mode requires manual session management and handling of OnlyFans API changes.
-    </Warning>
-  </Tab>
-  
-  <Tab title="Custom Mode">
-    **Best for**: Enterprise setups with custom proxy infrastructure
-    
-    ```typescript
-    import OFSDK from "@ofauth/onlyfans-sdk"
+  const sdk = new OFSDK({
+    mode: "access",
+    ofauthApiKey: process.env.OFAUTH_API_KEY,
+    debugLog: false // Enable for development
+  })
+  ```
 
-    const sdk = new OFSDK({
-      mode: "custom",
-      customOptions: {
-        baseUrl: "https://your-api-proxy.com",
-        signRequests: false, // Set to true if using OFAuth signing
-        beforeRequest: (url, request) => {
-          // Add custom headers or modify requests
-          request.headers = {
-            ...request.headers,
-            "X-Custom-Header": "your-value"
-          }
-          return request
+  <Info>
+    Access mode uses OFAuth's managed infrastructure to handle OnlyFans API complexities automatically.
+  </Info>
+
+- **Direct Mode** — Full control over API requests, session management, and local debugging without usage costs.
+
+  ```typescript
+  import OFSDK from "@ofauth/onlyfans-sdk"
+
+  const sdk = new OFSDK({
+    mode: "direct",
+    ofauthApiKey: process.env.OFAUTH_API_KEY, // Required for request signing
+    debugLog: true // Helpful for debugging direct API calls
+  })
+  ```
+
+  <Warning>
+    Direct mode requires manual session management and handling of OnlyFans API changes.
+  </Warning>
+
+- **Custom Mode** — Enterprise setups with custom proxy infrastructure and routing requirements.
+
+  ```typescript
+  import OFSDK from "@ofauth/onlyfans-sdk"
+
+  const sdk = new OFSDK({
+    mode: "custom",
+    customOptions: {
+      baseUrl: "https://your-api-proxy.com",
+      signRequests: false, // Set to true if using OFAuth signing
+      beforeRequest: (url, request) => {
+        // Add custom headers or modify requests
+        request.headers = {
+          ...request.headers,
+          "X-Custom-Header": "your-value"
         }
-      },
-      ofauthApiKey: process.env.OFAUTH_API_KEY // Required if signRequests: true
-    })
-    ```
-    
-    <Tip>
-      Custom mode is perfect for enterprise environments where requests need to go through internal proxies or custom infrastructure.
-    </Tip>
-  </Tab>
-</Tabs>
+        return request
+      }
+    },
+    ofauthApiKey: process.env.OFAUTH_API_KEY // Required if signRequests: true
+  })
+  ```
+
+  <Tip>
+    Custom mode is perfect for enterprise environments where requests need to go through internal proxies or custom infrastructure.
+  </Tip>
 
 ## Verify Installation
 
@@ -194,6 +178,41 @@ npx tsx test-sdk.ts
 # or if using regular JavaScript
 node test-sdk.js
 ```
+
+## Confirm Platform Configuration
+
+Use the Account API to verify that your API key and platform metadata are set up correctly. The `whoami` endpoint returns only general information about your organization.
+
+```bash
+curl -s https://api.ofauth.com/v2/account/whoami \
+  -H "apikey: $OFAUTH_API_KEY" \
+  -H "x-platform-id: $OFAUTH_PLATFORM_ID"
+```
+
+```json response
+{
+  "platform": {
+    "id": "plat_123",
+    "name": "Acme Analytics",
+    "benefits": {
+      "access": true,
+      "link": true
+    },
+    "permissions": ["profile:read"],
+    "allowedOrigins": ["https://app.example.com"],
+    "maxRateLimits": {
+      "access": {
+        "capacity": 120,
+        "refillRate": 1
+      }
+    }
+  }
+}
+```
+
+<Tip>
+  The account response is safe to expose in internal dashboards. It never returns secrets—only plan-level metadata for the authenticated platform.
+</Tip>
 
 ## Next Steps
 

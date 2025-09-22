@@ -1,0 +1,74 @@
+---
+title: "Account API Overview"
+description: "Retrieve organization metadata and plan information under /v2/account"
+---
+
+## Overview
+
+The Account API exposes high-level, non-sensitive details about your
+organization. Use it to confirm API key setup, surface plan entitlements in
+internal dashboards, and display rate limits without handling secrets.
+
+## Base URL
+
+`https://api.ofauth.com/v2/account`
+
+## Core Endpoint
+
+| Endpoint | Method | Purpose |
+| -------- | ------ | ------- |
+| `/whoami` | `GET` | Return platform name, ID, benefits, permissions, allowed origins, and rate limits |
+
+<Info>
+  Additional account management endpoints (webhooks, connections, usage) will
+  reappear here as they graduate from private beta.
+</Info>
+
+## Authentication
+
+```http
+apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
+```
+
+## Response Preview
+
+```json
+{
+  "platform": {
+    "id": "plat_123",
+    "name": "Acme Analytics",
+    "benefits": {
+      "access": true,
+      "link": true
+    },
+    "permissions": ["profile:read"],
+    "allowedOrigins": ["https://app.example.com"],
+    "maxRateLimits": {
+      "access": {
+        "capacity": 120,
+        "refillRate": 1
+      }
+    }
+  }
+}
+```
+
+<Tip>
+  The response never includes secrets or session-level data. It is safe to
+  surface in internal dashboards or admin tools.
+</Tip>
+
+## Related Docs
+
+<CardGroup cols={3}>
+  <Card title="Account Guide" icon="book" href="/guides/account">
+    End-to-end walkthrough with examples and security best practices
+  </Card>
+  <Card title="Access API" icon="key" href="/api-reference/access/overview">
+    Use connection IDs to request OnlyFans data
+  </Card>
+  <Card title="Dynamic Rules" icon="sparkles" href="/api-reference/dynamic-rules/overview">
+    Sign requests or monitor revision changes
+  </Card>
+</CardGroup>

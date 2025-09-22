@@ -1,0 +1,86 @@
+---
+title: "GET /v2/account/whoami"
+description: "Return platform metadata for the authenticated API key"
+---
+
+## Summary
+
+Retrieve general information about the organization associated with your API
+key. The response is intentionally limited to plan metadata so it can be safely
+used in internal tools and onboarding flows.
+
+## HTTP Request
+
+```http
+GET https://api.ofauth.com/v2/account/whoami
+apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
+```
+
+<Tip>
+  The `x-platform-id` header is optional when an API key maps to a single
+  organization, but including it avoids an extra lookup on each request.
+</Tip>
+
+## Sample Request
+
+```bash
+curl -s https://api.ofauth.com/v2/account/whoami \
+  -H "apikey: $OFAUTH_API_KEY" \
+  -H "x-platform-id: $OFAUTH_PLATFORM_ID"
+```
+
+## Response Fields
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `platform.id` | `string` | Unique identifier for your organization |
+| `platform.name` | `string \| null` | Display name configured for the platform |
+| `platform.benefits` | `object` | Enabled feature flags (e.g. `access`, `link`) |
+| `platform.permissions` | `string[]` | Data-access permissions granted to your account |
+| `platform.allowedOrigins` | `string[]` | Domains approved for Link and SDK usage |
+| `platform.maxRateLimits` | `object` | Current rate-limit configuration per endpoint |
+
+### Example Response
+
+```json
+{
+  "platform": {
+    "id": "plat_123",
+    "name": "Acme Analytics",
+    "benefits": {
+      "access": true,
+      "link": true,
+      "latest_rules": true
+    },
+    "permissions": ["profile:read"],
+    "allowedOrigins": ["https://app.example.com"],
+    "maxRateLimits": {
+      "access": {
+        "capacity": 120,
+        "refillRate": 1
+      },
+      "rules": null,
+      "sign": {
+        "capacity": 60,
+        "refillRate": 1
+      }
+    }
+  }
+}
+```
+
+### Error Responses
+
+| Status | Reason |
+| ------ | ------ |
+| `401` | Missing or invalid API key |
+| `403` | API key lacks the `ACCOUNT` scope |
+| `404` | Organization could not be found |
+| `429` | Rate limit exceeded (see `Retry-After` header) |
+| `500` | Unexpected server error |
+
+<Warning>
+  The endpoint is read-only. It never returns connection data, webhook
+  secrets, or other sensitive information.
+</Warning>
