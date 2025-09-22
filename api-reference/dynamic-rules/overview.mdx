@@ -1,0 +1,71 @@
+---
+title: "Dynamic Rules API"
+description: "Fetch current OnlyFans signing parameters or generate signatures via /v2/dynamic-rules"
+---
+
+## Overview
+
+Dynamic rules expose the signing configuration OnlyFans requires for direct API
+requests. Most applications rely on the Access API, which signs calls for you.
+Reach for dynamic rules only when you operate your own proxy or make raw
+OnlyFans requests.
+
+<Warning>
+  OnlyFans rotates signing requirements frequently. Always pull the latest rules
+  before generating signatures. Build retry and cache invalidation logic into your
+  infrastructure.
+</Warning>
+
+## Base URL
+
+`https://api.ofauth.com/v2/dynamic-rules`
+
+## Core Endpoints
+
+| Endpoint | Method | Purpose |
+| -------- | ------ | ------- |
+| `/` | `GET` | Fetch the latest signing bundle available to your account |
+| `/status` | `GET` | Check freshness and revision identifiers |
+| `/sign` | `POST` | Submit request metadata and receive a signed payload |
+
+## Authentication
+
+```http
+apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
+```
+
+## Access Tiers
+
+| Tier | Description |
+| ---- | ----------- |
+| Public | Stable but potentially stale rules, available to all plans |
+| Current | Latest production rules, default for standard plans |
+| Early Access | Preview feed for enterprise plans (requires `preview_rules` permission) |
+
+<Tip>
+  Subscribe to the `dynamic-rules.updated` webhook via the Account API to be
+  notified when OnlyFans changes the signing requirements.
+</Tip>
+
+## Best Practices
+
+- Cache rules locally but refresh when `is_current` becomes `false`
+- Monitor for OnlyFans 400/401 responses containing “Please refresh the page” and refetch rules
+- Implement exponential backoff when rules are unavailable (`503`)
+- If you call `/sign` at scale, consider replicating the signing algorithm in your
+  environment using the rule payload to avoid per-request latency
+
+## Related Docs
+
+<CardGroup cols={3}>
+  <Card title="Dynamic Rules Guide" icon="book" href="/guides/dynamic-rules">
+    In-depth explanation with sample code and troubleshooting
+  </Card>
+  <Card title="Access API" icon="key" href="/api-reference/access/overview">
+    Skip manual signing by using OFAuth-managed requests
+  </Card>
+  <Card title="Architecture: Authentication" icon="shield" href="/architecture/authentication">
+    Learn how dynamic rules fit into the broader security model
+  </Card>
+</CardGroup>

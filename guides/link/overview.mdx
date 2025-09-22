@@ -5,26 +5,14 @@ description: "Authentication solutions for OnlyFans integration"
 
 ## Overview
 
-The Link API (`/v2/link`) provides two authentication solutions for OnlyFans integration:
+The Link API (`/v2/link`) centers on hosted authentication experiences that keep user credentials away from your infrastructure:
 
-- **Hosted Mode**: Redirect users to OFAuth's secure authentication pages
-- **API Mode**: Handle authentication programmatically within your application
+- **Hosted Redirect**: Send users to OFAuth's secure authentication pages
+- **Link Embed**: Present the hosted flow in a popup or iframe so users remain in your product
 
 <Info>
 	**Using Node.js?** Our [OnlyFans SDK](/sdk) provides convenient wrapper methods for Link authentication with built-in error handling and TypeScript support. Perfect for building robust authentication flows.
 </Info>
-
-<Warning>
-**API Mode & Raw Session Access Require Approval**
-
-To prevent abuse and ensure the safety of users' OnlyFans accounts and credentials:
-
-- **API Mode** requires special approval
-- **Raw Session Access** requires the "all" user data permission which requires verification of your use case
-
-Please reach out to [support@ofauth.com](mailto:support@ofauth.com) to request these features.
-
-</Warning>
 
 <Info>
 	**Production Deployment?** Review our [Production Considerations](/getting-started/production-considerations) guide for critical information about building reliable OnlyFans integrations.
@@ -32,7 +20,7 @@ Please reach out to [support@ofauth.com](mailto:support@ofauth.com) to request t
 
 ## Choose Your Integration
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
 	<Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
 		Simple redirect-based authentication flow.
 		**Available immediately** to all users.
@@ -41,39 +29,14 @@ Please reach out to [support@ofauth.com](mailto:support@ofauth.com) to request t
 		Drop-in popup components for seamless authentication without redirects.
 		**Best user experience**.
 	</Card>
-	<Card title="API Mode" icon="code" href="/guides/link/api-mode">
-		Full control over UX with programmatic authentication. **Requires
-		approval**.
-	</Card>
 </CardGroup>
 
-## Quick Comparison
+## Why Hosted First
 
-| Feature                    | Hosted Mode  | API Mode             |
-| -------------------------- | ------------ | -------------------- |
-| **Availability**           | ✅ Immediate | ⚠️ Requires approval |
-| **Integration Complexity** | 🟢 Simple    | 🟡 Moderate          |
-| **UX Control**             | 🟡 Limited   | 🟢 Full control      |
-| **Security Burden**        | 🟢 Minimal   | 🟡 Higher            |
-| **Development Time**       | 🟢 Quick     | 🟡 Longer            |
-
-### When to Use Hosted Mode
-
-<Card title="Choose Hosted Mode When" icon="external-link">
-	- You want the fastest integration path - You're comfortable with OFAuth
-	handling the authentication UI - You want minimal security implementation
-	burden - You need to get to market quickly - You want popup/embed integration
-	options with our SDK
-</Card>
-
-### When to Use API Mode
-
-<Card title="Choose API Mode When" icon="code">
-	- You need complete control over the user experience - You want to keep users
-	within your application - You have specific UI/UX requirements - You're
-	comfortable handling sensitive data securely - You have development resources
-	for complex integration
-</Card>
+- Launch quickly without building authentication UI from scratch
+- Offload credential handling and security controls to OFAuth
+- Maintain a consistent, optimized experience across devices
+- Upgrade to the embed flow later without changing server code
 
 ## Base URL
 
@@ -91,31 +54,21 @@ apikey: YOUR_API_KEY
 
 ## Core Flow Overview
 
-### Hosted Mode Flow
-
 1. **Initialize** a hosted session
-2. **Redirect/Popup** user to OFAuth's authentication page (or use Embed SDK for popup)
-3. **Handle** return URLs when user completes/cancels
+2. **Redirect or Embed** the hosted UI
+3. **Handle** success and cancellation callbacks
 4. **Verify** session status server-side
-5. **Store** connection ID for API access
-
-### API Mode Flow
-
-1. **Initialize** an API session
-2. **Collect** OnlyFans credentials in your app
-3. **Submit** credentials to OFAuth
-4. **Handle** two-factor authentication if required
-5. **Receive** connection data and session information
+5. **Store** the connection ID for API access
 
 ## Permission Requirements
 
 <Info>
 **Understanding Permissions:**
 - **Hosted Mode**: Available to all users immediately
-- **API Mode**: Requires approval - contact [support@ofauth.com](mailto:support@ofauth.com)
-- **Raw Session Access** (`options.returnRawSession: true`): Requires "all" user data permission and use case verification
+- **Link Embed**: Included with hosted mode, no extra approval required
+- **Programmatic integrations & raw session access**: Available by request—contact [support@ofauth.com](mailto:support@ofauth.com) with details about your use case
 
-Most applications should start with **Hosted Mode** for fastest implementation.
+Most applications should start with **Hosted Mode** for the fastest implementation.
 
 </Info>
 
@@ -135,7 +88,7 @@ const response = await fetch("https://api.ofauth.com/v2/link/init", {
 		mode: "hosted",
 		hosted: {
 			returnUrl: "https://yourapp.com/cancel",
-			successUrl: "https://yourapp.com/success"
+			successUrl: "https://yourapp.com/success?connection={CONNECTION_ID}"
 		}
 	})
 })
@@ -146,23 +99,9 @@ const { url } = await response.json()
 window.location.href = url
 ```
 
-### API Mode Overview
-
-```javascript
-// 1. Initialize API session
-const { clientSecret } = await initAPISession()
-
-// 2. Submit credentials
-await submitCredentials(clientSecret, userEmail, userPassword)
-
-// 3. Handle 2FA if required
-if (requiresTwoFactor) {
-	await submit2FA(clientSecret, twoFactorCode)
-}
-
-// 4. Get connection data
-const connectionData = await getSessionStatus(clientSecret)
-```
+The success URL supports an optional `{CONNECTION_ID}` placeholder. When the user
+finishes linking, OFAuth replaces this token with the actual connection ID before
+redirecting or posting a success message to your application.
 
 ## Security Best Practices
 
@@ -177,7 +116,7 @@ const connectionData = await getSessionStatus(clientSecret)
 		Link sessions expire after 1 hour for security
 	</Card>
 	<Card title="Credential Handling" icon="database">
-		Never store OnlyFans credentials in API mode
+		Let OFAuth collect credentials through the hosted flow; never request them directly
 	</Card>
 </CardGroup>
 
@@ -190,29 +129,19 @@ const connectionData = await getSessionStatus(clientSecret)
 	expiration errors.
 </Accordion>
 
-<Accordion title="Invalid Credentials (API Mode)">
-	Ensure passwords are base64 encoded and credentials are valid OnlyFans account
-	details.
-</Accordion>
-
-<Accordion title="Access Denied (API Mode)">
-	API Mode requires approval. Contact support to request access.
-</Accordion>
-
 </AccordionGroup>
 
 ## Getting Started
 
 <Steps>
-	<Step title="Choose Your Mode">
-		Decide between Hosted Mode (simple) or API Mode (full control)
+	<Step title="Choose Hosted Flow">
+		Decide between redirect and embedded experiences
 	</Step>
-	<Step title="Get API Access">
-		For API Mode, contact [support@ofauth.com](mailto:support@ofauth.com) for
-		approval
+	<Step title="Configure Success Paths">
+		Provide success and cancel URLs so your app can react to outcomes
 	</Step>
 	<Step title="Follow the Guide">
-		Use the detailed implementation guide for your chosen mode
+		Use the detailed hosted integration guide for step-by-step instructions
 	</Step>
 	<Step title="Test Integration">
 		Use test API keys and demo credentials for development
@@ -221,7 +150,7 @@ const connectionData = await getSessionStatus(clientSecret)
 
 ## Next Steps
 
-<CardGroup cols={4}>
+<CardGroup cols={3}>
 	<Card
 		title="Hosted Mode Guide"
 		icon="external-link"
@@ -233,9 +162,6 @@ const connectionData = await getSessionStatus(clientSecret)
 		icon="window"
 		href="/guides/link/embed">
 		Drop-in components for seamless popup authentication
-	</Card>
-	<Card title="API Mode Guide" icon="code" href="/guides/link/api-mode">
-		Full programmatic authentication documentation
 	</Card>
 	<Card title="Access API" icon="key" href="/api-reference/access/overview">
 		Use connection IDs to access OnlyFans data

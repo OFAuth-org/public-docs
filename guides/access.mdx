@@ -25,82 +25,98 @@ The Access API provides two flavors of access:
 
 ## Base URLs
 
-```
-Managed: `https://api.ofauth.com/v2/access`
-
-Proxy: `https://api.ofauth.com/v2/access/proxy`
-```
+| Mode | URL |
+| ---- | --- |
+| Managed endpoints | `https://api.ofauth.com/v2/access` |
+| Proxy endpoints | `https://api.ofauth.com/v2/access/proxy` |
 
 ## Authentication
 
-The Access API supports two authentication approaches depending on how you handle user authentication:
+Every request must include your API key. Supplying the platform header is
+strongly recommended and required for organization-scoped or service keys.
 
-### Method 1: Link Connection ID (Recommended)
+| Header | Required | Notes |
+| ------ | -------- | ----- |
+| `apikey` | Yes | Found in the OFAuth dashboard |
+| `x-platform-id` | Recommended | Mandatory for service-level keys; enables faster key validation |
 
-Use OFAuth's Link API to authenticate users and obtain a connection ID:
+After the base headers, choose one user-session strategy:
+
+### Option 1: Link Connection ID (Recommended)
 
 ```http
 apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
 x-connection-id: CONNECTION_ID
 ```
 
-This is the recommended approach as it handles session management, renewal, and security automatically.
+- Obtained from the Link API once a user completes authentication
+- OFAuth maintains the underlying OnlyFans session so you don't handle raw credentials directly
+- Ideal when you want zero session maintenance
 
-### Method 2: Direct Session Headers
-
-If you handle OnlyFans authentication separately, provide the session headers directly:
+### Option 2: Direct OnlyFans Session Headers
 
 ```http
 apikey: YOUR_API_KEY
-x-bc: ONLYFANS_BC_HEADER
-user-id: ONLYFANS_USER_ID
-cookie: ONLYFANS_SESSION_COOKIE
-user-agent: ONLYFANS_USER_AGENT
+x-platform-id: YOUR_PLATFORM_ID
+x-of-cookie: ONLYFANS_SESSION_COOKIE
+x-of-user-agent: ONLYFANS_USER_AGENT
+x-of-bc: ONLYFANS_X_BC_HEADER (optional)
+x-of-user-id: ONLYFANS_USER_ID (optional)
 ```
 
+- Use when you cannot obtain a Link connection ID
+- `x-of-cookie` must contain `fp`, `auth_id`, and `sess` unless `x-of-bc` or
+  `x-of-user-id` override those values
+- You are responsible for session expiry, rotation, and security safeguards
+
 <Warning>
-	**Session Management**: When using direct session headers, you're responsible
-	for handling session expiration, renewal, and security. The Link API approach
-	handles this automatically.
+	Link connections remove the need to manage OnlyFans sessions yourself. Prefer
+	option 1 unless you have a strong requirement for raw session headers.
 </Warning>
 
-## Request Format
+## Request Patterns
 
-The Access API accepts any HTTP method and forwards requests to OnlyFans with the appropriate authentication and proxying.
+### Managed Endpoints
 
-### Basic Request Structure (Managed)
+Managed routes live directly under `/v2/access`. Use standard REST verbs and
+expect typed responses that stay stable across API revisions.
 
 ```http
-GET /v2/access/users/me HTTP/1.1
+GET /v2/access/self/me HTTP/1.1
 Host: api.ofauth.com
 apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
 x-connection-id: conn_abc123
 ```
 
-### Headers
+- Automatic retries, pagination helpers, and validation are handled for you
+- Perfect for dashboards, analytics, and common workflows where consistent
+  schemas matter
 
-| Header   | Required | Description         |
-| -------- | -------- | ------------------- |
-| `apikey` | Yes      | Your OFAuth API key |
+### Proxy Endpoints
 
-**Method 1: Link Connection ID**
-| Header | Required | Description |
-| ----------------- | -------- | ---------------------------------------------------------- |
-| `x-connection-id` | Yes\* | The connection ID from Link API authentication |
+Proxy routes live under `/v2/access/proxy/{path}` and forward requests to the
+matching OnlyFans endpoint. Provide the OnlyFans path relative to `/api2/v2/`.
 
-**Method 2: Direct Session Headers**
-| Header | Required | Description |
-| ----------------- | -------- | ---------------------------------------------------------- |
-| `x-bc` | Yes* | OnlyFans x-bc authentication header |
-| `user-id` | Yes* | OnlyFans user ID |
-| `cookie` | Yes* | OnlyFans session cookie |
-| `user-agent` | Yes* | OnlyFans user agent (should match session) |
+```bash
+curl -H 'apikey: YOUR_API_KEY' \
+     -H 'x-platform-id: YOUR_PLATFORM_ID' \
+     -H 'x-connection-id: conn_abc123' \
+     'https://api.ofauth.com/v2/access/proxy/users/me'
+```
 
-\*Choose one authentication method - either connection ID or all session headers
+- The response payload is returned exactly as OnlyFans sends it
+- Useful for endpoints not yet modelled by the managed surface or when you need
+  a beta field before it becomes part of the stable schema
+- If the path does not start with `/api2/v2/`, the request is rejected with
+  `INVALID_PATH`
 
 ## Response Format
 
-Responses are passed through transparently from OnlyFans
+- Managed endpoints return OFAuth-curated JSON with stable field names and
+  pagination helpers.
+- Proxy endpoints return the raw OnlyFans payload and status code.
 
 ```http
 HTTP/1.1 200 OK
@@ -108,144 +124,46 @@ Content-Type: application/json
 
 {
   "id": 12345,
-  "username": "example_user",
-  ...
+  "username": "example_user"
 }
 ```
 
-## Common Endpoints
+## Managed Endpoint Map
 
-### User Information
+| Domain | Key endpoints | Methods | Notes |
+| ------ | ------------- | ------- | ----- |
+| Authenticated user | `/self/me`, `/self/summary` | `GET` | Current creator profile, balances, and notification state |
+| Users | `/users/{id}`, `/users/{id}/posts` | `GET` | Fetch public creator data and their recent posts |
+| Posts | `/posts`, `/posts/{id}` | `GET`, `POST`, `PATCH` | Create or update posts with automatic media signing |
+| Messages | `/chats`, `/chats/{chatId}/messages` | `GET`, `POST` | List chats or send replies with attachments |
+| Subscriptions | `/subscriptions/subscribers`, `/subscriptions/users/{id}/subscribe` | `GET`, `POST` | Manage subscriber lists and trigger subscribe/cancel actions |
+| Vault | `/vault/lists`, `/vault/posts/{id}/unlock` | `GET`, `POST` | Work with locked content and vault assets |
+| Uploads | `/uploads`, `/uploads/{id}` | `POST`, `GET` | Generate signed upload URLs and poll processing status |
+| Statistics | `/statistics/earnings`, `/statistics/messages` | `GET` | Aggregated analytics ready for dashboards |
 
-<CodeGroup>
+<Tip>
+	Use the OpenAPI explorer (API Reference ▸ Access) for query parameters,
+	payload schemas, and an interactive console.
+</Tip>
 
-```javascript Get Current User (Link Connection)
-const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
+## Proxy Cheat Sheet
+
+| Example | Proxy path | Notes |
+| ------- | ---------- | ----- |
+| Current user | `users/me` | Mirrors OnlyFans `GET /api2/v2/users/me` |
+| Creator posts | `users/{id}/posts?limit=30` | Pass through query parameters as usual |
+| Messages | `chats/{chatId}/messages` | Use `POST` with JSON body to send replies |
+| Lists | `lists/{listId}/users` | Access endpoints not yet covered by managed routes |
+
+```javascript
+await fetch("https://api.ofauth.com/v2/access/proxy/users/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
+		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-connection-id": "conn_abc123"
 	}
 })
 ```
-
-```javascript Get Current User (Session Headers)
-const response = await fetch("https://api.ofauth.com/v2/access/users/me", {
-	headers: {
-		apikey: "YOUR_API_KEY",
-		"x-bc": "your_bc_header_value",
-		"user-id": "12345",
-		cookie: "your_session_cookie",
-		"user-agent": "Mozilla ...."
-	}
-})
-```
-
-</CodeGroup>
-
-### Messages (Managed)
-
-<CodeGroup>
-
-```javascript Get Conversations
-const conversations = await fetch(
-	"https://api.ofauth.com/v2/access/chats",
-	{
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": "conn_abc123"
-		}
-	}
-)
-```
-
-```javascript Get Messages
-const messages = await fetch(
-	"https://api.ofauth.com/v2/access/chat/123/messages",
-	{
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": "conn_abc123"
-		}
-	}
-)
-```
-
-</CodeGroup>
-
-### Content (Managed)
-
-<CodeGroup>
-
-```javascript Get User Posts
-const posts = await fetch(
-	"https://api.ofauth.com/v2/access/users/12345/posts",
-	{
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": "conn_abc123"
-		}
-	}
-)
-```
-
-```javascript Get Stories
-const stories = await fetch(
-	"https://api.ofauth.com/v2/access/users/12345/stories",
-	{
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": "conn_abc123"
-		}
-	}
-)
-```
-
-</CodeGroup>
-
-### Subscriptions (Managed)
-
-<CodeGroup>
-
-```javascript Get Subscriptions
-const subscriptions = await fetch(
-	"https://api.ofauth.com/v2/access/subscriptions",
-	{
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": "conn_abc123"
-		}
-	}
-)
-```
-
-```javascript Get Following List
-const following = await fetch(
-	"https://api.ofauth.com/v2/access/users/me/following",
-
-### Proxy Examples
-
-Use `/v2/access/proxy/*` to hit any OnlyFans API route:
-
-```javascript Any OF path via proxy
-// Conversations
-await fetch("https://api.ofauth.com/v2/access/proxy/chats/rooms", { headers })
-
-// Messages in a room
-await fetch("https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages", { headers })
-
-// Users
-await fetch("https://api.ofauth.com/v2/access/proxy/users/me", { headers })
-```
-	{
-		headers: {
-			apikey: "YOUR_API_KEY",
-			"x-connection-id": "conn_abc123"
-		}
-	}
-)
-```
-
-</CodeGroup>
 
 ## Rate Limiting
 
@@ -254,16 +172,14 @@ plan:
 
 ### Rate Limits by Plan
 
-**Per connection ID or user ID:**
+**Per connection ID or session:**
 
-- **Pay as You Go**: 30 Access req/min with 50 request burst capacity
-- **Starter**: Standard Access rate limits (60 Access req/min with 90 request burst capacity)
-- **Launch**: 120 Access req/min with 200 request burst capacity
-- **Scale**: No Access rate limits (OnlyFans limits still apply)
+- **Standard**: 60 Access req/min with 90 request burst capacity
+- **Scale**: No OFAuth Access limits (OnlyFans limits still apply)
 
 **System Details:**
 
-- **Scope**: Each `x-connection-id` or `user-id` has independent rate limits
+- **Scope**: Each `x-connection-id` or `x-of-user-id` has independent rate limits
 - **Token bucket system**: Continuous refill with burst capacity
 
 <Warning>
@@ -278,16 +194,18 @@ plan:
 
 ```javascript Independent Rate Limits (Connection IDs)
 // These requests are rate limited independently
-const user1Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
+		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-connection-id": "conn_user1"
 	}
 })
 
-const user2Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
+		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-connection-id": "conn_user2" // Independent rate limit
 	}
 })
@@ -295,23 +213,25 @@ const user2Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
 
 ```javascript Independent Rate Limits (User IDs)
 // These requests are rate limited independently
-const user1Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"user-id": "12345",
-		"x-bc": "bc_value_1",
-		cookie: "session_1",
-		"user-agent": "Mozilla ..."
+		"x-platform-id": "YOUR_PLATFORM_ID",
+		"x-of-cookie": "session_1",
+		"x-of-user-agent": "Mozilla ...",
+		"x-of-bc": "bc_value_1",
+		"x-of-user-id": "12345"
 	}
 })
 
-const user2Data = await fetch("https://api.ofauth.com/v2/access/users/me", {
+const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"user-id": "67890", // Independent rate limit
-		"x-bc": "bc_value_2",
-		cookie: "session_2",
-		"user-agent": "Mozilla ..."
+		"x-platform-id": "YOUR_PLATFORM_ID",
+		"x-of-cookie": "session_2",
+		"x-of-user-agent": "Mozilla ...",
+		"x-of-bc": "bc_value_2",
+		"x-of-user-id": "67890" // Independent rate limit
 	}
 })
 ```
@@ -371,7 +291,7 @@ When provided session headers are invalid or expired:
 {
 	"error": "No authentication provided",
 	"code": "NO_AUTH",
-	"details": "Provide either x-connection-id or session headers (x-bc, user-id, cookie, user-agent)"
+	"details": "Provide either x-connection-id or session headers (x-of-cookie, x-of-user-agent, optional x-of-bc, optional x-of-user-id)"
 }
 ```
 
@@ -381,7 +301,7 @@ When provided session headers are invalid or expired:
 {
 	"error": "Incomplete session headers",
 	"code": "INCOMPLETE_SESSION",
-	"missing": ["x-bc", "cookie"]
+	"missing": ["x-of-cookie", "x-of-user-agent"]
 }
 ```
 
@@ -422,9 +342,7 @@ limit.
 
 **Rate limits:**
 
-- Pay as You Go: 30 req/min (burst: 50)
-- Starter: 60 req/min (burst: 90)
-- Launch: 120 req/min (burst: 200)
+- Standard: 60 req/min (burst: 90)
 - Scale: No OFAuth limits
 
 Implement exponential backoff if you encounter rate limits.

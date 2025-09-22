@@ -1,0 +1,98 @@
+---
+title: "Access API Overview"
+description: "Managed data access and proxied OnlyFans requests under /v2/access"
+---
+
+## Overview
+
+The Access API exposes OFAuth's data access surface. Use managed endpoints for
+common resources with typed payloads, or the proxy endpoints when you need to
+reach any underlying OnlyFans path.
+
+<CardGroup cols={2}>
+  <Card title="Managed Endpoints" icon="database" href="/api-reference/access/managed">
+    Typed routes for users, posts, messages, vault, subscriptions, uploads, and more
+  </Card>
+  <Card title="Proxy Endpoints" icon="shuffle" href="/api-reference/access/proxy">
+    Flexible passthrough to any OnlyFans REST path while OFAuth handles auth and rotation
+  </Card>
+</CardGroup>
+
+<Info>
+  Managed endpoints cover the most common use cases and include stability guarantees.
+  Reach for proxy routes when you need a path that is not yet modelled or you want the
+  raw OnlyFans response format.
+</Info>
+
+## Base URLs
+
+| Environment | Managed | Proxy |
+| ----------- | ------- | ----- |
+| Production  | `https://api.ofauth.com/v2/access` | `https://api.ofauth.com/v2/access/proxy` |
+
+## Authentication
+
+Every request must include your OFAuth API key and platform identifier. Then choose
+one of two strategies for the user session that will power the request.
+
+<Tabs>
+  <Tab title="Headers">
+
+  | Header | Required | Notes |
+  | ------ | -------- | ----- |
+  | `apikey` | Yes | Found in the OFAuth dashboard |
+  | `x-platform-id` | Yes |  |
+
+  </Tab>
+  <Tab title="User Session Options">
+
+  **Link Connection (recommended)**
+
+  - Header: `x-connection-id`
+  - Obtained from the Link API after a user authenticates
+  - OFAuth securely manages OnlyFans sessions so you don't handle raw cookies
+
+  **Direct Session Headers**
+
+  Provide the OnlyFans session yourself when you cannot use Link.
+
+  | Header | Required | Notes |
+  | ------ | -------- | ----- |
+  | `x-of-cookie` | Yes | Must contain `fp`, `auth_id`, and `sess` unless overridden by other headers |
+  | `x-of-user-agent` | Yes | User agent bound to the OnlyFans session |
+  | `x-of-bc` | Optional | Overrides the `fp` value from the cookie |
+  | `x-of-user-id` | Optional | Overrides the `auth_id` value from the cookie |
+
+  <Warning>
+    When you supply direct session headers you own expiry, rotation, and security. Link
+    connections offload that work to OFAuth.
+  </Warning>
+
+  </Tab>
+</Tabs>
+
+## Request Patterns
+
+| Goal | Managed Example | Proxy Example |
+| ---- | ---------------- | ------------- |
+| Current user | `GET /self/me` | `GET /users/me` |
+| Posts listing | `GET /posts` | `GET /users/{id}/posts` |
+| Messages | `GET /chats` | `GET /chats/{chatId}/messages` |
+| Upload media | `POST /uploads` | `POST /posts/{id}/media` |
+
+Use standard HTTP verbs. Managed endpoints validate payloads and respond with
+stable schemas; proxy responses are passed through from OnlyFans.
+
+## Related Guides
+
+<CardGroup cols={3}>
+  <Card title="Access Guide" icon="book" href="/guides/access">
+    End-to-end walkthrough with headers, examples, and troubleshooting tips
+  </Card>
+  <Card title="Link API" icon="link" href="/api-reference/link/overview">
+    Create user connections to power Access requests
+  </Card>
+  <Card title="Dynamic Rules" icon="cog" href="/api-reference/dynamic-rules/overview">
+    Required only if you sign OnlyFans requests yourself
+  </Card>
+</CardGroup>

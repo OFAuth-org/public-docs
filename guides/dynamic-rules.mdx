@@ -15,15 +15,11 @@ The Dynamic Rules API (`/v2/dynamic-rules`) provides the current signing paramet
 </Info>
 
 <Warning>
-	**Critical for Direct API Access**: OnlyFans API requests will fail without
-	properly signed requests using current dynamic rules. The signing requirements
-	change so frequently (hourly to daily) that hardcoded signing values become
-	obsolete quickly, causing all API requests to return 401/403 authentication
-	errors.
-</Warning>
-
-<Warning>
-	**Third-Party Dependency Risk**: While OFAuth's Dynamic Rules API is stable and reliable, it depends on OnlyFans (a third party) for functionality. OnlyFans has a history of making sudden, breaking changes to their systems without notice. Although we work diligently to minimize disruption and maintain service availability, **you should plan for potential outages and have fallback strategies** when building production applications that depend on OnlyFans APIs.
+	**Direct API calls require vigilance**. OnlyFans rotates signing requirements
+	frequently—hardcoded values stop working within hours, leading to 401/403
+	errors. Because dynamic rules depend on OnlyFans behaviour, plan for sudden
+	changes and have fallbacks (circuit breakers, retries, status messaging) ready
+	for temporary outages.
 </Warning>
 
 ### When You Need Dynamic Rules
@@ -95,11 +91,13 @@ apikey: YOUR_API_KEY
 
 ## Access Control
 
-Access to dynamic rules is controlled by your subscription plan:
+Access to dynamic rules is available in two forms:
 
-- **Current Rules**: Latest rules available to all users (no special permissions required)
-- **Early Access**: Preview rules available with slight delay (requires `preview_rules` permission)  
-- **Public Rules**: Older stable rules available to everyone (no permissions required)
+- **Current Rules (Paid)**: Real-time signing payloads delivered via API and webhooks. This is the
+	add-on sold with OFAuth and includes 24/7 monitoring and SLA-backed uptime.
+- **Public Rules (GitHub)**: Delayed snapshots published for the community at
+	no cost. Grab them from
+	<a href="https://github.com/deviint/onlyfans-dynamic-rules">github.com/deviint/onlyfans-dynamic-rules</a>.
 
 ## Core Endpoints
 

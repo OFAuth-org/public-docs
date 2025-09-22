@@ -27,7 +27,8 @@ const response = await fetch("https://api.ofauth.com/v2/link/init", {
 		"Content-Type": "application/json",
 	},
 	body: JSON.stringify({
-		mode: "hosted",
+		successUrl: "https://yourapp.com/auth/success",
+		returnUrl: "https://yourapp.com/auth/cancel"
 	}),
 });
 
@@ -45,7 +46,10 @@ response = requests.post(
 		"x-platform-id": "YOUR_PLATFORM_ID",
 		"Content-Type": "application/json"
 	},
-	json={"mode": "hosted"}
+	json={
+		"successUrl": "https://yourapp.com/auth/success",
+		"returnUrl": "https://yourapp.com/auth/cancel"
+	}
 )
 
 session = response.json()
@@ -57,7 +61,7 @@ curl -X POST https://api.ofauth.com/v2/link/init \
   -H "apikey: YOUR_API_KEY" \
   -H "x-platform-id: YOUR_PLATFORM_ID" \
   -H "Content-Type: application/json" \
-  -d '{"mode": "hosted"}'
+  -d '{"successUrl": "https://yourapp.com/auth/success", "returnUrl": "https://yourapp.com/auth/cancel"}'
 ```
 
 </CodeGroup>

@@ -1,0 +1,83 @@
+---
+title: "Link API Overview"
+description: "Authenticate OnlyFans users and issue connection IDs via /v2/link"
+---
+
+## Overview
+
+The Link API provisions authenticated OnlyFans sessions on behalf of your
+application. Use it to obtain connection IDs for the Access API, deliver the
+hosted experience, and monitor session state.
+
+<CardGroup cols={2}>
+  <Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
+    Redirect-based flow managed entirely by OFAuth
+  </Card>
+  <Card title="Link Embed" icon="window" href="/guides/link/embed">
+    Popup experience that keeps users inside your product
+  </Card>
+</CardGroup>
+
+## Base URL
+
+`https://api.ofauth.com/v2/link`
+
+## Core Endpoints
+
+| Endpoint | Method | Purpose |
+| -------- | ------ | ------- |
+| `/init` | `POST` | Create a hosted or embed session |
+| `/{clientSecret}` | `POST` | Submit credentials or 2FA challenges (approved programmatic access only) |
+| `/status/{clientSecret}` | `GET` | Poll current session state |
+| `/connections/{connectionId}` | `GET` | Retrieve connection metadata |
+| `/connections/{connectionId}` | `DELETE` | Revoke an existing connection |
+
+<Tip>
+  Hosted and embed integrations only need the `/init` endpoint plus webhook
+  events emitted when a session completes. Additional endpoints are reserved for
+  approved programmatic integrations.
+</Tip>
+
+## Authentication
+
+Include your API key on every request. When calling from the server you may also
+set `x-platform-id` to speed up key validation.
+
+```http
+apikey: YOUR_API_KEY
+x-platform-id: YOUR_PLATFORM_ID
+```
+
+## Session Types
+
+| Mode | Availability | UX ownership | Notes |
+| ---- | ------------ | ------------ | ----- |
+| Hosted | Default | OFAuth pages | Fastest to integrate; redirect or success/cancel URLs |
+| Embed | Default | OFAuth popup inside your app | Use the Link Embed library for best experience |
+
+<Info>
+  Programmatic integrations and raw session data are available by request.
+  Contact `support@ofauth.com` with details about your use case if you require
+  deeper customization.
+</Info>
+
+## Responses & Webhooks
+
+- Successful sessions return a `connectionId` that you can store server-side
+- Webhooks (from the Account API) deliver updates for `connection.created`,
+  `connection.updated`, and `connection.expired`
+- Sessions expire after 1 hour if incomplete
+
+## Related Docs
+
+<CardGroup cols={3}>
+  <Card title="Authentication Quickstart" icon="rocket" href="/getting-started/quickstart/authentication">
+    Step-by-step tutorial using hosted mode
+  </Card>
+  <Card title="Access API" icon="key" href="/api-reference/access/overview">
+    Use your connection IDs to query OnlyFans data
+  </Card>
+  <Card title="Account API" icon="user" href="/api-reference/account/overview">
+    Configure webhooks and monitor connections
+  </Card>
+</CardGroup>

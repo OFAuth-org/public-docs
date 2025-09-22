@@ -3,7 +3,7 @@ title: 'Any OnlyFans API Request'
 description: 'The Access API acts as a transparent proxy to OnlyFans, allowing you to make any OnlyFans API request while OFAuth handles authentication, session management, and proxy optimization automatically. The request and response format depends entirely on the underlying OnlyFans API endpoint being accessed.'
 ---
 
-**Base URL:** `https://api.ofauth.com`
+**Base URL:** `https://api.ofauth.com/v2/access/proxy`
 
 <Panel>
 
@@ -33,22 +33,25 @@ DELETE /v2/access/proxy/{path}
 ```bash Connection ID
 curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
   -H 'apikey: YOUR_API_KEY' \
+  -H 'x-platform-id: YOUR_PLATFORM_ID' \
   -H 'x-connection-id: conn_abc123'
 ```
 
 ```bash Session Headers
 curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
   -H 'apikey: YOUR_API_KEY' \
-  -H 'user-id: 12345' \
-  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...' \
-  -H 'x-bc: your_bc_header_value' \
-  -H 'cookie: your_session_cookie_string'
+  -H 'x-platform-id: YOUR_PLATFORM_ID' \
+  -H 'x-of-cookie: your_session_cookie_string' \
+  -H 'x-of-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...' \
+  -H 'x-of-bc: your_bc_header_value' \
+  -H 'x-of-user-id: 12345'
 ```
 
 ```javascript JavaScript
 const response = await fetch('https://api.ofauth.com/v2/access/proxy/users/me', {
   headers: {
     'apikey': 'YOUR_API_KEY',
+    'x-platform-id': 'YOUR_PLATFORM_ID',
     'x-connection-id': 'conn_abc123'
   }
 });
@@ -63,6 +66,7 @@ response = requests.get(
     'https://api.ofauth.com/v2/access/proxy/users/me',
     headers={
         'apikey': 'YOUR_API_KEY',
+        'x-platform-id': 'YOUR_PLATFORM_ID',
         'x-connection-id': 'conn_abc123'
     }
 )
@@ -71,18 +75,20 @@ user_data = response.json()
 ```
 
 ```bash Connection ID POST
-curl -X POST 'https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages' \
+curl -X POST 'https://api.ofauth.com/v2/access/proxy/chats/123/messages' \
   -H 'apikey: YOUR_API_KEY' \
+  -H 'x-platform-id: YOUR_PLATFORM_ID' \
   -H 'x-connection-id: conn_abc123' \
   -H 'Content-Type: application/json' \
   -d '{"text": "Hello there!"}'
 ```
 
 ```javascript JavaScript POST
-const response = await fetch('https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages', {
+const response = await fetch('https://api.ofauth.com/v2/access/proxy/chats/123/messages', {
   method: 'POST',
   headers: {
     'apikey': 'YOUR_API_KEY',
+    'x-platform-id': 'YOUR_PLATFORM_ID',
     'x-connection-id': 'conn_abc123',
     'Content-Type': 'application/json'
   },
@@ -166,20 +172,19 @@ The OnlyFans API path to proxy to. This can be any valid OnlyFans API endpoint p
 
 **Examples:**
 - `users/me` - Get current user information
-- `chats/rooms` - Get chat conversations  
+- `chats` - Get chat conversations  
 - `users/12345/posts` - Get posts for user 12345
-- `subscriptions` - Get subscriptions
+- `subscriptions/subscribers` - Get subscribers
 </ParamField>
 
 </Panel>
 
 ## Authentication
 
-- Api key header: include your OFAuth API key on every request.
-  - Header: `apikey: YOUR_API_KEY`
-- Platform header (optional but recommended): identify your platform/organization.
-  - Header: `x-platform-id: YOUR_PLATFORM_ID`
-  - Required when using service-level keys; otherwise used for attribution and analytics.
+| Header | Required | Notes |
+| ------ | -------- | ----- |
+| `apikey` | Yes | API key from the OFAuth dashboard |
+| `x-platform-id` | Yes |  |
 
 <CodeGroup>
 ```http Headers
@@ -202,32 +207,40 @@ Use OFAuth's Link API connection ID for automatic session management.
 Your OFAuth API key
 </ParamField>
 
+<ParamField header="x-platform-id" type="string">
+Your OFAuth platform ID
+</ParamField>
+
 <ParamField header="x-connection-id" type="string" required>
 The connection ID obtained from Link API authentication
 </ParamField>
 </Tab>
 
 <Tab title="Session Headers">
-Provide OnlyFans session data directly if you handle authentication separately.
+Provide OnlyFans session data directly if you handle authentication separately. The `x-of-cookie` header must include the OnlyFans `fp`, `auth_id`, and `sess` cookies unless you override `fp` with `x-of-bc` and `auth_id` with `x-of-user-id`.
 
 <ParamField header="apikey" type="string" required>
 Your OFAuth API key
 </ParamField>
 
-<ParamField header="user-id" type="string" required>
-OnlyFans user ID from the authenticated session
+<ParamField header="x-platform-id" type="string">
+Your OFAuth platform ID
 </ParamField>
 
-<ParamField header="user-agent" type="string" required>
+<ParamField header="x-of-cookie" type="string" required>
+OnlyFans session cookie string. Must contain `fp`, `auth_id`, and `sess` unless overridden by other headers.
+</ParamField>
+
+<ParamField header="x-of-user-agent" type="string" required>
 User agent string that matches the OnlyFans session
 </ParamField>
 
-<ParamField header="x-bc" type="string" required>
-OnlyFans x-bc authentication header
+<ParamField header="x-of-bc" type="string">
+OnlyFans `x-bc` authentication value (optional, derived from cookie if omitted)
 </ParamField>
 
-<ParamField header="cookie" type="string" required>
-OnlyFans session cookie string
+<ParamField header="x-of-user-id" type="string">
+OnlyFans `auth_id` value (optional, derived from cookie if omitted)
 </ParamField>
 </Tab>
 </Tabs>
@@ -249,11 +262,9 @@ The specific response structure and status codes depend on the OnlyFans API endp
 
 ## Rate Limits
 
-Rate limits are applied per connection ID or user ID:
+Rate limits are applied per connection ID or session:
 
-- **Pay as You Go**: 30 requests/minute (burst: 50)
-- **Starter**: 60 requests/minute (burst: 90)  
-- **Launch**: 120 requests/minute (burst: 200)
+- **Standard**: 60 requests/minute (burst: 90)
 - **Scale**: No OFAuth limits
 
 <Warning>

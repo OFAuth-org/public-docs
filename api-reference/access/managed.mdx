@@ -1,0 +1,62 @@
+---
+title: "Managed Endpoint Authentication"
+description: "Headers required to call typed Access routes under /v2/access/*"
+---
+
+Managed endpoints are the typed, stable routes under `/v2/access/*` (e.g.
+`/v2/access/users/{userId}`, `/v2/access/posts`). They require standard OFAuth
+headers plus either a Link connection ID or direct OnlyFans session headers.
+
+## Required Headers
+
+| Header | Required | Notes |
+| ------ | -------- | ----- |
+| `apikey` | Yes | API key from the OFAuth dashboard |
+| `x-platform-id` | Yes |  |
+
+## Session Strategies
+
+### Link Connection ID (Recommended)
+
+```http
+x-connection-id: CONNECTION_ID
+```
+
+- Returned after a user completes Link authentication
+- OFAuth securely manages the underlying OnlyFans session so you don't handle raw cookies
+- Best choice for most production apps
+
+### Direct OnlyFans Session Headers
+
+```http
+x-of-cookie: ONLYFANS_SESSION_COOKIE
+x-of-user-agent: ONLYFANS_USER_AGENT
+x-of-bc: ONLYFANS_X_BC_HEADER (optional)
+x-of-user-id: ONLYFANS_USER_ID (optional)
+```
+
+- Use when you already manage OnlyFans sessions yourself
+- `x-of-cookie` must include `fp`, `auth_id`, and `sess` unless overridden by
+  `x-of-bc` or `x-of-user-id`
+- You own responsibility for renewal, rotation, and security controls
+
+## Example Requests
+
+<CodeGroup>
+```bash Connection ID
+curl -s \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-platform-id: YOUR_PLATFORM_ID' \
+  -H 'x-connection-id: conn_abc123' \
+  'https://api.ofauth.com/v2/access/self/me'
+```
+
+```bash Session Headers
+curl -s \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-platform-id: YOUR_PLATFORM_ID' \
+  -H 'x-of-cookie: fp=...;auth_id=...;sess=...' \
+  -H 'x-of-user-agent: Mozilla/5.0 ...' \
+  'https://api.ofauth.com/v2/access/self/me'
+```
+</CodeGroup>

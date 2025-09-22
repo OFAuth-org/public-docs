@@ -68,7 +68,7 @@ const sdk = new OFSDK({
 ```typescript
 // 1. Create authentication session
 const authSession = await sdk.link.initSession({
-  mode: "api",
+  mode: "whitelabel",
   clientReferenceId: "unique_session_id"
 })
 
@@ -90,7 +90,7 @@ if (loginResult.status === "completed") {
 ```
 
 <Warning>
-  **Advanced Users Only**: Direct mode requires handling 2FA, session management, and security considerations. Use Access mode unless you specifically need this level of control.
+  **Advanced & Approval Required**: Direct/whitelabel mode requires handling 2FA, session management, and hardened security controls. These flows are available only to approved partners. Use Access mode unless OFAuth has explicitly enabled this level of control for your account.
 </Warning>
 
 ## Custom Mode (Enterprise)

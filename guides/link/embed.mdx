@@ -261,7 +261,7 @@ async function start() {
 
 ```typescript
 interface SuccessMetadata {
-	successUrl: string;     // as supplied to the /v2/link/init request
+	successUrl: string;     // /v2/link/init successUrl with {CONNECTION_ID} resolved
 	redirect: boolean;      // if redirect should occur based on your configuration
 	connection: {
 		id: string;
@@ -274,6 +274,10 @@ interface SuccessMetadata {
 	};
 }
 ```
+
+If you supplied a success URL containing `{CONNECTION_ID}`, the success event
+receives the fully expanded URL, so you can redirect immediately or record the
+identifier without additional lookups.
 
 ### CloseMetadata
 

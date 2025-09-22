@@ -11,6 +11,10 @@ The Link module (`sdk.link`) handles OnlyFans authentication flows, session mana
   **When to use Link Authentication**: Use these methods when you need direct control over the authentication flow, such as building custom login UI or handling authentication in server-side applications. For most web applications, the standard hosted OFAuth Link OAuth-style flow is recommended.
 </Info>
 
+<Warning>
+  **Approval required**: Programmatic Link integrations ("whitelabel" mode) are available only to vetted partners. Contact `support@ofauth.com` with your use case before building against these APIs.
+</Warning>
+
 <Info>
   **Link vs Access**: OFAuth Link handles account connection (this module), while OFAuth Access handles API calls to OnlyFans endpoints using established connections. Most applications use Link for authentication and Access for data retrieval.
 </Info>
@@ -25,8 +29,8 @@ Initialize a new authentication session for OnlyFans login.
   Configuration for the authentication session.
 </ParamField>
 
-<ParamField path="options.mode" type="'api'" required>
-  The session mode. Currently only 'api' mode is supported.
+<ParamField path="options.mode" type="'whitelabel'" required>
+  The session mode. Whitelabel integrations require OFAuth approval.
 </ParamField>
 
 <ParamField path="options.clientReferenceId" type="string" required>
@@ -48,7 +52,7 @@ Initialize a new authentication session for OnlyFans login.
 <RequestExample>
 ```typescript Initialize Session
 const authSession = await sdk.link.initSession({
-  mode: "api",
+  mode: "whitelabel",
   clientReferenceId: "user_123_session_" + Date.now(),
   webhook: "https://your-app.com/webhooks/auth" // Optional
 })
@@ -327,7 +331,7 @@ async function authenticateUser(
   try {
     // Step 1: Initialize session
     const authSession = await sdk.link.initSession({
-      mode: "api",
+      mode: "whitelabel",
       clientReferenceId: `auth_${Date.now()}_${Math.random()}`
     })
     
