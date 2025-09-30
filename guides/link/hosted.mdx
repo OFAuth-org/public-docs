@@ -12,8 +12,6 @@ Hosted Mode provides the simplest integration path for OnlyFans authentication. 
 	in your app rather than redirecting them away from your site.
 </Info>
 
-
-
 ## How It Works
 
 1. **Initialize**: Create a link session with hosted mode configuration
@@ -67,11 +65,10 @@ https://api.ofauth.com/v2/link
 
 ## Authentication
 
-All requests require both your API key and platform identifier headers:
+All requests require your API key header:
 
 ```http
 apikey: YOUR_API_KEY
-x-platform-id: YOUR_PLATFORM_ID
 ```
 
 ## Core Endpoints
@@ -89,7 +86,6 @@ POST /v2/link/init
 **Headers:**
 
 - `apikey`: Your API key (required)
-- `x-platform-id`: Your OFAuth platform identifier (required)
 - `Content-Type`: application/json
 
 **Request Body:**
@@ -215,7 +211,6 @@ DELETE /v2/link/{clientSecret}
 **Headers:**
 
 - `apikey`: Your API key (required)
-- `x-platform-id`: Your OFAuth platform identifier (required)
 
 **Response:**
 
@@ -238,7 +233,6 @@ const initResponse = await fetch("https://api.ofauth.com/v2/link/init", {
 	method: "POST",
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"x-platform-id": "YOUR_PLATFORM_ID",
 		"Content-Type": "application/json"
 	},
 	body: JSON.stringify({
@@ -258,7 +252,6 @@ response = requests.post(
     "https://api.ofauth.com/v2/link/init",
     headers={
         "apikey": "YOUR_API_KEY",
-        "x-platform-id": "YOUR_PLATFORM_ID",
         "Content-Type": "application/json"
     },
     json={
@@ -279,7 +272,6 @@ $response = file_get_contents("https://api.ofauth.com/v2/link/init", false, stre
         'method' => 'POST',
         'header' => [
             'apikey: YOUR_API_KEY',
-            'x-platform-id: YOUR_PLATFORM_ID',
             'Content-Type: application/json'
         ],
         'content' => json_encode([
@@ -317,7 +309,6 @@ When users complete or cancel authentication, they'll be redirected to your spec
 const urlParams = new URLSearchParams(window.location.search)
 const connectionId = urlParams.get("connection")
 const sessionId = urlParams.get("session")
-
 
 if (connectionId) {
 	// Store connection ID for future API calls
@@ -359,7 +350,6 @@ app.get("/api/verify-session", async (req, res) => {
 	const response = await fetch(`https://api.ofauth.com/v2/link/${session}`, {
 		headers: {
 			apikey: process.env.OFAUTH_API_KEY,
-			"x-platform-id": process.env.OFAUTH_PLATFORM_ID
 		}
 	})
 
@@ -390,7 +380,6 @@ def verify_session():
         f"https://api.ofauth.com/v2/link/{session_id}",
         headers={
             "apikey": os.getenv("OFAUTH_API_KEY"),
-            "x-platform-id": os.getenv("OFAUTH_PLATFORM_ID")
         }
     )
 

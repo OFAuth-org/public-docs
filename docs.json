@@ -144,7 +144,7 @@
       {
         "dropdown": "API Reference",
         "icon": "square-terminal",
-        "openapi": "https://api-next.ofauth.com/openapi-core.json",
+        "openapi": "https://api-next.ofauth.com/openapi-link.json",
         "groups": [
           {
             "group": "Link",

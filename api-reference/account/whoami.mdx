@@ -14,20 +14,13 @@ used in internal tools and onboarding flows.
 ```http
 GET https://api.ofauth.com/v2/account/whoami
 apikey: YOUR_API_KEY
-x-platform-id: YOUR_PLATFORM_ID
 ```
-
-<Tip>
-  The `x-platform-id` header is optional when an API key maps to a single
-  organization, but including it avoids an extra lookup on each request.
-</Tip>
 
 ## Sample Request
 
 ```bash
 curl -s https://api.ofauth.com/v2/account/whoami \
   -H "apikey: $OFAUTH_API_KEY" \
-  -H "x-platform-id: $OFAUTH_PLATFORM_ID"
 ```
 
 ## Response Fields

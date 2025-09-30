@@ -113,7 +113,7 @@ Store your API key in environment variables, never in your code:
 
 ```bash
 # .env file
-OFAUTH_API_KEY=ofauth_your_api_key_here
+OFAUTH_API_KEY=sk_live_your_api_key_here
 ```
 
 ```javascript
@@ -129,7 +129,7 @@ const apiKey = process.env.OFAUTH_API_KEY;
 ```javascript
 // ❌ DON'T DO THIS - Client-side
 const response = await fetch("https://api.ofauth.com/v2/account/info", {
-	headers: { apikey: "ofauth_123..." }, // Visible to users!
+	headers: { apikey: "sk_live_1.secret_part..." }, // Visible to users!
 });
 
 // ✅ DO THIS - Server-side
@@ -155,7 +155,7 @@ const response = await fetch("https://api.ofauth.com/v2/account/info", {
 <AccordionGroup>
 
 <Accordion title="401 Unauthorized Error">
-	Double-check your API key is correct and hasn't been copied with extra spaces. The API key should start with `ofauth_` and be exactly as shown in your dashboard.
+	Double-check your API key is correct and hasn't been copied with extra spaces. The API key should start with `sk_` and be exactly as shown in your dashboard.
 </Accordion>
 
 <Accordion title="Rate Limiting">

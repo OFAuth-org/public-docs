@@ -4,15 +4,13 @@ description: "Headers required to call typed Access routes under /v2/access/*"
 ---
 
 Managed endpoints are the typed, stable routes under `/v2/access/*` (e.g.
-`/v2/access/users/{userId}`, `/v2/access/posts`). They require standard OFAuth
-headers plus either a Link connection ID or direct OnlyFans session headers.
+`/v2/access/users/{userId}`, `/v2/access/posts`). They require the standard OFAuth `apikey` header plus either a Link connection ID or direct OnlyFans session headers.
 
 ## Required Headers
 
 | Header | Required | Notes |
 | ------ | -------- | ----- |
 | `apikey` | Yes | API key from the OFAuth dashboard |
-| `x-platform-id` | Yes |  |
 
 ## Session Strategies
 
@@ -46,7 +44,6 @@ x-of-user-id: ONLYFANS_USER_ID (optional)
 ```bash Connection ID
 curl -s \
   -H 'apikey: YOUR_API_KEY' \
-  -H 'x-platform-id: YOUR_PLATFORM_ID' \
   -H 'x-connection-id: conn_abc123' \
   'https://api.ofauth.com/v2/access/self/me'
 ```
@@ -54,7 +51,6 @@ curl -s \
 ```bash Session Headers
 curl -s \
   -H 'apikey: YOUR_API_KEY' \
-  -H 'x-platform-id: YOUR_PLATFORM_ID' \
   -H 'x-of-cookie: fp=...;auth_id=...;sess=...' \
   -H 'x-of-user-agent: Mozilla/5.0 ...' \
   'https://api.ofauth.com/v2/access/self/me'

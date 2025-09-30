@@ -32,21 +32,16 @@ The Access API provides two flavors of access:
 
 ## Authentication
 
-Every request must include your API key. Supplying the platform header is
-strongly recommended and required for organization-scoped or service keys.
+Every request must include your API key. After authentication, choose one of these session strategies:
 
 | Header | Required | Notes |
 | ------ | -------- | ----- |
 | `apikey` | Yes | Found in the OFAuth dashboard |
-| `x-platform-id` | Recommended | Mandatory for service-level keys; enables faster key validation |
-
-After the base headers, choose one user-session strategy:
 
 ### Option 1: Link Connection ID (Recommended)
 
 ```http
 apikey: YOUR_API_KEY
-x-platform-id: YOUR_PLATFORM_ID
 x-connection-id: CONNECTION_ID
 ```
 
@@ -58,7 +53,6 @@ x-connection-id: CONNECTION_ID
 
 ```http
 apikey: YOUR_API_KEY
-x-platform-id: YOUR_PLATFORM_ID
 x-of-cookie: ONLYFANS_SESSION_COOKIE
 x-of-user-agent: ONLYFANS_USER_AGENT
 x-of-bc: ONLYFANS_X_BC_HEADER (optional)
@@ -86,7 +80,6 @@ expect typed responses that stay stable across API revisions.
 GET /v2/access/self/me HTTP/1.1
 Host: api.ofauth.com
 apikey: YOUR_API_KEY
-x-platform-id: YOUR_PLATFORM_ID
 x-connection-id: conn_abc123
 ```
 
@@ -101,7 +94,6 @@ matching OnlyFans endpoint. Provide the OnlyFans path relative to `/api2/v2/`.
 
 ```bash
 curl -H 'apikey: YOUR_API_KEY' \
-     -H 'x-platform-id: YOUR_PLATFORM_ID' \
      -H 'x-connection-id: conn_abc123' \
      'https://api.ofauth.com/v2/access/proxy/users/me'
 ```
@@ -159,7 +151,6 @@ Content-Type: application/json
 await fetch("https://api.ofauth.com/v2/access/proxy/users/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-connection-id": "conn_abc123"
 	}
 })
@@ -197,7 +188,6 @@ plan:
 const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-connection-id": "conn_user1"
 	}
 })
@@ -205,7 +195,6 @@ const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-connection-id": "conn_user2" // Independent rate limit
 	}
 })
@@ -216,7 +205,6 @@ const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-of-cookie": "session_1",
 		"x-of-user-agent": "Mozilla ...",
 		"x-of-bc": "bc_value_1",
@@ -227,7 +215,6 @@ const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-		"x-platform-id": "YOUR_PLATFORM_ID",
 		"x-of-cookie": "session_2",
 		"x-of-user-agent": "Mozilla ...",
 		"x-of-bc": "bc_value_2",
