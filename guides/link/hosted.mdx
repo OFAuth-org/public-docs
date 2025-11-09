@@ -222,6 +222,28 @@ DELETE /v2/link/{clientSecret}
 
 </Expandable>
 
+## Security: Allowed Redirect URIs
+
+Your `successUrl` and `returnUrl` must be pre-registered in your OFAuth dashboard as Allowed Redirect URIs.
+
+<CardGroup cols={2}>
+  <Card title="Exact Match" icon="list-checks">
+    We require exact URL matches (scheme, host, path, and query). Use `{CONNECTION_ID}` anywhere in the URL if you need the ID at return time.
+  </Card>
+  <Card title="HTTPS Required" icon="lock">
+    Always use HTTPS in production. Configure multiple URLs if you have different environments (e.g., staging vs production).
+  </Card>
+</CardGroup>
+
+<Tip>
+  You can configure Allowed Redirect URIs per platform in the OFAuth dashboard under Developers → API.
+</Tip>
+
+### Misconfiguration Behavior
+
+- If you pass a `successUrl`/`returnUrl` not on your allowlist, `/v2/link/init` returns `400` with `Link is misconfigured`.
+- If a legacy session references an unlisted URL, the hosted page omits it and shows a friendly “Link is misconfigured” error.
+
 ## Implementation Guide
 
 ### Step 1: Initialize the Session

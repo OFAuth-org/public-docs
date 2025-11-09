@@ -75,6 +75,13 @@
               "architecture/webhooks"
             ]
           },
+          {
+            "group": "Environments",
+            "pages": [
+              "environments/overview",
+              "environments/sandbox"
+            ]
+          },
 
           {
             "group": "API Guides",

@@ -21,6 +21,36 @@ The OFAuth Link Embed library provides pre-built components and a seamless popup
 - **TypeScript Support**: Full TypeScript definitions for a better development experience.
 - **Framework Agnostic**: Works with React, Vue, Svelte, vanilla JavaScript, and more.
 
+## Security: Allowed Origins & CSP
+
+OFAuth enforces where your Link iframe may be embedded using Content Security Policy (CSP) `frame-ancestors`.
+
+<CardGroup cols={2}>
+  <Card title="Allowed Origins" icon="shield-check">
+    Configure trusted web origins in your OFAuth dashboard. Only these origins can embed the hosted Link page.
+  </Card>
+  <Card title="CSP Enforcement" icon="lock">
+    The hosted Link page sets `Content-Security-Policy: frame-ancestors 'self' <your-origins...>`.
+    Browsers block embedding from unlisted origins.
+  </Card>
+</CardGroup>
+
+<Tip>
+  For local development you can add your dev origin (e.g. `http://localhost:5173`) to the list. In production, use HTTPS origins only.
+</Tip>
+
+### Configuration Rules
+
+- Provide full origins, e.g. `https://app.example.com` (scheme + host, optional port)
+- Wildcards are not supported; list each origin explicitly
+- An empty list means only `'self'` (no third‑party iframes)
+- Changes apply to newly loaded sessions immediately
+
+### Troubleshooting
+
+- If the embed fails to appear or the browser console shows a CSP error mentioning `frame-ancestors`, add your site’s origin to Allowed Origins
+- If you see a “Link is misconfigured” screen, verify your dashboard’s Allowed Origins and your `successUrl`/`returnUrl` whitelists (see Hosted guide)
+
 ## Installation
 
 ### NPM Package

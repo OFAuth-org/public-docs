@@ -46,6 +46,13 @@ Include your API key on every request.
 apikey: YOUR_API_KEY
 ```
 
+## Security Configuration
+
+- Allowed Redirect URIs: `successUrl` and `returnUrl` passed to `/init` must be pre-registered in your dashboard. Non-whitelisted URLs return `400` with an error.
+- Allowed Origins: the hosted Link page sets a CSP `frame-ancestors` directive so only configured origins can embed the iframe.
+
+See the Hosted and Embed guides for configuration details.
+
 ## Session Types
 
 | Mode | Availability | UX ownership | Notes |

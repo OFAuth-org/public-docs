@@ -120,6 +120,24 @@ redirecting or posting a success message to your application.
 	</Card>
 </CardGroup>
 
+## Platform Settings
+
+Security-sensitive behavior is controlled from your OFAuth dashboard:
+
+- Allowed Origins: controls which web origins can embed the hosted Link page (enforced via CSP `frame-ancestors`)
+- Allowed Redirect URIs: exact URLs the hosted flow may redirect to on success or cancel
+
+See the detailed guides for configuration steps:
+
+<CardGroup cols={2}>
+	<Card title="Allowed Origins" icon="shield-check" href="/guides/link/embed#security-allowed-origins-csp">
+		Configure trusted embed origins
+	</Card>
+	<Card title="Allowed Redirect URIs" icon="link" href="/guides/link/hosted#security-allowed-redirect-uris">
+		Whitelist success and cancel URLs
+	</Card>
+</CardGroup>
+
 ## Common Error Patterns
 
 <AccordionGroup>
