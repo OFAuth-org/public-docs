@@ -20,13 +20,85 @@ OnlyFans requests.
 
 `https://api.ofauth.com/v2/dynamic-rules`
 
-## Core Endpoints
+## Endpoints
 
-| Endpoint | Method | Purpose |
-| -------- | ------ | ------- |
-| `/` | `GET` | Fetch the latest signing bundle available to your account |
-| `/status` | `GET` | Check freshness and revision identifiers |
-| `/sign` | `POST` | Submit request metadata and receive a signed payload |
+### Get Rules
+
+Fetch the current signing rules bundle.
+
+```http
+GET /v2/dynamic-rules
+```
+
+**Response**
+
+```json
+{
+  "rules": {
+    "static_param": "...",
+    "format": "...",
+    "start": "...",
+    "end": "...",
+    "checksum_indexes": [1, 2, 3],
+    "checksum_constant": 123,
+    "app_token": "...",
+    "revision": "rev_..."
+  },
+  "is_current": true,
+  "is_public": false,
+  "is_early_access": false
+}
+```
+
+### Sign Request
+
+Generate a signature for a specific request without implementing the signing logic yourself.
+
+```http
+POST /v2/dynamic-rules/sign
+```
+
+**Body**
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `endpoint` | `string` | Yes | The OnlyFans API path (e.g., `/api2/v2/users/me`) |
+| `time` | `number` | No | specific timestamp to sign with |
+| `user-id` | `string` | No | OnlyFans user ID |
+
+**Response**
+
+```json
+{
+  "signed": {
+    "sign": "generated_signature_string",
+    "time": "1698400000000",
+    "user-id": "12345",
+    "app-token": "33d5...",
+    "x-of-rev": "rev_..."
+  },
+  "is_public": false,
+  "is_early_access": false
+}
+```
+
+### Get Status
+
+Check the status and revision of the current rules.
+
+```http
+GET /v2/dynamic-rules/status
+```
+
+**Response**
+
+```json
+{
+  "revision": "rev_abc...",
+  "is_current": true,
+  "access_granted": true
+}
+```
 
 ## Authentication
 
@@ -54,17 +126,3 @@ apikey: YOUR_API_KEY
 - Implement exponential backoff when rules are unavailable (`503`)
 - If you call `/sign` at scale, consider replicating the signing algorithm in your
   environment using the rule payload to avoid per-request latency
-
-## Related Docs
-
-<CardGroup cols={3}>
-  <Card title="Dynamic Rules Guide" icon="book" href="/guides/dynamic-rules">
-    In-depth explanation with sample code and troubleshooting
-  </Card>
-  <Card title="Access API" icon="key" href="/api-reference/access/overview">
-    Skip manual signing by using OFAuth-managed requests
-  </Card>
-  <Card title="Architecture: Authentication" icon="shield" href="/architecture/authentication">
-    Learn how dynamic rules fit into the broader security model
-  </Card>
-</CardGroup>

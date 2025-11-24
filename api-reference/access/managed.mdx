@@ -1,58 +1,104 @@
 ---
-title: "Managed Endpoint Authentication"
-description: "Headers required to call typed Access routes under /v2/access/*"
+title: "Managed Access Endpoints"
+description: "Typed, stable endpoints for common OnlyFans resources"
 ---
 
-Managed endpoints are the typed, stable routes under `/v2/access/*` (e.g.
-`/v2/access/users/{userId}`, `/v2/access/posts`). They require the standard OFAuth `apikey` header plus either a Link connection ID or direct OnlyFans session headers.
+Managed endpoints provide a stable, typed interface for interacting with OnlyFans data. Unlike proxy endpoints, these routes validate input parameters, normalize responses, and handle common logic like pagination.
 
-## Required Headers
+## User Endpoints
 
-| Header | Required | Notes |
-| ------ | -------- | ----- |
-| `apikey` | Yes | API key from the OFAuth dashboard |
+Interact with user profiles and lists.
 
-## Session Strategies
+### Get User
 
-### Link Connection ID (Recommended)
+Retrieve public profile information for a specific user.
 
 ```http
-x-connection-id: CONNECTION_ID
+GET /v2/access/users/{userId}
 ```
 
-- Returned after a user completes Link authentication
-- OFAuth securely manages the underlying OnlyFans session so you don't handle raw cookies
-- Best choice for most production apps
+**Parameters**
 
-### Direct OnlyFans Session Headers
+| Name | In | Type | Description |
+| ---- | -- | ---- | ----------- |
+| `userId` | path | `string` | The OnlyFans user ID or username (e.g., `u12345` or `janedoe`) |
+
+**Response**
+
+Returns a user profile object containing fields like `name`, `username`, `avatar`, `about`, `subscribersCount`, etc.
+
+### List User Posts
+
+Retrieve a paginated list of posts for a user.
 
 ```http
-x-of-cookie: ONLYFANS_SESSION_COOKIE
-x-of-user-agent: ONLYFANS_USER_AGENT
-x-of-bc: ONLYFANS_X_BC_HEADER (optional)
-x-of-user-id: ONLYFANS_USER_ID (optional)
+GET /v2/access/users/{userId}/posts
 ```
 
-- Use when you already manage OnlyFans sessions yourself
-- `x-of-cookie` must include `fp`, `auth_id`, and `sess` unless overridden by
-  `x-of-bc` or `x-of-user-id`
-- You own responsibility for renewal, rotation, and security controls
+**Query Parameters**
 
-## Example Requests
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `limit` | `number` | Number of posts to return (default 10) |
+| `offset` | `number` | Offset for pagination |
+| `sortBy` | `string` | Sort by `publish_date`, `tips`, or `favorites_count` |
+| `sortDirection` | `string` | `asc` or `desc` |
 
-<CodeGroup>
-```bash Connection ID
-curl -s \
-  -H 'apikey: YOUR_API_KEY' \
-  -H 'x-connection-id: conn_abc123' \
-  'https://api.ofauth.com/v2/access/self/me'
+## Post Endpoints
+
+Create and manage content.
+
+### Create Post
+
+Create a new post. Supports text and media attachments.
+
+```http
+POST /v2/access/posts
 ```
 
-```bash Session Headers
-curl -s \
-  -H 'apikey: YOUR_API_KEY' \
-  -H 'x-of-cookie: fp=...;auth_id=...;sess=...' \
-  -H 'x-of-user-agent: Mozilla/5.0 ...' \
-  'https://api.ofauth.com/v2/access/self/me'
+**Body Parameters**
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| `text` | `string` | The text content of the post |
+| `price` | `number` | Price for the post (if paid) |
+| `mediaItems` | `array` | List of media IDs to attach (uploaded via Upload endpoints) |
+| `isPinned` | `boolean` | Whether to pin the post |
+
+### Edit Post
+
+Update an existing post.
+
+```http
+PUT /v2/access/posts/{postId}
 ```
-</CodeGroup>
+
+### Delete Post
+
+Remove a post.
+
+```http
+DELETE /v2/access/posts/{postId}
+```
+
+### Get Post
+
+Retrieve details for a single post.
+
+```http
+GET /v2/access/posts/{postId}
+```
+
+## Other Categories
+
+The following resource categories are also available as managed endpoints:
+
+- **Messages**: `/chats`, `/chats/{chatId}/messages` - List conversations and send messages.
+- **Statistics**: `/statistics/earnings`, `/statistics/messages` - Retrieve aggregated performance data.
+- **Subscriptions**: `/subscriptions/subscribers` - Manage your subscriber list.
+- **Vault**: `/vault/lists` - Access vault media collections.
+- **Upload**: `/upload` - Generate signed URLs for media uploads.
+
+<Tip>
+  For a complete interactive reference of all managed endpoints, schemas, and parameters, please consult the OpenAPI specification available in your dashboard or the API explorer.
+</Tip>

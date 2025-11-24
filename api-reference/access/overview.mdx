@@ -76,11 +76,30 @@ strategies for the user session that will power the request.
 | ---- | ---------------- | ------------- |
 | Current user | `GET /self/me` | `GET /users/me` |
 | Posts listing | `GET /posts` | `GET /users/{id}/posts` |
-| Messages | `GET /chats` | `GET /chats/{chatId}/messages` |
-| Upload media | `POST /uploads` | `POST /posts/{id}/media` |
+| Messages | `GET /messages` | `GET /chats/{chatId}/messages` |
+| Upload media | `POST /upload` | `POST /posts/{id}/media` |
 
 Use standard HTTP verbs. Managed endpoints validate payloads and respond with
 stable schemas; proxy responses are passed through from OnlyFans.
+
+## Media Proxy
+
+The Access API includes an automatic media proxy that simplifies handling images and videos.
+
+**Benefits:**
+
+- **Persistent URLs**: Converts expiring OnlyFans CDN links into permanent OFAuth URLs.
+- **Zero Configuration**: No need to sign media requests or manage cookies for assets.
+- **CORS Support**: Display images and videos directly in web applications without cross-origin errors.
+- **Edge Caching**: Content is cached globally for faster load times.
+
+<Note>
+  Media proxy usage is metered and charged per kilobyte (KB) according to your plan's pricing schedule.
+</Note>
+
+**How it works:**
+
+When available on your plan, the Access API automatically detects OnlyFans media URLs in responses and rewrites them to point to the OFAuth Media Proxy. You can use these URLs directly in `<img>` or `<video>` tags.
 
 ## Related Guides
 

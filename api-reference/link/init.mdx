@@ -1,0 +1,70 @@
+---
+title: "Initialize Link Session"
+description: "Create a new hosted or embedded Link session"
+---
+
+## Overview
+
+The `/init` endpoint creates a new Link session. It returns a URL that you can redirect the user to (Hosted mode) or load in an iframe/popup (Embed mode).
+
+## HTTP Request
+
+```http
+POST https://api.ofauth.com/v2/link/init
+apikey: YOUR_API_KEY
+Content-Type: application/json
+```
+
+## Request Body
+
+| Field | Type | Required | Description |
+| ----- | ---- | -------- | ----------- |
+| `mode` | `string` | No | `hosted` (default) or `whitelabel`. |
+| `successUrl` | `string` | No | URL to redirect to after successful login. Supports `{CONNECTION_ID}` placeholder. |
+| `returnUrl` | `string` | No | URL to redirect to if the user cancels or fails. |
+| `clientReferenceId` | `string` | No | Your own internal ID for this user. Returned in webhooks. |
+| `connectionId` | `string` | No | Provide an existing connection ID to reconnect/re-authenticate that specific connection. |
+| `options` | `object` | No | Additional configuration options. |
+| `options.returnRawSession` | `boolean` | No | If `true` (default), returns raw session cookies in the final payload/webhook. Set to `false` if you only want the Connection ID. |
+
+### Connection ID Placeholder
+
+For `successUrl`, you can use the string `{CONNECTION_ID}` as a placeholder. OFAuth will replace this with the actual connection ID before redirecting the user.
+
+Example: `https://app.example.com/callback?conn_id={CONNECTION_ID}`
+
+## Response
+
+```json
+{
+  "clientSecret": "cs_abcdef123456...",
+  "url": "https://link.ofauth.com/cs_abcdef123456...",
+  "expiresAt": "2023-10-27T10:00:00.000Z",
+  "mode": "hosted"
+}
+```
+
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| `clientSecret` | `string` | Unique secret identifier for this session. |
+| `url` | `string` | The URL to redirect the user to. |
+| `expiresAt` | `string` | ISO timestamp when this session expires (usually 30-60 minutes). |
+| `mode` | `string` | The mode the session was initialized in. |
+
+## Example
+
+```bash
+curl -X POST https://api.ofauth.com/v2/link/init \
+  -H "apikey: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "hosted",
+    "successUrl": "https://myapp.com/dashboard?connection={CONNECTION_ID}",
+    "returnUrl": "https://myapp.com/login",
+    "clientReferenceId": "user_123",
+    "options": {
+      "returnRawSession": true
+    }
+  }'
+```
+

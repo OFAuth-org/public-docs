@@ -26,11 +26,12 @@ hosted experience, and monitor session state.
 
 | Endpoint | Method | Purpose |
 | -------- | ------ | ------- |
-| `/init` | `POST` | Create a hosted or embed session |
-| `/{clientSecret}` | `POST` | Submit credentials or 2FA challenges (approved programmatic access only) |
-| `/status/{clientSecret}` | `GET` | Poll current session state |
-| `/connections/{connectionId}` | `GET` | Retrieve connection metadata |
-| `/connections/{connectionId}` | `DELETE` | Revoke an existing connection |
+| `/init` | `POST` | Initialize a Link session (Hosted or Whitelabel) |
+| `/{clientSecret}` | `POST` | Start login (Approved programmatic access only) |
+| `/{clientSecret}` | `GET` | Poll current session state |
+| `/{clientSecret}` | `DELETE` | Delete a login session |
+| `/{clientSecret}/2fa/code` | `POST` | Submit 2FA code |
+| `/{clientSecret}/2fa/sms` | `PATCH` | Request SMS 2FA code |
 
 <Tip>
   Hosted and embed integrations only need the `/init` endpoint plus webhook
