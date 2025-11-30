@@ -4,66 +4,46 @@ description:
   "The infrastructure layer that powers OnlyFans integrations. Save development costs, ship 10x faster, launch in weeks not months."
 ---
 
-
 ## What is OFAuth?
 
-OFAuth is the infrastructure layer that powers OnlyFans integrations - think Plaid for OnlyFans. Save $50K-200K in development costs, ship features 10x faster, and launch in weeks instead of months. Our platform eliminates the expensive complexity of OnlyFans integration so you can focus on building features that generate revenue.
-
-### Why Choose OFAuth?
+OFAuth is the infrastructure layer that powers OnlyFans integrations - **think Plaid for OnlyFans**. We handle authentication, request signing, session management, and API complexity so you can focus on building features that generate revenue.
 
 <CardGroup cols={2}>
 	<Card title="Enterprise Security" icon="shield-check">
-		Bank-grade encryption and security practices protect your users' data with
-		automatic session management
+		Bank-grade encryption and automatic session management protect your users' data
 	</Card>
 	<Card title="Ship 10x Faster" icon="rocket">
-		First OnlyFans feature deployed in days, not months. Save weeks of authentication infrastructure work.
+		Deploy your first OnlyFans feature in days, not months
 	</Card>
 	<Card title="Always Up-to-Date" icon="refresh">
-		Dynamic rules engine automatically adapts to OnlyFans changes - no code
-		updates required
+		Dynamic rules engine adapts to OnlyFans changes automatically
 	</Card>
-	<Card title="Save $75K+ in Dev Costs" icon="trending-down">
-		Skip months of expensive infrastructure development. Focus engineering budget on revenue-generating features.
+	<Card title="Save $$$ in Dev Costs" icon="trending-down">
+		Skip months of infrastructure development
 	</Card>
 </CardGroup>
 
-## Built by Industry Pioneers
+---
 
-OFAuth was founded by the first person to reverse engineer OnlyFans' request signing algorithm. Our team has built and scaled multiple products and services in the creator economy, helping others do the same along the way.
+## Start Building
 
-OFAuth represents the culmination of years of production experience - every feature, security measure, and optimization has been battle-tested by thousands of users in real-world applications. When you choose OFAuth, you're not just getting an API - you're getting the collective knowledge and proven solutions from the industry's most experienced OnlyFans integration experts.
-
-## Get Started
-
-<CardGroup cols={2}>
-	<Card title="Quick Start" icon="rocket" href="/quickstart">
-		**New to OFAuth?** Get from zero to working integration in under 10 minutes
+<CardGroup cols={3}>
+	<Card title="Quick Start" icon="rocket" href="/getting-started/quickstart/index">
+		**10 minutes** - From zero to working integration with step-by-step guidance
 	</Card>
-	<Card title="OnlyFans SDK" icon="code" href="/sdk">
-		**Want a Node.js SDK?** Get started with our comprehensive TypeScript SDK
+	<Card title="TypeScript SDK" icon="code" href="/sdk/quickstart">
+		**5 minutes** - Install and configure our full-featured SDK
 	</Card>
 	<Card title="Create Account" icon="user-plus" href="https://ofauth.com/platform">
-		**Ready to build?** Sign up for free and get your API keys in minutes
-	</Card>
-	<Card title="Authentication Guide" icon="link" href="/guides/link/overview">
-		**Need integration help?** Explore hosted and embed flows for Link authentication
-	</Card>
-	<Card title="Access API" icon="database" href="/guides/access">
-		**Want direct API access?** Use our proxied API for any programming language
-	</Card>
-	<Card title="API Reference" icon="key" href="/api-reference/access/overview">
-		**Want technical details?** Explore Access, Link, Account, and Dynamic Rules references
+		**2 minutes** - Sign up and get your API keys
 	</Card>
 </CardGroup>
 
-<Tip>
-	Need a product-level overview first? Head back to the marketing site to compare
-	<a href="https://ofauth.com/products/link">Link</a>,
-	<a href="https://ofauth.com/products/access">Access</a>, the
-	<a href="https://ofauth.com/products/sdk">SDK</a>, and
-	<a href="https://ofauth.com/products/dynamic-rules">Dynamic Rules</a> offerings.
-</Tip>
+<Info>
+	**Not sure where to start?** Check out [Core Concepts](/getting-started/concepts) to understand how OFAuth works, or [Choose Your Path](/getting-started/choose-your-path) to pick the right integration approach for your stack.
+</Info>
+
+---
 
 ## What You Can Build
 
@@ -90,48 +70,82 @@ Build powerful OnlyFans integrations across these popular use cases:
 	</Card>
 </CardGroup>
 
-<Info>
-	**Building for Production?** Before deploying your OnlyFans integration, review our [Production Considerations](/getting-started/production-considerations) guide for critical reliability and risk management information.
-</Info>
+---
 
-## Integration Flow Overview
-
-Here's how OFAuth works at a high level:
+## How It Works
 
 ```mermaid
-graph TD
-    A[Your Application] --> B[OFAuth Link API]
-    B --> C[User Authentication]
-    C --> D[OnlyFans Login]
-    D --> E[Connection Established]
-    E --> F[Access API Available]
-    F --> G[Your App + OnlyFans Data]
-
+graph LR
+    A[Your App] --> B[OFAuth]
+    B --> C[OnlyFans]
+    C --> B
+    B --> A
+    
     style A fill:#e1f5fe
-    style G fill:#e8f5e8
     style B fill:#fff3e0
-    style F fill:#fff3e0
+    style C fill:#e8f5e8
 ```
 
-1. **Initialize** - Your app creates an authentication session
-2. **Authenticate** - User securely logs in through OFAuth
-3. **Connect** - OFAuth establishes a secure connection to OnlyFans
-4. **Access** - Your app can now access OnlyFans data on behalf of the user
+<Steps>
+	<Step title="Connect Users">
+		Use the **Link API** to authenticate OnlyFans users. They log in on our secure hosted page.
+	</Step>
+	<Step title="Get a Connection ID">
+		After authentication, you receive a Connection ID - a simple token representing the user's account.
+	</Step>
+	<Step title="Access Data">
+		Use the **Access API** with the Connection ID to fetch OnlyFans data. We handle signing and session management.
+	</Step>
+</Steps>
+
+<Tip>
+	Want to understand this better? Read [Core Concepts](/getting-started/concepts) for a complete explanation of Link, Access, Connections, and more.
+</Tip>
+
+---
+
+## Explore the Docs
+
+<CardGroup cols={2}>
+	<Card title="Integration Guides" icon="book" href="/guides/link/overview">
+		Step-by-step guides for Link, Access, and Webhooks
+	</Card>
+	<Card title="API Reference" icon="square-terminal" href="/api-reference/access/overview">
+		Complete endpoint documentation with examples
+	</Card>
+	<Card title="SDK Documentation" icon="code" href="/sdk">
+		TypeScript SDK with full IntelliSense support
+	</Card>
+	<Card title="Going to Production" icon="shield" href="/getting-started/production-considerations">
+		Critical reliability and risk management information
+	</Card>
+</CardGroup>
+
+---
+
+## Built by Industry Pioneers
+
+OFAuth was founded by the first person to reverse engineer OnlyFans' request signing algorithm. Our team has built and scaled multiple products in the creator economy.
+
+Every feature, security measure, and optimization has been battle-tested by thousands of users. When you choose OFAuth, you're getting the collective knowledge from the industry's most experienced OnlyFans integration experts.
+
+---
 
 ## Need Help?
 
 <CardGroup cols={2}>
 	<Card title="Join Community" icon="discord" href="https://discord.gg/ofauth">
-		Connect with other developers and get support from the community
+		Connect with developers and get community support
 	</Card>
 	<Card title="Contact Support" icon="envelope" href="mailto:support@ofauth.com">
 		Get direct help from our technical team
 	</Card>
 </CardGroup>
 
----
-
-<Info>
-	**Ready to start?** Most developers complete their first integration within an
-	hour using our [Quick Start guide](/quickstart).
-</Info>
+<Tip>
+	Compare our products on the marketing site:
+	[Link](https://ofauth.com/products/link),
+	[Access](https://ofauth.com/products/access),
+	[SDK](https://ofauth.com/products/sdk), and
+	[Dynamic Rules](https://ofauth.com/products/dynamic-rules).
+</Tip>

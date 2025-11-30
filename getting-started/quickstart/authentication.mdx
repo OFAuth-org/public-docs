@@ -99,10 +99,9 @@ After the user completes authentication, you can fetch their connections:
 <CodeGroup>
 
 ```javascript JavaScript
-const response = await fetch("https://api.ofauth.com/v2/link/connections", {
+const response = await fetch("https://api.ofauth.com/v2/connections", {
 	headers: {
 		apikey: "YOUR_API_KEY",
-
 	},
 });
 
@@ -114,7 +113,7 @@ console.log("User connections:", connections);
 import requests
 
 response = requests.get(
-	"https://api.ofauth.com/v2/link/connections",
+	"https://api.ofauth.com/v2/connections",
 	headers={
 		"apikey": "YOUR_API_KEY",
 	}
@@ -126,7 +125,7 @@ print("User connections:", connections)
 
 ```curl cURL
 curl -H "apikey: YOUR_API_KEY" \
-  https://api.ofauth.com/v2/link/connections
+  https://api.ofauth.com/v2/connections
 ```
 
 </CodeGroup>
@@ -134,15 +133,20 @@ curl -H "apikey: YOUR_API_KEY" \
 <Accordion title="Expected Response">
 ```json
 {
-  "connections": [
+  "list": [
     {
       "id": "conn_abc123",
       "status": "active",
-      "userId": "12345",
-      "username": "creator_username",
+      "userData": {
+        "id": "12345",
+        "name": "Creator Name",
+        "username": "creator_username",
+        "avatar": "https://..."
+      },
       "createdAt": "2024-01-15T09:30:00Z"
     }
-  ]
+  ],
+  "hasMore": false
 }
 ```
 </Accordion>

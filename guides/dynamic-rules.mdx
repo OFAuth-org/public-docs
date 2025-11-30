@@ -3,16 +3,22 @@ title: "Dynamic Rules for Request Signing"
 description: "Current signing parameters required for OnlyFans API authentication"
 ---
 
+<Warning>
+	**Most integrations don't need Dynamic Rules.** If you're using the [Access API](/guides/access) or [TypeScript SDK](/sdk), request signing is handled automatically. Only read this guide if you're making direct requests to OnlyFans APIs.
+</Warning>
+
 ## Overview
 
 The Dynamic Rules API (`/v2/dynamic-rules`) provides the current signing parameters required to generate valid signatures for OnlyFans API requests. OnlyFans requires cryptographically signed requests and **changes their signing requirements very frequently** - sometimes multiple times per day.
 
-<Info>
-	**Most Users Don't Need This**: If you're using OFAuth's [Access
-	API](/api-reference/access/overview), **request signing is handled
-	automatically**. Dynamic rules are only needed if you're making direct
-	requests to OnlyFans APIs outside of OFAuth's proxy system.
-</Info>
+<CardGroup cols={2}>
+	<Card title="Use the Access API Instead" icon="rocket" href="/guides/access">
+		Automatic signing, no maintenance required. **Recommended for most use cases.**
+	</Card>
+	<Card title="Use the TypeScript SDK" icon="code" href="/sdk">
+		Full-featured SDK with built-in signing and error handling.
+	</Card>
+</CardGroup>
 
 <Warning>
 	**Direct API calls require vigilance**. OnlyFans rotates signing requirements

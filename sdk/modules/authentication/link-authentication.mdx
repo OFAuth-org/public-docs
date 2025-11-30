@@ -1,22 +1,18 @@
 ---
-title: "Link Authentication"
-description: "Complete API reference for SDK authentication methods including session initialization, login, and 2FA handling"
+title: "Link Authentication (Enterprise)"
+description: "Enterprise SDK methods for programmatic authentication - requires approval"
 ---
 
 ## Overview
 
-The Link module (`sdk.link`) handles OnlyFans authentication flows, session management, and two-factor authentication. This module provides direct authentication capabilities for building custom login experiences.
-
-<Info>
-  **When to use Link Authentication**: Use these methods when you need direct control over the authentication flow, such as building custom login UI or handling authentication in server-side applications. For most web applications, the standard hosted OFAuth Link OAuth-style flow is recommended.
-</Info>
-
 <Warning>
-  **Approval required**: Programmatic Link integrations ("whitelabel" mode) are available only to vetted partners. Contact `support@ofauth.com` with your use case before building against these APIs.
+  **Enterprise Feature**: The programmatic Link authentication methods documented on this page are part of [Enterprise Whitelabel](/enterprise/whitelabel) and require approval before use. Contact [support@ofauth.com](mailto:support@ofauth.com) to request access.
 </Warning>
 
+The Link module (`sdk.link`) provides direct authentication capabilities for building custom login experiences. This is intended for approved enterprise partners who need full control over the authentication flow.
+
 <Info>
-  **Link vs Access**: OFAuth Link handles account connection (this module), while OFAuth Access handles API calls to OnlyFans endpoints using established connections. Most applications use Link for authentication and Access for data retrieval.
+  **For most applications**: Use [Hosted Mode](/guides/link/hosted) or [Link Embed](/guides/link/embed) instead. These provide excellent user experiences and are available immediately without approval.
 </Info>
 
 ## Session Initialization
@@ -30,7 +26,7 @@ Initialize a new authentication session for OnlyFans login.
 </ParamField>
 
 <ParamField path="options.mode" type="'whitelabel'" required>
-  The session mode. Whitelabel integrations require OFAuth approval.
+  The session mode. Requires [Enterprise Whitelabel](/enterprise/whitelabel) approval.
 </ParamField>
 
 <ParamField path="options.clientReferenceId" type="string" required>
@@ -50,7 +46,8 @@ Initialize a new authentication session for OnlyFans login.
 </ResponseField>
 
 <RequestExample>
-```typescript Initialize Session
+```typescript Initialize Session (Enterprise Only)
+// Requires Enterprise Whitelabel approval
 const authSession = await sdk.link.initSession({
   mode: "whitelabel",
   clientReferenceId: "user_123_session_" + Date.now(),

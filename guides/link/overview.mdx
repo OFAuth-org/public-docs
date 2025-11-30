@@ -60,16 +60,20 @@ apikey: YOUR_API_KEY
 4. **Verify** session status server-side
 5. **Store** the connection ID for API access
 
+<Tip>
+**Billing:** You're only charged for active connections. Expired connections don't count toward your monthly usage—billing resumes only if the user re-authenticates.
+</Tip>
+
 ## Permission Requirements
 
 <Info>
 **Understanding Permissions:**
 - **Hosted Mode**: Available to all users immediately
 - **Link Embed**: Included with hosted mode, no extra approval required
-- **Programmatic integrations & raw session access**: Available by request—contact [support@ofauth.com](mailto:support@ofauth.com) with details about your use case
 
 Most applications should start with **Hosted Mode** for the fastest implementation.
 
+Looking for more control? [Enterprise Whitelabel](/enterprise/whitelabel) mode is available for approved partners.
 </Info>
 
 ## Implementation Examples
@@ -168,7 +172,7 @@ See the detailed guides for configuration steps:
 
 ## Next Steps
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
 	<Card
 		title="Hosted Mode Guide"
 		icon="external-link"
@@ -181,7 +185,10 @@ See the detailed guides for configuration steps:
 		href="/guides/link/embed">
 		Drop-in components for seamless popup authentication
 	</Card>
-	<Card title="Access API" icon="key" href="/api-reference/access/overview">
+	<Card title="Access API" icon="key" href="/guides/access">
 		Use connection IDs to access OnlyFans data
+	</Card>
+	<Card title="Going to Production" icon="shield" href="/getting-started/production-considerations">
+		Critical reliability and risk management information
 	</Card>
 </CardGroup>

@@ -1,0 +1,113 @@
+---
+title: "Enterprise Whitelabel"
+description: "Build fully custom OnlyFans authentication experiences with direct API control"
+---
+
+## Overview
+
+Enterprise Whitelabel mode provides direct control over the OnlyFans authentication flow, enabling you to build fully custom login experiences within your own application. This includes:
+
+- **Custom Authentication UI**: Build your own login forms and authentication flows
+- **Direct Session Access**: Receive raw session credentials for maximum flexibility
+- **Programmatic 2FA Handling**: Full control over two-factor authentication flows
+- **Custom Proxy Configuration**: Use your own proxy infrastructure if needed
+
+<Warning>
+  **Approval Required**: Whitelabel mode is subject to approval and available only to vetted enterprise partners. You must be approved before implementing whitelabel integrations.
+</Warning>
+
+## Who Is This For?
+
+Whitelabel mode is designed for enterprise partners who need:
+
+- Complete control over the authentication user experience
+- Direct access to OnlyFans session credentials
+- Integration with existing authentication infrastructure
+- Custom security and compliance requirements
+
+<Info>
+  **Most applications don't need whitelabel mode.** Our [Hosted Mode](/guides/link/hosted) and [Link Embed](/guides/link/embed) provide excellent user experiences with minimal integration effort. Only pursue whitelabel if you have specific requirements that hosted solutions cannot meet.
+</Info>
+
+## Capabilities
+
+| Feature | Description |
+| ------- | ----------- |
+| **Custom Login UI** | Build authentication forms matching your brand |
+| **Raw Session Data** | Receive OnlyFans session cookies and headers directly |
+| **2FA Management** | Handle app-based, SMS, and face verification flows |
+| **Proxy Support** | Configure custom proxy URLs for authentication |
+| **Wait Mode** | Long-polling support for synchronous authentication flows |
+
+## API Reference
+
+Enterprise whitelabel endpoints are available at `/v2/enterprise/link`:
+
+| Endpoint | Method | Purpose |
+| -------- | ------ | ------- |
+| `/v2/enterprise/link/init` | `POST` | Initialize with whitelabel mode and raw session options |
+| `/v2/enterprise/link/{clientSecret}` | `POST` | Start programmatic login |
+| `/v2/enterprise/link/{clientSecret}` | `GET` | Poll session status |
+| `/v2/enterprise/link/{clientSecret}/2fa/code` | `POST` | Submit 2FA code |
+| `/v2/enterprise/link/{clientSecret}/2fa/sms` | `PATCH` | Request SMS 2FA code |
+
+<Card title="Enterprise API Specification" icon="file-code" href="https://api-next.ofauth.com/openapi-link-enterprise.json">
+  Full OpenAPI specification for enterprise whitelabel integrations
+</Card>
+
+## Security Requirements
+
+Enterprise whitelabel integrations come with additional security responsibilities:
+
+- **Credential Handling**: You must implement secure credential collection and transmission
+- **Session Storage**: Raw sessions must be encrypted at rest and in transit
+- **2FA Security**: Proper handling of all two-factor authentication methods
+- **Audit Logging**: Comprehensive logging of authentication events
+- **Rate Limiting**: Implementation of appropriate rate limits
+
+## Getting Started
+
+<Steps>
+  <Step title="Contact Our Team">
+    Reach out to [support@ofauth.com](mailto:support@ofauth.com) with details about your use case, expected volume, and security practices.
+  </Step>
+  <Step title="Security Review">
+    Our team will review your integration requirements and security posture.
+  </Step>
+  <Step title="Approval & Enablement">
+    Once approved, we'll enable whitelabel mode for your organization and provide implementation guidance.
+  </Step>
+  <Step title="Implementation Support">
+    Our team provides dedicated support during your whitelabel integration.
+  </Step>
+</Steps>
+
+## Request Access
+
+To request enterprise whitelabel access, please contact our team with the following information:
+
+- **Company name and website**
+- **Use case description**: What are you building and why do you need whitelabel?
+- **Expected volume**: Estimated monthly authentication volume
+- **Security practices**: How will you handle and store session data?
+- **Technical contact**: Who will be implementing the integration?
+
+<Card title="Contact Enterprise Sales" icon="envelope" href="mailto:support@ofauth.com">
+  Email **support@ofauth.com** to discuss enterprise whitelabel access
+</Card>
+
+## Alternative Solutions
+
+Before pursuing whitelabel, consider whether these solutions meet your needs:
+
+<CardGroup cols={2}>
+  <Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
+    Redirect-based authentication with minimal integration effort
+  </Card>
+  <Card title="Link Embed" icon="window" href="/guides/link/embed">
+    Popup-based authentication that keeps users in your app
+  </Card>
+</CardGroup>
+
+Both hosted solutions provide excellent user experiences and are available immediately without approval.
+

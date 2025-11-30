@@ -7,6 +7,18 @@ description: "Manage Link connections via /v2/connections"
 
 Connections represent authenticated OnlyFans sessions linked to your organization. You can list active connections or disconnect them (logout) using these endpoints.
 
+## Connection Statuses
+
+| Status | Description | Billable |
+| ------ | ----------- | -------- |
+| `active` | User is authenticated and connection is fully functional | ✓ Yes |
+| `awaiting_2fa` | User needs to complete 2FA verification | ✓ Yes |
+| `expired` | Session has expired; user must re-authenticate | ✗ No |
+
+<Info>
+**Billing Note:** You are only billed for **active** connections. When a connection expires, it's immediately removed from your billable count. If a user re-authenticates and the connection becomes active again, billing resumes.
+</Info>
+
 ## Base URL
 
 `https://api.ofauth.com/v2/connections`

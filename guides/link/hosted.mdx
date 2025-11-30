@@ -95,10 +95,7 @@ POST /v2/link/init
 	"successUrl": "https://yourapp.com/success?connection={CONNECTION_ID}",
 	"returnUrl": "https://yourapp.com/cancel",
 	"clientReferenceId": "user_123",
-	"connectionId": "conn_existing_123",
-	"options": {
-		"returnRawSession": false
-	}
+	"connectionId": "conn_existing_123"
 }
 ```
 
@@ -106,30 +103,16 @@ POST /v2/link/init
 
 | Parameter                  | Type    | Required | Description                                                      |
 | -------------------------- | ------- | -------- | ---------------------------------------------------------------- |
-| `mode`                     | string  | No       | Optional. Defaults to hosted—leave unset unless OFAuth has approved a custom flow |
 | `returnUrl`                | string  | No       | URL to redirect to on cancellation (recommended)                 |
 | `successUrl`               | string  | No       | URL to redirect to on success (supports `{CONNECTION_ID}` placeholder) |
 | `clientReferenceId`        | string  | No       | Your internal user identifier for webhook correlation            |
 | `connectionId`             | string  | No       | Existing connection ID to reconnect to                           |
-| `options.returnRawSession` | boolean | No       | Return raw session data (requires approval, default: false)      |
-
-<Note>
-	`options.returnRawSession` is an advanced setting that requires approval from
-	the OFAuth team. Reach out to [support@ofauth.com](mailto:support@ofauth.com)
-	with your use case before enabling it in production.
-</Note>
 
 <Tip>
 	Include `{CONNECTION_ID}` anywhere in your success URL to have it replaced with
 	the connection identifier that was just created. This makes it easy to
 	validate the redirect on your side without extra API calls.
 </Tip>
-
-<Info>
-	`mode` is optional. Omit it to use hosted mode automatically. Only specify a
-	custom value if OFAuth has enabled a programmatic integration for your
-	account.
-</Info>
 
 **Response:**
 
@@ -568,6 +551,5 @@ async function addNewAccount(userId) {
 </CardGroup>
 
 <Info>
-  Looking for a fully custom experience? Programmatic flows are available by request.
-  Reach out to [support@ofauth.com](mailto:support@ofauth.com) with your use case.
+  Looking for a fully custom experience? [Enterprise Whitelabel](/enterprise/whitelabel) mode is available for approved partners who need direct control over authentication flows.
 </Info>

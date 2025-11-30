@@ -19,13 +19,10 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 | ----- | ---- | -------- | ----------- |
-| `mode` | `string` | No | `hosted` (default) or `whitelabel`. |
 | `successUrl` | `string` | No | URL to redirect to after successful login. Supports `{CONNECTION_ID}` placeholder. |
 | `returnUrl` | `string` | No | URL to redirect to if the user cancels or fails. |
 | `clientReferenceId` | `string` | No | Your own internal ID for this user. Returned in webhooks. |
 | `connectionId` | `string` | No | Provide an existing connection ID to reconnect/re-authenticate that specific connection. |
-| `options` | `object` | No | Additional configuration options. |
-| `options.returnRawSession` | `boolean` | No | If `true` (default), returns raw session cookies in the final payload/webhook. Set to `false` if you only want the Connection ID. |
 
 ### Connection ID Placeholder
 
@@ -58,13 +55,9 @@ curl -X POST https://api.ofauth.com/v2/link/init \
   -H "apikey: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "mode": "hosted",
     "successUrl": "https://myapp.com/dashboard?connection={CONNECTION_ID}",
     "returnUrl": "https://myapp.com/login",
-    "clientReferenceId": "user_123",
-    "options": {
-      "returnRawSession": true
-    }
+    "clientReferenceId": "user_123"
   }'
 ```
 

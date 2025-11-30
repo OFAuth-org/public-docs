@@ -26,17 +26,13 @@ hosted experience, and monitor session state.
 
 | Endpoint | Method | Purpose |
 | -------- | ------ | ------- |
-| `/init` | `POST` | Initialize a Link session (Hosted or Whitelabel) |
-| `/{clientSecret}` | `POST` | Start login (Approved programmatic access only) |
+| `/init` | `POST` | Initialize a Link session |
 | `/{clientSecret}` | `GET` | Poll current session state |
 | `/{clientSecret}` | `DELETE` | Delete a login session |
-| `/{clientSecret}/2fa/code` | `POST` | Submit 2FA code |
-| `/{clientSecret}/2fa/sms` | `PATCH` | Request SMS 2FA code |
 
 <Tip>
   Hosted and embed integrations only need the `/init` endpoint plus webhook
-  events emitted when a session completes. Additional endpoints are reserved for
-  approved programmatic integrations.
+  events emitted when a session completes.
 </Tip>
 
 ## Authentication
@@ -62,9 +58,7 @@ See the Hosted and Embed guides for configuration details.
 | Embed | Default | OFAuth popup inside your app | Use the Link Embed library for best experience |
 
 <Info>
-  Programmatic integrations and raw session data are available by request.
-  Contact `support@ofauth.com` with details about your use case if you require
-  deeper customization.
+  Looking for more control? [Enterprise Whitelabel](/enterprise/whitelabel) mode is available for approved partners who need custom authentication flows.
 </Info>
 
 ## Responses & Webhooks
@@ -73,6 +67,10 @@ See the Hosted and Embed guides for configuration details.
 - Webhooks (from the Account API) deliver updates for `connection.created`,
   `connection.updated`, and `connection.expired`
 - Sessions expire after 1 hour if incomplete
+
+<Info>
+**Billing:** Only active connections count toward your monthly usage. When a connection expires, it's immediately removed from your billable count. See [Connections](/api-reference/account/connections) for details on connection statuses.
+</Info>
 
 ## Related Docs
 

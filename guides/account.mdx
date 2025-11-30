@@ -5,15 +5,18 @@ description: "Webhook configuration and account management"
 
 ## Overview
 
-The Account API (`/v2/account`) manages your OFAuth account settings, webhook configurations, and provides access to connection data. This API is essential for receiving real-time notifications about connection events and managing your integration settings.
+The Account API (`/v2/account`) manages your OFAuth account settings and webhook configurations. Connection management is handled by the separate Connections API (`/v2/connections`).
 
-## Base URL
+## Base URLs
 
-Base URL: `https://api.ofauth.com/v2/account`.
+| API | Base URL | Purpose |
+|-----|----------|---------|
+| Account | `https://api.ofauth.com/v2/account` | Platform info, webhooks |
+| Connections | `https://api.ofauth.com/v2/connections` | Manage connections |
 
 ## Authentication
 
-Include your OFAuth API key in the `apikey` header on every Account API request.
+Include your OFAuth API key in the `apikey` header on every request.
 
 ## Webhooks
 
@@ -21,47 +24,37 @@ Webhook configuration, event payloads, and delivery guidance are documented in t
 
 ## Connection Management
 
+Connection endpoints are at `/v2/connections`, not under `/v2/account`.
+
 ### List Connections
 
 Retrieve all active connections for your account.
 
-<Expandable title="GET /connections">
+<Expandable title="GET /v2/connections">
 
 - **Purpose**: List connections associated with your organization.
-- **Endpoint**: `GET /v2/account/connections`
+- **Endpoint**: `GET /v2/connections`
 - **Query parameters**:
 
 | Parameter | Type    | Description                                           |
 | --------- | ------- | ----------------------------------------------------- |
-| `limit`   | integer | Maximum number of connections to return (default: 50) |
+| `limit`   | integer | Maximum number of connections to return (default: 10) |
 | `offset`  | integer | Number of connections to skip (default: 0)            |
-| `status`  | string  | Filter by status: `active`, `expired`, `revoked`      |
+| `status`  | string  | Filter by status: `active`, `expired`, `awaiting_2fa` |
 
-- **Response**: Returns a paginated list of connection objects along with pagination metadata (total, limit, offset, hasMore).
-
-</Expandable>
-
-### Get Connection Details
-
-Retrieve detailed information about a specific connection.
-
-<Expandable title="GET /connections/{connectionId}">
-
-- **Purpose**: Retrieve full details for a specific connection.
-- **Endpoint**: `GET /v2/account/connections/{connectionId}`
-- **Response**: Returns a single connection object with metadata such as status, timestamps, client reference ID, and any profile information collected during linking.
+- **Response**: Returns a paginated list of connection objects with `hasMore` boolean.
 
 </Expandable>
 
-### Revoke Connection
+### Delete Connection
 
-Manually revoke a connection to immediately invalidate it.
+Delete a connection and log out the user.
 
-<Expandable title="DELETE /connections/{connectionId}">
+<Expandable title="DELETE /v2/connections/{connectionId}">
 
-- **Purpose**: Revoke a connection immediately and prevent future Access API calls with it.
-- **Endpoint**: `DELETE /v2/account/connections/{connectionId}`
-- **Response**: Indicates the connection was revoked and provides updated status metadata.
+- **Purpose**: Delete a connection and stop billing for it.
+- **Endpoint**: `DELETE /v2/connections/{connectionId}`
+- **Response**: Returns 200 on success.
 
 </Expandable>
 

@@ -7,6 +7,10 @@ description: "Seamless, proxied access to OnlyFans data with automatic session m
 
 The Access API provides two flavors of access:
 
+<Info>
+	**Need a Connection ID?** Most Access API requests require a Connection ID from the [Link API](/guides/link/overview). Complete the Link flow first to authenticate users and get a connection.
+</Info>
+
 - Managed endpoints under `/v2/access/*` for common operations (users, posts, messages, uploads, statistics, subscriptions, vault). These are stable, typed routes.
 - Proxy endpoints under `/v2/access/proxy/*` for arbitrary OnlyFans API paths. These transparently forward requests to OnlyFans.
 
@@ -155,6 +159,40 @@ await fetch("https://api.ofauth.com/v2/access/proxy/users/me", {
 	}
 })
 ```
+
+## Media Proxy
+
+The Access API includes an automatic media proxy that converts OnlyFans CDN links into embeddable URLs you can use directly in web applications.
+
+**Key Benefits:**
+
+- **Longer-Lived URLs**: OnlyFans CDN links expire quickly; proxied URLs have extended validity
+- **CORS Support**: Display images and videos in web apps without cross-origin errors  
+- **Edge Caching**: Content is cached globally for faster loads
+- **Zero Config**: API responses automatically include proxied URLs when enabled
+
+**Billing:**
+
+Media proxy usage is **charged per kilobyte (KB)** of bandwidth transferred. Edge caching reduces costs—cached content is served without additional bandwidth charges.
+
+```javascript
+// API response with media proxy enabled
+{
+  "avatar": "https://media.ofauth.com/v1/abc123/avatar.jpg",
+  "posts": [
+    {
+      "id": 12345,
+      "media": [
+        { "url": "https://media.ofauth.com/v1/xyz789/photo.jpg" }
+      ]
+    }
+  ]
+}
+```
+
+<Tip>
+Use proxied URLs directly in `<img>` and `<video>` tags. Frequently accessed media (like profile pictures) benefit from edge caching, reducing bandwidth costs.
+</Tip>
 
 ## Rate Limiting
 

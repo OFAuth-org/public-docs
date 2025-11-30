@@ -29,29 +29,30 @@
     }
   },
   "navigation": {
-    "global":  {
-    "anchors": [
-      {
-         "anchor": "LLMs.txt (Overview)",
-         "icon": "robot",
-         "href": "https://docs-next.ofauth.com/llms.txt"
-      },
-      {
-         "anchor": "LLMs.txt (Full)",
-         "icon": "robot",
-         "href": "https://docs-next.ofauth.com/llms-full.txt"
-      }
-    ]
-  },
+    "global": {
+      "anchors": [
+        {
+          "anchor": "LLMs.txt (Overview)",
+          "icon": "robot",
+          "href": "https://docs-next.ofauth.com/llms.txt"
+        },
+        {
+          "anchor": "LLMs.txt (Full)",
+          "icon": "robot",
+          "href": "https://docs-next.ofauth.com/llms-full.txt"
+        }
+      ]
+    },
     "dropdowns": [
       {
         "dropdown": "Documentation",
         "icon": "book-open",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Get Started",
             "pages": [
               "index",
+              "getting-started/concepts",
               {
                 "group": "Quick Start",
                 "pages": [
@@ -61,30 +62,12 @@
                   "getting-started/quickstart/data-access"
                 ]
               },
-              "getting-started/sdk-vs-api",
-              "getting-started/production-considerations"
+              "getting-started/choose-your-path",
+              "getting-started/quick-reference"
             ]
           },
           {
-            "group": "API Architecture",
-            "pages": [
-              "architecture/index",
-              "architecture/authentication",
-              "architecture/rate-limiting",
-              "architecture/error-handling",
-              "architecture/webhooks"
-            ]
-          },
-          {
-            "group": "Environments",
-            "pages": [
-              "environments/overview",
-              "environments/sandbox"
-            ]
-          },
-
-          {
-            "group": "API Guides",
+            "group": "Integration Guides",
             "pages": [
               {
                 "group": "Link",
@@ -95,9 +78,33 @@
                 ]
               },
               "guides/access",
-              "guides/dynamic-rules",
               "guides/account",
               "guides/webhooks"
+            ]
+          },
+          {
+            "group": "Going to Production",
+            "pages": [
+              "getting-started/production-considerations",
+              "environments/overview",
+              "environments/sandbox"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "guides/dynamic-rules",
+              "architecture/index",
+              "architecture/authentication",
+              "architecture/rate-limiting",
+              "architecture/error-handling",
+              "architecture/webhooks"
+            ]
+          },
+          {
+            "group": "Enterprise",
+            "pages": [
+              "enterprise/whitelabel"
             ]
           }
         ]

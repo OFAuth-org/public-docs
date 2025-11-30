@@ -1,0 +1,222 @@
+---
+title: "Quick Reference"
+sidebarTitle: "Quick Reference"
+description: "API endpoints, headers, response codes, and key terms at a glance"
+---
+
+## API Base URLs
+
+| API | Base URL | Purpose |
+|-----|----------|---------|
+| **Link** | `https://api.ofauth.com/v2/link` | User authentication |
+| **Access** | `https://api.ofauth.com/v2/access` | OnlyFans data access |
+| **Connections** | `https://api.ofauth.com/v2/connections` | Manage connections |
+| **Account** | `https://api.ofauth.com/v2/account` | Webhooks, platform info |
+| **Dynamic Rules** | `https://api.ofauth.com/v2/dynamic-rules` | Request signing (advanced) |
+
+---
+
+## Required Headers
+
+### All Requests
+
+| Header | Value | Required |
+|--------|-------|----------|
+| `apikey` | Your OFAuth API key | Yes |
+
+### Access API (with Connection ID)
+
+| Header | Value | Required |
+|--------|-------|----------|
+| `apikey` | Your OFAuth API key | Yes |
+| `x-connection-id` | Connection ID from Link | Yes |
+
+### Access API (with Session Headers)
+
+| Header | Value | Required |
+|--------|-------|----------|
+| `apikey` | Your OFAuth API key | Yes |
+| `x-of-cookie` | OnlyFans session cookie | Yes |
+| `x-of-user-agent` | User agent string | Yes |
+| `x-of-bc` | BC header value | No |
+| `x-of-user-id` | OnlyFans user ID | No |
+
+---
+
+## Common Response Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| `200` | Success | Process response |
+| `400` | Bad request | Check request format |
+| `401` | Invalid API key | Verify `apikey` header |
+| `404` | Not found | Check connection ID or endpoint |
+| `429` | Rate limited | Implement exponential backoff |
+| `503` | Service unavailable | Retry in 5-10 seconds |
+
+---
+
+## Error Codes
+
+| Code | Meaning |
+|------|---------|
+| `SESSION_EXPIRED` | Connection session expired - user needs to re-authenticate |
+| `CONNECTION_NOT_FOUND` | Invalid connection ID |
+| `INVALID_SESSION` | Session headers are invalid or expired |
+| `NO_AUTH` | Missing authentication headers |
+| `RATE_LIMITED` | Too many requests - wait and retry |
+| `RULES_OUTDATED` | Dynamic rules being updated - retry shortly |
+
+---
+
+## Rate Limits by Plan
+
+| Plan | Access API | Burst |
+|------|------------|-------|
+| **Pay as You Go** | 30 req/min | 50 |
+| **Starter** | 60 req/min | 90 |
+| **Launch** | 120 req/min | 200 |
+| **Scale** | No OFAuth limits | - |
+
+<Info>
+	Rate limits are per connection ID or user ID. Different connections have independent limits.
+</Info>
+
+---
+
+## Key Endpoints
+
+### Link API
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v2/link/init` | POST | Create authentication session |
+| `/v2/link/{clientSecret}` | GET | Check session status |
+| `/v2/link/{clientSecret}` | DELETE | Delete session |
+
+### Access API
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v2/access/self/me` | GET | Current user profile |
+| `/v2/access/users/{id}` | GET | User profile by ID |
+| `/v2/access/posts` | GET | User's posts |
+| `/v2/access/chats` | GET | Conversations list |
+| `/v2/access/proxy/{path}` | * | Proxy any OnlyFans endpoint |
+
+### Connections API
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v2/connections` | GET | List all connections |
+| `/v2/connections/{connectionId}` | DELETE | Delete a connection |
+
+### Account API
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/v2/account/whoami` | GET | Platform info |
+| `/v2/account/webhook` | PUT | Configure webhooks |
+
+---
+
+## Webhook Events
+
+| Event | Trigger |
+|-------|---------|
+| `connection.created` | New connection established |
+| `connection.updated` | Connection details changed |
+| `connection.expired` | Connection lost or invalidated |
+| `rules.updated` | Dynamic rules changed |
+
+---
+
+## Glossary
+
+| Term | Definition |
+|------|------------|
+| **API Key** | Your OFAuth authentication key (starts with `sk_live_` or `sk_sandbox_`) |
+| **Connection** | A linked OnlyFans account |
+| **Connection ID** | Unique identifier for a connection (e.g., `conn_abc123`) |
+| **Link Session** | Temporary authentication flow (expires after 1 hour) |
+| **Client Secret** | Token identifying a Link session (e.g., `cs_xyz789`) |
+| **Dynamic Rules** | Current OnlyFans request signing parameters |
+| **Managed Endpoints** | Stable, typed Access API routes |
+| **Proxy Endpoints** | Raw passthrough to any OnlyFans API path |
+
+---
+
+## Environment API Keys
+
+| Environment | Key Prefix | Purpose |
+|-------------|------------|---------|
+| **Live** | `sk_live_` | Production - real OnlyFans requests |
+| **Sandbox** | `sk_sandbox_` | Testing - deterministic fixtures |
+
+---
+
+## Sandbox Test Credentials
+
+| Scenario | Email Format | Password | OTP |
+|----------|--------------|----------|-----|
+| Creator (no 2FA) | `{id}@creator.sandbox.com` | `good-password` | - |
+| Creator (OTP) | `{id}@creator-otp.sandbox.com` | `good-password` | `123456` |
+| Fan (no 2FA) | `{id}@fan.sandbox.com` | `good-password` | - |
+| Fan (OTP) | `{id}@fan-otp.sandbox.com` | `good-password` | `123456` |
+
+<Tip>
+	Replace `{id}` with any identifier (e.g., `test`, `demo123`). The domain determines the behavior.
+</Tip>
+
+---
+
+## Quick Code Snippets
+
+### Create Link Session
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/link/init", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    successUrl: "https://yourapp.com/success?connection={CONNECTION_ID}",
+    returnUrl: "https://yourapp.com/cancel"
+  })
+})
+
+const { url } = await response.json()
+// Redirect user to `url`
+```
+
+### Fetch User Data
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/self/me", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const userData = await response.json()
+```
+
+---
+
+## Related Resources
+
+<CardGroup cols={3}>
+	<Card title="Core Concepts" icon="lightbulb" href="/getting-started/concepts">
+		Understand how OFAuth works
+	</Card>
+	<Card title="Quick Start" icon="rocket" href="/getting-started/quickstart/index">
+		Step-by-step tutorial
+	</Card>
+	<Card title="API Reference" icon="book" href="/api-reference/access/overview">
+		Full endpoint documentation
+	</Card>
+</CardGroup>
+

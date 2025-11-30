@@ -88,18 +88,30 @@ The Access API includes an automatic media proxy that simplifies handling images
 
 **Benefits:**
 
-- **Persistent URLs**: Converts expiring OnlyFans CDN links into permanent OFAuth URLs.
-- **Zero Configuration**: No need to sign media requests or manage cookies for assets.
-- **CORS Support**: Display images and videos directly in web applications without cross-origin errors.
-- **Edge Caching**: Content is cached globally for faster load times.
-
-<Note>
-  Media proxy usage is metered and charged per kilobyte (KB) according to your plan's pricing schedule.
-</Note>
+- **Longer-Lived URLs**: Converts quickly-expiring OnlyFans CDN links into URLs with extended validity
+- **Zero Configuration**: No need to sign media requests or manage cookies for assets
+- **CORS Support**: Display images and videos directly in web applications without cross-origin errors
+- **Edge Caching**: Content is cached globally for faster load times
 
 **How it works:**
 
 When available on your plan, the Access API automatically detects OnlyFans media URLs in responses and rewrites them to point to the OFAuth Media Proxy. You can use these URLs directly in `<img>` or `<video>` tags.
+
+### Media Proxy Billing
+
+<Note>
+  Media proxy usage is metered and **charged per kilobyte (KB)** of bandwidth according to your plan's pricing schedule.
+</Note>
+
+| Factor | Impact on Billing |
+| ------ | ----------------- |
+| Image/video size | Larger files = more KB transferred |
+| Edge caching | Cached content reduces repeated transfers |
+| Request frequency | First request is billed; cached requests are free |
+
+<Tip>
+Edge caching means that frequently accessed media (like profile pictures) will typically only incur bandwidth costs on the first request. Subsequent requests are served from cache at no additional cost.
+</Tip>
 
 ## Related Guides
 

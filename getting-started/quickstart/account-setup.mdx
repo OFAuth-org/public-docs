@@ -104,6 +104,30 @@ OFAuth uses usage-based billing with different plans offering included credits t
 
 <Info>All monthly plans include the Link, Access, and Latest Dynamic Rules. Higher plans include more credits and better per-unit rates for usage beyond included amounts.</Info>
 
+### How Link Connections Are Billed
+
+Link connections count toward your monthly usage based on their status:
+
+- **Active & Awaiting 2FA**: These connections are billable
+- **Expired**: Not billed—expired connections are immediately removed from your count
+- **Deleted**: Permanently removed from billing
+
+<Tip>
+When a user's session expires, you stop being charged for that connection immediately. If they re-authenticate later, the connection becomes active and billable again. This ensures you only pay for connections that are actually usable.
+</Tip>
+
+### How Media Proxy Is Billed
+
+The Media Proxy converts quickly-expiring OnlyFans CDN links into embeddable URLs with extended validity. It's billed based on bandwidth usage:
+
+- **Per-KB Billing**: You're charged per kilobyte of data transferred through the proxy
+- **Edge Caching**: Content is cached globally, reducing repeated bandwidth costs for the same media
+- **Automatic Rewriting**: When enabled, API responses automatically include proxied URLs
+
+<Info>
+Media proxy is ideal for displaying OnlyFans images and videos in web applications. The proxied URLs work without CORS issues and don't expire like direct OnlyFans CDN links.
+</Info>
+
 ## API Key Best Practices
 
 <AccordionGroup>
