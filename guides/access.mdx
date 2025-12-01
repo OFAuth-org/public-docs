@@ -162,21 +162,25 @@ await fetch("https://api.ofauth.com/v2/access/proxy/users/me", {
 
 ## Media Proxy
 
-The Access API includes an automatic media proxy that converts OnlyFans CDN links into embeddable URLs you can use directly in web applications.
+The Access API includes an automatic media proxy that converts OnlyFans CDN links into embeddable URLs. **It's enabled by default—no setup required.**
+
+<Warning>
+Your API responses will automatically contain `media.ofauth.com/*` URLs. **Using these URLs incurs bandwidth charges** according to your subscription plan.
+</Warning>
 
 **Key Benefits:**
 
+- **Enabled by Default**: API responses automatically include `media.ofauth.com/*` URLs
 - **Longer-Lived URLs**: OnlyFans CDN links expire quickly; proxied URLs have extended validity
 - **CORS Support**: Display images and videos in web apps without cross-origin errors  
 - **Edge Caching**: Content is cached globally for faster loads
-- **Zero Config**: API responses automatically include proxied URLs when enabled
 
 **Billing:**
 
-Media proxy usage is **charged per kilobyte (KB)** of bandwidth transferred. Edge caching reduces costs—cached content is served without additional bandwidth charges.
+Media proxy usage is **charged per kilobyte (KB)** of bandwidth transferred. **Only cache misses are billed**—when content is served from Cloudflare's edge cache (up to 7 days, may be purged sooner), no charges apply.
 
 ```javascript
-// API response with media proxy enabled
+// API responses automatically contain proxied URLs
 {
   "avatar": "https://media.ofauth.com/v1/abc123/avatar.jpg",
   "posts": [

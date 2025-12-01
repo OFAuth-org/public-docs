@@ -118,14 +118,18 @@ When a user's session expires, you stop being charged for that connection immedi
 
 ### How Media Proxy Is Billed
 
-The Media Proxy converts quickly-expiring OnlyFans CDN links into embeddable URLs with extended validity. It's billed based on bandwidth usage:
+The Media Proxy is **enabled by default**—your API responses will automatically contain `media.ofauth.com/*` URLs instead of raw OnlyFans CDN links. No setup required.
 
-- **Per-KB Billing**: You're charged per kilobyte of data transferred through the proxy
-- **Edge Caching**: Content is cached globally, reducing repeated bandwidth costs for the same media
-- **Automatic Rewriting**: When enabled, API responses automatically include proxied URLs
+<Warning>
+Using these proxied URLs incurs bandwidth charges according to your subscription plan.
+</Warning>
+
+- **Per-KB Billing**: You're charged per kilobyte of data transferred—**only on cache miss**
+- **Edge Cache**: Content cached globally for up to 7 days (may be purged sooner); cached requests are free
+- **CORS Support**: Display images and videos in web apps without cross-origin errors
 
 <Info>
-Media proxy is ideal for displaying OnlyFans images and videos in web applications. The proxied URLs work without CORS issues and don't expire like direct OnlyFans CDN links.
+Media proxy is ideal for displaying OnlyFans images and videos in web applications. The proxied URLs work without CORS issues and have extended validity compared to direct OnlyFans CDN links.
 </Info>
 
 ## API Key Best Practices

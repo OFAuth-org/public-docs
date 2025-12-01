@@ -158,10 +158,11 @@
       {
         "dropdown": "API Reference",
         "icon": "square-terminal",
-        "openapi": "https://api-next.ofauth.com/openapi-link.json",
+        "openapi": "https://api-next.ofauth.com/openapi-core.json",
         "groups": [
           {
             "group": "Link",
+            "openapi": "https://api-next.ofauth.com/openapi-link.json",
             "pages": [
               "api-reference/link/overview"
             ]
@@ -171,21 +172,12 @@
             "openapi": "https://api-next.ofauth.com/openapi-access.json",
             "pages": [
               "api-reference/access/overview",
-              "api-reference/access/managed",
               "api-reference/access/proxy"
             ]
           },
           {
-            "group": "Account",
-            "pages": [
-              "api-reference/account/overview"
-            ]
-          },
-          {
             "group": "Dynamic Rules",
-            "pages": [
-              "api-reference/dynamic-rules/overview"
-            ]
+            "openapi": "https://api-next.ofauth.com/openapi-dynamic-rules.json"
           }
         ]
       }

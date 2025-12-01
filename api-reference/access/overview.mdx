@@ -84,18 +84,22 @@ stable schemas; proxy responses are passed through from OnlyFans.
 
 ## Media Proxy
 
-The Access API includes an automatic media proxy that simplifies handling images and videos.
+The Access API includes an automatic media proxy that simplifies handling images and videos. **It's enabled by default with no setup required.**
+
+<Warning>
+Your API responses will automatically contain `media.ofauth.com/*` URLs instead of raw OnlyFans CDN links. **Using these URLs incurs bandwidth charges** according to your subscription plan.
+</Warning>
 
 **Benefits:**
 
+- **Enabled by Default**: No configuration needed—media URLs are automatically rewritten in API responses
 - **Longer-Lived URLs**: Converts quickly-expiring OnlyFans CDN links into URLs with extended validity
-- **Zero Configuration**: No need to sign media requests or manage cookies for assets
 - **CORS Support**: Display images and videos directly in web applications without cross-origin errors
 - **Edge Caching**: Content is cached globally for faster load times
 
 **How it works:**
 
-When available on your plan, the Access API automatically detects OnlyFans media URLs in responses and rewrites them to point to the OFAuth Media Proxy. You can use these URLs directly in `<img>` or `<video>` tags.
+The Access API automatically detects OnlyFans media URLs in responses and rewrites them to `media.ofauth.com/*` URLs. You can use these directly in `<img>` or `<video>` tags without CORS issues.
 
 ### Media Proxy Billing
 
@@ -106,11 +110,11 @@ When available on your plan, the Access API automatically detects OnlyFans media
 | Factor | Impact on Billing |
 | ------ | ----------------- |
 | Image/video size | Larger files = more KB transferred |
-| Edge caching | Cached content reduces repeated transfers |
-| Request frequency | First request is billed; cached requests are free |
+| Cache status | **Only cache misses are billed**—cached responses are free |
+| Cache TTL | Content cached for up to 7 days (may be purged sooner) |
 
 <Tip>
-Edge caching means that frequently accessed media (like profile pictures) will typically only incur bandwidth costs on the first request. Subsequent requests are served from cache at no additional cost.
+**Cache hits are free.** When media is served from edge cache, no bandwidth charges apply. Only the initial fetch (cache miss) incurs billing.
 </Tip>
 
 ## Related Guides
