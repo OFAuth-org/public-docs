@@ -19,22 +19,18 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 | ----- | ---- | -------- | ----------- |
-| `successUrl` | `string` | No | URL to redirect to after successful login. Supports `{CONNECTION_ID}` placeholder. |
-| `returnUrl` | `string` | No | URL to redirect to if the user cancels or fails. |
-| `clientReferenceId` | `string` | No | Your own internal ID for this user. Returned in webhooks. |
+| `redirectUrl` | `string` | No | URL to redirect to after completion. If omitted, uses the first Allowed Redirect URI from your dashboard. |
+| `clientReferenceId` | `string` | No | Your own internal ID for this user. Returned in webhooks and query params. |
 | `connectionId` | `string` | No | Provide an existing connection ID to reconnect/re-authenticate that specific connection. |
 
-### Connection ID Placeholder
-
-For `successUrl`, you can use the string `{CONNECTION_ID}` as a placeholder. OFAuth will replace this with the actual connection ID before redirecting the user.
-
-Example: `https://app.example.com/callback?conn_id={CONNECTION_ID}`
+<Info>
+The `redirectUrl` must be pre-registered in your [OFAuth dashboard](https://ofauth.com) under Developers → API → Allowed Redirect URIs.
+</Info>
 
 ## Response
 
 ```json
 {
-  "clientSecret": "cs_abcdef123456...",
   "url": "https://link.ofauth.com/cs_abcdef123456...",
   "expiresAt": "2023-10-27T10:00:00.000Z",
   "mode": "hosted"
@@ -43,10 +39,49 @@ Example: `https://app.example.com/callback?conn_id={CONNECTION_ID}`
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| `clientSecret` | `string` | Unique secret identifier for this session. |
 | `url` | `string` | The URL to redirect the user to. |
 | `expiresAt` | `string` | ISO timestamp when this session expires (usually 30-60 minutes). |
 | `mode` | `string` | The mode the session was initialized in. |
+
+## Redirect Query Parameters
+
+After Link completes, OFAuth redirects the user to your `redirectUrl` with query parameters appended:
+
+### On Success
+
+```
+https://yourapp.com/callback?status=success&connection_id=conn_abc123&client_reference_id=user_456
+```
+
+| Param | Description |
+|-------|-------------|
+| `status` | `success` |
+| `connection_id` | The new or updated connection ID |
+| `client_reference_id` | Your reference ID (if provided in init) |
+
+### On Cancel
+
+```
+https://yourapp.com/callback?status=cancelled&step=authorization&client_reference_id=user_456
+```
+
+| Param | Description |
+|-------|-------------|
+| `status` | `cancelled` |
+| `step` | Where the user cancelled: `pre-login`, `authorization`, `login`, or `2fa` |
+| `client_reference_id` | Your reference ID (if provided) |
+
+### On Error
+
+```
+https://yourapp.com/callback?status=error&error_code=session_expired&client_reference_id=user_456
+```
+
+| Param | Description |
+|-------|-------------|
+| `status` | `error` |
+| `error_code` | Error type: `session_expired`, `invalid_credentials`, etc. |
+| `client_reference_id` | Your reference ID (if provided) |
 
 ## Example
 
@@ -55,9 +90,26 @@ curl -X POST https://api.ofauth.com/v2/link/init \
   -H "apikey: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "successUrl": "https://myapp.com/dashboard?connection={CONNECTION_ID}",
-    "returnUrl": "https://myapp.com/login",
+    "redirectUrl": "https://myapp.com/callback",
     "clientReferenceId": "user_123"
   }'
 ```
 
+### Handling the Callback
+
+```javascript
+// On your callback page
+const params = new URLSearchParams(window.location.search);
+const status = params.get('status');
+const connectionId = params.get('connection_id');
+const clientReferenceId = params.get('client_reference_id');
+
+if (status === 'success') {
+  // Store connectionId, fetch user data via API
+  console.log('Connected!', connectionId);
+} else if (status === 'cancelled') {
+  console.log('User cancelled at step:', params.get('step'));
+} else if (status === 'error') {
+  console.log('Error:', params.get('error_code'));
+}
+```

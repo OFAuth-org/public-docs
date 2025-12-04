@@ -14,11 +14,11 @@ Hosted Mode provides the simplest integration path for OnlyFans authentication. 
 
 ## How It Works
 
-1. **Initialize**: Create a link session with hosted mode configuration
-2. **Redirect/Popup**: Send users to OFAuth's secure authentication page or embed in a popup
+1. **Initialize**: Create a link session with your redirect URL
+2. **Redirect/Popup**: Send users to OFAuth's secure authentication page
 3. **Authentication**: Users complete authentication on OFAuth's pages
-4. **Return**: Users are redirected back to your application with results
-5. **Verify**: Verify the session server-side to get connection details
+4. **Return**: Users are redirected back to your URL with status and connection details
+5. **Process**: Handle the query params to complete the flow
 
 ## Integration Options
 
@@ -34,28 +34,6 @@ Hosted Mode offers two integration approaches to fit your application's user exp
 		iframe. Keeps users in your application throughout the flow.
 	</Card>
 </CardGroup>
-
-### Redirect Integration
-
-The standard approach where users navigate to OFAuth's authentication pages:
-
-- Users leave your application temporarily
-- Authentication happens on OFAuth's secure domain
-- Users return to your application when complete
-- Simple implementation with just URL redirection
-
-### Popup/Embed Integration
-
-A more seamless experience using our Embed SDK:
-
-- Authentication opens in a popup window or embedded iframe
-- Users never leave your main application
-- Better user experience and higher conversion rates
-- SDK handles popup management and communication
-
-<Info>
-	**Link Embed Library**: The OFAuth Link Embed library provides pre-built components and a seamless popup flow for hosted authentication. Visit our [comprehensive embed guide](/guides/link/embed) for detailed implementation instructions.
-</Info>
 
 ## Base URL
 
@@ -92,8 +70,7 @@ POST /v2/link/init
 
 ```json
 {
-	"successUrl": "https://yourapp.com/success?connection={CONNECTION_ID}",
-	"returnUrl": "https://yourapp.com/cancel",
+	"redirectUrl": "https://yourapp.com/callback",
 	"clientReferenceId": "user_123",
 	"connectionId": "conn_existing_123"
 }
@@ -101,30 +78,49 @@ POST /v2/link/init
 
 **Parameters:**
 
-| Parameter                  | Type    | Required | Description                                                      |
-| -------------------------- | ------- | -------- | ---------------------------------------------------------------- |
-| `returnUrl`                | string  | No       | URL to redirect to on cancellation (recommended)                 |
-| `successUrl`               | string  | No       | URL to redirect to on success (supports `{CONNECTION_ID}` placeholder) |
-| `clientReferenceId`        | string  | No       | Your internal user identifier for webhook correlation            |
-| `connectionId`             | string  | No       | Existing connection ID to reconnect to                           |
+| Parameter           | Type   | Required | Description                                                                                 |
+| ------------------- | ------ | -------- | ------------------------------------------------------------------------------------------- |
+| `redirectUrl`       | string | No       | URL to redirect to after completion. If omitted, uses first Allowed Redirect URI.          |
+| `clientReferenceId` | string | No       | Your internal user identifier for webhook correlation                                       |
+| `connectionId`      | string | No       | Existing connection ID to reconnect to                                                      |
 
 <Tip>
-	Include `{CONNECTION_ID}` anywhere in your success URL to have it replaced with
-	the connection identifier that was just created. This makes it easy to
-	validate the redirect on your side without extra API calls.
+	Configure your Allowed Redirect URIs in the OFAuth dashboard under Developers → API.
+	If you don't specify a `redirectUrl`, the first configured URI is used as the default.
 </Tip>
 
 **Response:**
 
 ```json
 {
-	"clientSecret": "cs_abc123def456",
-	"url": "https://auth.ofauth.com/link/cs_abc123def456",
-	"expiresAt": "2024-01-15T10:30:00Z"
+	"url": "https://link.ofauth.com/cs_abc123def456",
+	"expiresAt": "2024-01-15T10:30:00Z",
+	"mode": "hosted"
 }
 ```
 
 </Expandable>
+
+### Redirect Query Parameters
+
+After authentication completes, OFAuth redirects users to your URL with query parameters:
+
+| Outcome | Query Parameters |
+|---------|------------------|
+| Success | `?status=success&connection_id=conn_xxx&client_reference_id=...` |
+| Cancel | `?status=cancelled&step=login&client_reference_id=...` |
+| Error | `?status=error&error_code=session_expired&client_reference_id=...` |
+
+**Status Values:**
+- `success`: Authentication completed, `connection_id` is available
+- `cancelled`: User exited the flow, `step` indicates where
+- `error`: Something went wrong, `error_code` provides details
+
+**Step Values (for cancelled):**
+- `pre-login`: Before entering credentials
+- `authorization`: Reviewing permissions
+- `login`: During login
+- `2fa`: During two-factor authentication
 
 ### Retrieve Session Status
 
@@ -150,34 +146,23 @@ GET /v2/link/{clientSecret}
 
 // User is authenticating
 {
-	"status": "awaiting_approval"
+	"status": "pending"
 }
 
 // Authentication completed
 {
-	"status": "active",
+	"status": "completed",
 	"data": {
 		"id": "conn_xyz789",
-		"platformUserId": "12345",
 		"userData": {
-			"userId": "12345",
+			"id": "12345",
 			"name": "Jane Doe",
 			"username": "janedoe",
 			"avatar": "https://example.com/avatar.jpg"
-		},
-		"permissions": ["read:all", "write:all"],
-		"status": "active"
+		}
 	}
 }
 ```
-
-**Status Values:**
-
-- `initialized`: Session created, waiting for user to start authentication
-- `awaiting_approval`: User is on the authentication page
-- `active`: Authentication successful and connection active
-- `failed`: Authentication failed or was cancelled
-- `not_found`: Session expired or doesn't exist
 
 </Expandable>
 
@@ -207,25 +192,25 @@ DELETE /v2/link/{clientSecret}
 
 ## Security: Allowed Redirect URIs
 
-Your `successUrl` and `returnUrl` must be pre-registered in your OFAuth dashboard as Allowed Redirect URIs.
+Your `redirectUrl` must be pre-registered in your OFAuth dashboard as an Allowed Redirect URI.
 
 <CardGroup cols={2}>
-  <Card title="Exact Match" icon="list-checks">
-    We require exact URL matches (scheme, host, path, and query). Use `{CONNECTION_ID}` anywhere in the URL if you need the ID at return time.
+  <Card title="Exact Match" icon="list-check">
+    We require exact URL matches (scheme, host, path). Query parameters are added by OFAuth on redirect.
   </Card>
   <Card title="HTTPS Required" icon="lock">
-    Always use HTTPS in production. Configure multiple URLs if you have different environments (e.g., staging vs production).
+    Always use HTTPS in production. Configure multiple URLs for different environments.
   </Card>
 </CardGroup>
 
 <Tip>
-  You can configure Allowed Redirect URIs per platform in the OFAuth dashboard under Developers → API.
+  Configure Allowed Redirect URIs per platform in the OFAuth dashboard under Developers → API.
 </Tip>
 
 ### Misconfiguration Behavior
 
-- If you pass a `successUrl`/`returnUrl` not on your allowlist, `/v2/link/init` returns `400` with `Link is misconfigured`.
-- If a legacy session references an unlisted URL, the hosted page omits it and shows a friendly “Link is misconfigured” error.
+- If you pass a `redirectUrl` not on your allowlist, `/v2/link/init` returns `400` with `Link is misconfigured`.
+- If no Allowed Redirect URIs are configured, you must add at least one before using Link.
 
 ## Implementation Guide
 
@@ -241,13 +226,12 @@ const initResponse = await fetch("https://api.ofauth.com/v2/link/init", {
 		"Content-Type": "application/json"
 	},
 	body: JSON.stringify({
-		successUrl: "https://yourapp.com/success?connection={CONNECTION_ID}",
-		returnUrl: "https://yourapp.com/cancel",
+		redirectUrl: "https://yourapp.com/callback",
 		clientReferenceId: "user_123"
 	})
 })
 
-const { clientSecret, url } = await initResponse.json()
+const { url } = await initResponse.json()
 ```
 
 ```python Python
@@ -260,14 +244,12 @@ response = requests.post(
         "Content-Type": "application/json"
     },
     json={
-        "successUrl": "https://yourapp.com/success?connection={CONNECTION_ID}",
-        "returnUrl": "https://yourapp.com/cancel",
+        "redirectUrl": "https://yourapp.com/callback",
         "clientReferenceId": "user_123"
     }
 )
 
 data = response.json()
-client_secret = data["clientSecret"]
 auth_url = data["url"]
 ```
 
@@ -280,15 +262,13 @@ $response = file_get_contents("https://api.ofauth.com/v2/link/init", false, stre
             'Content-Type: application/json'
         ],
         'content' => json_encode([
-            'successUrl' => 'https://yourapp.com/success?connection={CONNECTION_ID}',
-            'returnUrl' => 'https://yourapp.com/cancel',
+            'redirectUrl' => 'https://yourapp.com/callback',
             'clientReferenceId' => 'user_123'
         ])
     ]
 ]));
 
 $data = json_decode($response, true);
-$clientSecret = $data['clientSecret'];
 $authUrl = $data['url'];
 ```
 
@@ -302,106 +282,53 @@ After initialization, redirect the user to the authentication URL:
 window.location.href = url // Redirect to authentication page
 ```
 
-### Step 3: Handle Return URLs
+### Step 3: Handle the Callback
 
-When users complete or cancel authentication, they'll be redirected to your specified URLs:
+When users complete or cancel authentication, they'll be redirected to your URL with query params:
 
 <CodeGroup>
 
-```javascript Success Handler
-// User visits: https://yourapp.com/success?connection=conn_abc123def456&session=cs_abc123def456
+```javascript Client-side
+// User visits: https://yourapp.com/callback?status=success&connection_id=conn_abc123&client_reference_id=user_123
 
-const urlParams = new URLSearchParams(window.location.search)
-const connectionId = urlParams.get("connection")
-const sessionId = urlParams.get("session")
+const params = new URLSearchParams(window.location.search)
+const status = params.get("status")
+const connectionId = params.get("connection_id")
+const clientReferenceId = params.get("client_reference_id")
 
-if (connectionId) {
+if (status === "success" && connectionId) {
 	// Store connection ID for future API calls
 	localStorage.setItem("connectionId", connectionId)
-}
-
-if (sessionId) {
-	// Verify the session server-side
-	const response = await fetch(`/api/verify-session?session=${sessionId}`)
-	const { connectionId: verifiedConnectionId } = await response.json()
-
-	// Update connection ID using the verified value
-	localStorage.setItem("connectionId", verifiedConnectionId)
+	// Redirect to dashboard or next step
+	window.location.href = "/dashboard"
+} else if (status === "cancelled") {
+	const step = params.get("step")
+	console.log(`User cancelled at: ${step}`)
+	// Show appropriate message
+} else if (status === "error") {
+	const errorCode = params.get("error_code")
+	console.error(`Authentication failed: ${errorCode}`)
+	// Handle error
 }
 ```
 
-```javascript Cancel Handler
-// User visits: https://yourapp.com/cancel?session=cs_abc123def456
+```javascript Server-side (Node.js)
+app.get("/callback", async (req, res) => {
+	const { status, connection_id, client_reference_id, step, error_code } = req.query
 
-const urlParams = new URLSearchParams(window.location.search)
-const sessionId = urlParams.get("session")
-
-// Handle cancellation
-console.log("User cancelled authentication")
-```
-
-</CodeGroup>
-
-### Step 4: Verify Session Server-Side
-
-Always verify the session status server-side for security:
-
-<CodeGroup>
-
-```javascript Node.js
-app.get("/api/verify-session", async (req, res) => {
-	const { session } = req.query
-
-	const response = await fetch(`https://api.ofauth.com/v2/link/${session}`, {
-		headers: {
-			apikey: process.env.OFAUTH_API_KEY,
-		}
-	})
-
-	const sessionData = await response.json()
-
-	if (sessionData.status === "active") {
-		// Store connection ID in your database
-		res.json({
-			success: true,
-			connectionId: sessionData.data.id,
-			userData: sessionData.data.userData
+	if (status === "success") {
+		// Store connection in your database
+		await db.saveConnection({
+			userId: client_reference_id,
+			connectionId: connection_id
 		})
+		res.redirect("/dashboard")
+	} else if (status === "cancelled") {
+		res.redirect(`/connect?cancelled=true&step=${step}`)
 	} else {
-		res.status(400).json({
-			success: false,
-			error: "Authentication not completed"
-		})
+		res.redirect(`/connect?error=${error_code}`)
 	}
 })
-```
-
-```python Python
-@app.route('/api/verify-session')
-def verify_session():
-    session_id = request.args.get('session')
-
-    response = requests.get(
-        f"https://api.ofauth.com/v2/link/{session_id}",
-        headers={
-            "apikey": os.getenv("OFAUTH_API_KEY"),
-        }
-    )
-
-    session_data = response.json()
-
-    if session_data['status'] == 'active':
-        # Store connection ID in your database
-        return jsonify({
-            'success': True,
-            'connectionId': session_data['data']['id'],
-            'userData': session_data['data']['userData']
-        })
-    else:
-        return jsonify({
-            'success': False,
-            'error': 'Authentication not completed'
-        }), 400
 ```
 
 </CodeGroup>
@@ -423,10 +350,7 @@ function ConnectOnlyFansButton({ userId }) {
 			const response = await fetch("/api/auth/init", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					userId: userId,
-					mode: "hosted"
-				})
+				body: JSON.stringify({ userId })
 			})
 
 			const { url } = await response.json()
@@ -445,36 +369,6 @@ function ConnectOnlyFansButton({ userId }) {
 			{isLoading ? "Connecting..." : "Connect OnlyFans Account"}
 		</button>
 	)
-}
-```
-
-### Multiple Account Management
-
-```javascript
-async function addNewAccount(userId) {
-	const response = await fetch("/api/auth/init", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({
-			userId: userId,
-			mode: "hosted",
-			accountType: "additional"
-		})
-	})
-
-	const { url } = await response.json()
-
-	// Open in popup for better UX
-	const popup = window.open(url, "auth", "width=500,height=600")
-
-	// Listen for completion
-	const checkClosed = setInterval(() => {
-		if (popup.closed) {
-			clearInterval(checkClosed)
-			// Refresh account list
-			window.location.reload()
-		}
-	}, 1000)
 }
 ```
 
@@ -503,31 +397,25 @@ async function addNewAccount(userId) {
 ```json
 {
   "error": "Session expired",
-  "code": "SESSION_EXPIRED",
-  "expiresAt": "2024-01-15T10:30:00Z"
+  "code": "SESSION_EXPIRED"
 }
 ```
 **Solution**: Create a new session with `/init`
 </Accordion>
 
-<Accordion title="Invalid Client Secret">
+<Accordion title="Invalid Redirect URL">
 ```json
 {
-  "error": "Session not found",
-  "code": "SESSION_NOT_FOUND"
+  "error": "Link is misconfigured: invalid redirect URL"
 }
 ```
-**Solution**: Verify the client secret parameter
+**Solution**: Add the URL to your Allowed Redirect URIs in the dashboard
 </Accordion>
 
 <Accordion title="Authentication Failed">
-```json
-{
-  "status": "failed",
-  "error": "User cancelled authentication or credentials were invalid"
-}
-```
-**Solution**: User needs to retry authentication
+User is redirected with `?status=error&error_code=invalid_credentials`
+
+**Solution**: User needs to retry authentication with correct credentials
 </Accordion>
 
 </AccordionGroup>
@@ -535,7 +423,7 @@ async function addNewAccount(userId) {
 ## Testing
 
 <Info>
-  **Development Mode**: Use test API keys for development. Test sessions work with demo
+  **Sandbox Mode**: Use sandbox API keys for development. Test sessions work with demo
   credentials that are provided on the hosted authentication page.
 </Info>
 
@@ -545,7 +433,7 @@ async function addNewAccount(userId) {
 	<Card title="Access API" icon="key" href="/api-reference/access/overview">
 		Use connection IDs to access OnlyFans data
 	</Card>
-	<Card title="Webhooks" icon="webhook" href="/api-reference/account/overview">
+	<Card title="Webhooks" icon="webhook" href="/guides/webhooks">
 		Get notified of connection events
 	</Card>
 </CardGroup>
