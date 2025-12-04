@@ -16,25 +16,27 @@ legitimate use cases.
 Rate limits vary based on your subscription plan:
 
 **Access API (per connection):**
-| Plan | Rate Limit | Burst Capacity |
-| ------------ | ------------- | -------------- |
-| Pay as You Go | 60 req/min | 90 requests |
-| Starter | 60 req/min | 90 requests |
-| Launch | No limit* | No limit* |
+
+| Plan          | Rate Limit | Burst Capacity |
+| ------------- | ---------- | -------------- |
+| Pay as You Go | 60 req/min | 90 requests    |
+| Starter       | 60 req/min | 90 requests    |
+| Launch        | No limit\* | No limit\*     |
 
 The **standard tier** (Pay as You Go and Starter) shares the same limit: a 60 requests per minute refill with a 90 request burst allowance. Launch customers inherit the same Access infrastructure and monitoring, but their buckets are uncapped so your throughput is only constrained by upstream OnlyFans limits.
 
 **Other APIs (per organization):**
-| API Category | Default Limit | Burst Capacity |
+
+| API Category      | Default Limit | Burst Capacity |
 | ----------------- | ------------- | -------------- |
-| **Dynamic Rules** | 1 req/min | 3 requests |
-| **Sign** | 10 req/min | 20 requests |
-| **Link** | No limit | - |
-| **Account** | No limit | - |
+| **Dynamic Rules** | 1 req/min     | 3 requests     |
+| **Sign**          | 10 req/min    | 20 requests    |
+| **Link**          | No limit      | -              |
+| **Account**       | No limit      | -              |
 
 <Warning>
-	*Launch plan has no OFAuth rate limits but is still subject to OnlyFans' native
-	rate limiting. OFAuth does not bypass OnlyFans' rate limits.
+  \*Launch plan has no OFAuth rate limits but is still subject to OnlyFans' native
+  rate limiting. OFAuth does not bypass OnlyFans' rate limits.
 </Warning>
 
 ## Managing Rate Limits
@@ -43,17 +45,17 @@ OFAuth uses a token bucket system. Tokens replenish continuously, allowing short
 
 ### Best Practices
 
-- Space out non-critical requests to avoid draining the burst bucket.
-- Implement exponential backoff with jitter whenever the API returns `429` responses.
-- Track the `X-RateLimit-*` response headers so you can alert before reaching zero remaining tokens.
-- Cache results and batch fetches where possible to reduce duplicate calls.
-- Distribute traffic across multiple connections if your use case supports parallelism.
+* Space out non-critical requests to avoid draining the burst bucket.
+* Implement exponential backoff with jitter whenever the API returns `429` responses.
+* Track the `X-RateLimit-*` response headers so you can alert before reaching zero remaining tokens.
+* Cache results and batch fetches where possible to reduce duplicate calls.
+* Distribute traffic across multiple connections if your use case supports parallelism.
 
 ### Monitoring Tips
 
-- Watch the `X-RateLimit-Reset` header to know when full capacity returns.
-- Surface rate-limit telemetry alongside your application health dashboards.
-- Set alerts when remaining tokens fall below 20% of the current window.
+* Watch the `X-RateLimit-Reset` header to know when full capacity returns.
+* Surface rate-limit telemetry alongside your application health dashboards.
+* Set alerts when remaining tokens fall below 20% of the current window.
 
 ### Reduce Calls with Caching
 
@@ -64,26 +66,18 @@ Cache frequently read data and prefer incremental updates over full refreshes. D
 Enterprise customers can request custom rate limits based on their use case.
 Contact support with:
 
-- **Expected request volume**
-- **Usage patterns** (bursts vs steady)
-- **Business requirements**
-- **Current plan details**
+* **Expected request volume**
+* **Usage patterns** (bursts vs steady)
+* **Business requirements**
+* **Current plan details**
 
 ## Next Steps
 
-<CardGroup cols={3}>
-	<Card
-		title="Error Handling"
-		icon="exclamation-triangle"
-		href="/architecture/error-handling"
-	>
-		Learn about error codes and debugging
-	</Card>
-	<Card
-		title="Authentication"
-		icon="key"
-		href="/architecture/authentication"
-	>
-		Understand authentication methods
-	</Card>
+<CardGroup cols={2}>
+  <Card title="Error Handling" icon="exclamation-triangle" href="/reference/error-handling">
+    Error codes and debugging strategies
+  </Card>
+  <Card title="Access Guide" icon="key" href="/guides/access">
+    Using the Access API
+  </Card>
 </CardGroup>

@@ -1,157 +1,123 @@
 ---
 title: "Webhooks"
-description: "Configure OFAuth webhooks, understand event payloads, and process deliveries reliably"
+description: "Real-time notifications for connection lifecycle changes and system events"
 ---
 
 ## Overview
 
-OFAuth webhooks provide real-time notifications for connection lifecycle changes and dynamic rules updates. They eliminate the need for polling by pushing structured events to your infrastructure whenever something changes in a user's session or in the signing rules landscape.
+OFAuth webhooks push structured events to your infrastructure whenever something changes—connection lifecycle updates, dynamic rules changes, and more. No polling required.
 
-## Base URL
+## Configuration
 
-All webhook management endpoints live under the Account API: `https://api.ofauth.com/v2/account`.
+Configure webhooks in the [OFAuth Dashboard](https://ofauth.com/platform/settings):
 
-## Configure Webhooks
+- Set your webhook endpoint URL (HTTPS required)
+- Select which events to subscribe to
+- View delivery history and retry failed events
 
-### Create or Update Endpoint
+<Info>
+  All webhook requests come from static IP ranges published in the dashboard. Allowlist them if your firewall blocks unknown sources.
+</Info>
 
-<Expandable title="PUT /webhook">
-
-- **Purpose**: Configure the webhook endpoint OFAuth will call for account events.
-- **Endpoint**: `PUT /v2/account/webhook`
-- **Headers**: `apikey` (required), `Content-Type: application/json`
-- **Body fields**:
-
-| Field | Type   | Required | Description |
-| ----- | ------ | -------- | ----------- |
-| `url` | string | Yes | HTTPS endpoint that receives webhook payloads |
-| `events` | array | Yes | List of event types to subscribe to |
-
-- **Available events**: `connection.created`, `connection.updated`, `connection.expired`, `rules.updated`
-- **Response**: Confirms the webhook configuration, including the persisted URL, subscribed events, and timestamps.
-
-</Expandable>
-
-### Retrieve Configuration
-
-<Expandable title="GET /webhook">
-
-- **Purpose**: Retrieve the webhook configuration currently stored for your organization.
-- **Endpoint**: `GET /v2/account/webhook`
-- **Response**: Returns the configured URL, subscribed events, delivery timestamps, and current status.
-
-</Expandable>
-
-### Remove Webhook
-
-<Expandable title="DELETE /webhook">
-
-- **Purpose**: Remove the webhook configuration and stop future deliveries.
-- **Endpoint**: `DELETE /v2/account/webhook`
-- **Response**: Returns a success indicator confirming the webhook has been removed.
-
-</Expandable>
-
-## Supported Events
-
-### Event Schema
+## Event Types
 
 Every webhook payload includes:
 
-- `eventType`: Name of the event such as `connection.created` or `rules.updated`.
-- `live`: Boolean indicating whether the event originated from production or test environments.
-- `data`: Object containing resource-specific fields (connection snapshot or dynamic rules revision).
+| Field | Description |
+|-------|-------------|
+| `eventType` | Event name (e.g., `connection.created`) |
+| `live` | Boolean indicating production vs sandbox |
+| `data` | Resource-specific payload |
 
 ### Connection Events
 
-| Event Type | Trigger | Data Included |
-| ---------- | ------- | ------------- |
-| `connection.created` | New connection established | Full connection object, user metadata, client reference ID |
-| `connection.updated` | Connection details changed | Updated connection object with `updatedAt` timestamp |
-| `connection.expired` | Connection lost or invalidated | Connection ID, status set to `expired`, `expiredAt` timestamp |
+| Event | Trigger | Data |
+|-------|---------|------|
+| `connection.created` | New connection established | Full connection object, user metadata |
+| `connection.updated` | Connection details changed | Updated connection with `updatedAt` |
+| `connection.expired` | Connection lost/invalidated | Connection ID, status, `expiredAt` |
 
 ### System Events
 
-| Event Type | Trigger | Data Included |
-| ---------- | ------- | ------------- |
-| `rules.updated` | Dynamic rules changed | Complete rules payload plus revision identifier |
+| Event | Trigger | Data |
+|-------|---------|------|
+| `rules.updated` | Dynamic rules changed | Complete rules payload, revision ID |
 
-## Delivery Behavior
+<Tip>
+  Cache `rules.updated` payloads directly—they contain the full rules object, no API call needed.
+</Tip>
 
-### Retry Policy
+## Delivery & Retries
 
-OFAuth automatically retries failed webhook deliveries:
+OFAuth guarantees reliable delivery with automatic retries:
 
-- Immediate retry on the first failure.
-- Exponential backoff at 1, 2, 4, and 8 minute intervals.
-- Maximum of 5 attempts per event.
-- 10 second timeout per request.
+- **Retry policy**: Exponential backoff (1, 2, 4, 8 min intervals), max 5 attempts
+- **Timeout**: 10 seconds per request
+- **Ordering**: In-order delivery per `connectionId`; cross-connection is best-effort
+- **Dead letter**: Failed events after all retries are moved to DLQ (contact support to replay)
 
-If all retries fail, the event is marked as undelivered and no further attempts are made.
+Respond with `2xx` within 10 seconds to acknowledge. Offload heavy processing to background workers.
 
-### Security Requirements
+## Security
 
-Protect your webhook endpoint with layered controls:
+### Signature Verification
 
-- **HTTPS only**: Maintain valid TLS certificates for delivery.
-- **Authentication**: Require a shared secret or validate the OFAuth signature before processing.
-- **IP restrictions**: Optionally restrict traffic to OFAuth's published egress ranges.
+Each request includes an `OFAuth-Signature` header (HMAC SHA-256):
+
+```
+OFAuth-Signature: t=1234567890,v1=abc123...
+```
+
+Verify by:
+1. Extract timestamp (`t`) and signature (`v1`)
+2. Reject if timestamp > 5 minutes old (replay protection)
+3. Compute HMAC-SHA256 of `{timestamp}.{raw_body}` with your signing secret
+4. Compare signatures using constant-time comparison
+
+### Secret Rotation
+
+Rotate secrets in the [Dashboard](https://ofauth.com/platform/settings) without downtime—overlapping secrets are supported during rotation.
 
 ## Implementation Checklist
 
-1. Accept `application/json` payloads, parse the body, and validate authenticity before use.
-2. Branch on `eventType` and route to the appropriate handler for connections or rules events.
-3. Persist connection state changes or update cached rules directly from the payload.
-4. Respond with a `2xx` status within 10 seconds to avoid retries; offload long-running work to background jobs.
-5. Record event IDs to ensure idempotent processing when OFAuth retries deliveries.
+1. **Accept JSON** - Parse `application/json` body
+2. **Verify signature** - Validate before processing
+3. **Route by eventType** - Handle each event type appropriately
+4. **Respond fast** - Return `2xx` within 10 seconds
+5. **Be idempotent** - Store event IDs to handle retries
 
-## Error Handling
+## Troubleshooting
 
 <AccordionGroup>
+  <Accordion title="Webhook Delivery Failed">
+    OFAuth exhausted retry attempts.
 
-<Accordion title="Webhook URL Invalid">
-**Error code**: `INVALID_WEBHOOK_URL`
+    **Fix**: Ensure endpoint is reachable and responds `2xx` within 10 seconds. Check Dashboard delivery history to retry.
+  </Accordion>
 
-**What it means**: The provided webhook URL is not HTTPS.
+  <Accordion title="Events Not Arriving">
+    Expected events aren't being received.
 
-**Fix it**: Update the configuration to use an HTTPS endpoint.
-</Accordion>
+    **Fix**: Verify endpoint URL in Dashboard, check event subscriptions, confirm server accepts POST with JSON body.
+  </Accordion>
 
-<Accordion title="Webhook Delivery Failed">
-**Error code**: `WEBHOOK_DELIVERY_FAILED`
+  <Accordion title="Signature Verification Failing">
+    Requests arrive but signature doesn't match.
 
-**What it means**: OFAuth exhausted retry attempts and stopped delivering events to the configured URL.
-
-**Fix it**: Restore your endpoint and respond with a `2xx` status so future deliveries succeed.
-</Accordion>
-
-<Accordion title="Connection Not Found">
-**Error code**: `CONNECTION_NOT_FOUND`
-
-**What it means**: The referenced connection ID does not exist or is not associated with your organization.
-
-**Fix it**: Verify the identifier before sending management requests.
-</Accordion>
-
+    **Fix**: Ensure you're using the raw request body (not parsed JSON), check signing secret matches Dashboard, verify timestamp handling.
+  </Accordion>
 </AccordionGroup>
-
-## Best Practices
-
-- Handle duplicate webhook deliveries gracefully by storing processed event IDs.
-- Monitor latency, success rates, and retry counts to detect delivery issues.
-- Cache dynamic rules from `rules.updated` events so you can apply them without extra API calls.
-- Maintain clear runbooks for rotating secrets and updating webhook URLs during incident response.
 
 ## Next Steps
 
 <CardGroup cols={3}>
-	<Card title="Account API" icon="user" href="/guides/account">
-		Manage account settings and connection lists
-	</Card>
-	<Card title="Rate Limiting" icon="gauge" href="/architecture/rate-limiting">
-		Design for request quotas and burst handling
-	</Card>
-	<Card title="Error Handling" icon="exclamation-triangle" href="/architecture/error-handling">
-		Build resilient retry and logging flows
-	</Card>
+  <Card title="Connections" icon="plug" href="/guides/connections">
+    Manage connection lifecycle
+  </Card>
+  <Card title="Error Handling" icon="exclamation-triangle" href="/reference/error-handling">
+    Handle webhook-related errors
+  </Card>
+  <Card title="Dynamic Rules" icon="cog" href="/guides/dynamic-rules">
+    Use rules.updated events
+  </Card>
 </CardGroup>

@@ -111,7 +111,7 @@ Access to dynamic rules is available in two forms:
 
 Retrieve the latest OnlyFans API rules and signing parameters.
 
-<Expandable title="GET /">
+<Expandable title="GET /v2/dynamic-rules">
 
 ```http
 GET /v2/dynamic-rules
@@ -165,7 +165,7 @@ GET /v2/dynamic-rules
 
 Generate a signed request using current rules for OnlyFans API access.
 
-<Expandable title="POST /sign">
+<Expandable title="POST /v2/dynamic-rules/sign">
 
 ```http
 POST /v2/dynamic-rules/sign
@@ -262,7 +262,7 @@ const onlyFansResponse = await fetch("https://onlyfans.com/api2/v2/users/me", {
 
 Get the current status of dynamic rules without fetching the actual rules.
 
-<Expandable title="GET /status">
+<Expandable title="GET /v2/dynamic-rules/status">
 
 ```http
 GET /v2/dynamic-rules/status
@@ -848,7 +848,7 @@ If you're migrating from a legacy signing implementation:
 	<Card title="Link API" icon="link" href="/api-reference/link/overview">
 		Establish user connections for signing
 	</Card>
-	<Card title="Account API" icon="user" href="/api-reference/account/overview">
-		Monitor connections and webhook events
+	<Card title="Connections" icon="user" href="/guides/connections">
+		Manage connection lifecycle
 	</Card>
 </CardGroup>

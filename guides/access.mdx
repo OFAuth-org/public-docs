@@ -77,8 +77,7 @@ x-of-user-id: ONLYFANS_USER_ID (optional)
 
 ### Managed Endpoints
 
-Managed routes live directly under `/v2/access`. Use standard REST verbs and
-expect typed responses that stay stable across API revisions.
+Managed routes live directly under `/v2/access`.
 
 ```http
 GET /v2/access/self/me HTTP/1.1
@@ -86,10 +85,6 @@ Host: api.ofauth.com
 apikey: YOUR_API_KEY
 x-connection-id: conn_abc123
 ```
-
-- Automatic retries, pagination helpers, and validation are handled for you
-- Perfect for dashboards, analytics, and common workflows where consistent
-  schemas matter
 
 ### Proxy Endpoints
 
@@ -103,10 +98,6 @@ curl -H 'apikey: YOUR_API_KEY' \
 ```
 
 - The response payload is returned exactly as OnlyFans sends it
-- Useful for endpoints not yet modelled by the managed surface or when you need
-  a beta field before it becomes part of the stable schema
-- If the path does not start with `/api2/v2/`, the request is rejected with
-  `INVALID_PATH`
 
 ## Response Format
 
@@ -122,42 +113,6 @@ Content-Type: application/json
   "id": 12345,
   "username": "example_user"
 }
-```
-
-## Managed Endpoint Map
-
-| Domain | Key endpoints | Methods | Notes |
-| ------ | ------------- | ------- | ----- |
-| Authenticated user | `/self/me`, `/self/summary` | `GET` | Current creator profile, balances, and notification state |
-| Users | `/users/{id}`, `/users/{id}/posts` | `GET` | Fetch public creator data and their recent posts |
-| Posts | `/posts`, `/posts/{id}` | `GET`, `POST`, `PATCH` | Create or update posts with automatic media signing |
-| Messages | `/chats`, `/chats/{chatId}/messages` | `GET`, `POST` | List chats or send replies with attachments |
-| Subscriptions | `/subscriptions/subscribers`, `/subscriptions/users/{id}/subscribe` | `GET`, `POST` | Manage subscriber lists and trigger subscribe/cancel actions |
-| Vault | `/vault/lists`, `/vault/posts/{id}/unlock` | `GET`, `POST` | Work with locked content and vault assets |
-| Uploads | `/uploads`, `/uploads/{id}` | `POST`, `GET` | Generate signed upload URLs and poll processing status |
-| Statistics | `/statistics/earnings`, `/statistics/messages` | `GET` | Aggregated analytics ready for dashboards |
-
-<Tip>
-	Use the OpenAPI explorer (API Reference ▸ Access) for query parameters,
-	payload schemas, and an interactive console.
-</Tip>
-
-## Proxy Cheat Sheet
-
-| Example | Proxy path | Notes |
-| ------- | ---------- | ----- |
-| Current user | `users/me` | Mirrors OnlyFans `GET /api2/v2/users/me` |
-| Creator posts | `users/{id}/posts?limit=30` | Pass through query parameters as usual |
-| Messages | `chats/{chatId}/messages` | Use `POST` with JSON body to send replies |
-| Lists | `lists/{listId}/users` | Access endpoints not yet covered by managed routes |
-
-```javascript
-await fetch("https://api.ofauth.com/v2/access/proxy/users/me", {
-	headers: {
-		apikey: "YOUR_API_KEY",
-		"x-connection-id": "conn_abc123"
-	}
-})
 ```
 
 ## Media Proxy
@@ -200,223 +155,48 @@ Use proxied URLs directly in `<img>` and `<video>` tags. Frequently accessed med
 
 ## Rate Limiting
 
-The Access API implements per-user rate limiting that varies by subscription
-plan:
+Access API requests are rate limited per connection ID or session. Each connection has independent limits, so multiple connections can scale your throughput.
 
-### Rate Limits by Plan
-
-**Per connection ID or session:**
-
-- **Standard**: 60 Access req/min with 90 request burst capacity
-- **Scale**: No OFAuth Access limits (OnlyFans limits still apply)
-
-**System Details:**
-
-- **Scope**: Each `x-connection-id` or `x-of-user-id` has independent rate limits
-- **Token bucket system**: Continuous refill with burst capacity
+| Plan | Limit | Burst |
+|------|-------|-------|
+| Standard | 60 req/min | 90 requests |
+| Scale | No OFAuth limit | — |
 
 <Warning>
-	**Important**: OFAuth does not bypass OnlyFans' native rate limits. Even if
-	you're within OFAuth's Access rate limits, you may still receive rate limiting
-	responses from OnlyFans.
+  OFAuth limits don't bypass OnlyFans' native rate limits. You may still receive rate limiting from OnlyFans even when within OFAuth limits.
 </Warning>
 
-### Multiple Users/Connections
-
-<CodeGroup>
-
-```javascript Independent Rate Limits (Connection IDs)
-// These requests are rate limited independently
-const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
-	headers: {
-		apikey: "YOUR_API_KEY",
-		"x-connection-id": "conn_user1"
-	}
-})
-
-const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
-	headers: {
-		apikey: "YOUR_API_KEY",
-		"x-connection-id": "conn_user2" // Independent rate limit
-	}
-})
-```
-
-```javascript Independent Rate Limits (User IDs)
-// These requests are rate limited independently
-const user1Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
-	headers: {
-		apikey: "YOUR_API_KEY",
-		"x-of-cookie": "session_1",
-		"x-of-user-agent": "Mozilla ...",
-		"x-of-bc": "bc_value_1",
-		"x-of-user-id": "12345"
-	}
-})
-
-const user2Data = await fetch("https://api.ofauth.com/v2/access/self/me", {
-	headers: {
-		apikey: "YOUR_API_KEY",
-		"x-of-cookie": "session_2",
-		"x-of-user-agent": "Mozilla ...",
-		"x-of-bc": "bc_value_2",
-		"x-of-user-id": "67890" // Independent rate limit
-	}
-})
-```
-
-</CodeGroup>
-
-### Rate Limit Best Practices
-
-<CardGroup cols={2}>
-	<Card title="Distribute Load" icon="scale-balanced">
-		Use multiple connections to scale request volume
-	</Card>
-	<Card title="Monitor Limits" icon="chart-line">
-		Track rate limit headers in responses
-	</Card>
-	<Card title="Implement Backoff" icon="clock">
-		Use exponential backoff when rate limited
-	</Card>
-	<Card title="Cache Responses" icon="database">
-		Cache responses to reduce API calls
-	</Card>
-</CardGroup>
+<Card title="Rate Limiting Reference" icon="gauge" href="/reference/rate-limiting">
+  Full details on token bucket system, best practices, and monitoring tips
+</Card>
 
 ## Error Handling
 
-The Access API handles various error conditions automatically:
+Common Access API errors:
 
-### Session Expired
+| Code | Meaning | Action |
+|------|---------|--------|
+| `SESSION_EXPIRED` | Connection session ended | Re-authenticate via [Link](/guides/link/overview) |
+| `CONNECTION_NOT_FOUND` | Invalid connection ID | Check ID or re-authenticate |
+| `RATE_LIMITED` | Too many requests | Wait and retry with backoff |
+| `RULES_OUTDATED` | Signing rules updating | Retry in a few seconds |
 
-**For Connection ID Authentication:**
-When a Link connection session expires, the API returns:
-
-```json
-{
-	"error": "Session expired",
-	"code": "SESSION_EXPIRED",
-	"connection_id": "conn_abc123"
-}
-```
-
-**For Session Header Authentication:**
-When provided session headers are invalid or expired:
-
-```json
-{
-	"error": "Invalid session headers",
-	"code": "INVALID_SESSION",
-	"user_id": "12345"
-}
-```
-
-### Authentication Errors
-
-**Missing Authentication:**
-
-```json
-{
-	"error": "No authentication provided",
-	"code": "NO_AUTH",
-	"details": "Provide either x-connection-id or session headers (x-of-cookie, x-of-user-agent, optional x-of-bc, optional x-of-user-id)"
-}
-```
-
-**Incomplete Session Headers:**
-
-```json
-{
-	"error": "Incomplete session headers",
-	"code": "INCOMPLETE_SESSION",
-	"missing": ["x-of-cookie", "x-of-user-agent"]
-}
-```
-
-### Proxy Errors
-
-If a proxy fails, the API automatically retries with a different proxy:
-
-```json
-{
-	"error": "All proxies failed",
-	"code": "PROXY_ERROR",
-	"retries": 3
-}
-```
-
-### Rules Outdated
-
-When dynamic rules need updating:
-
-```json
-{
-	"error": "Rules outdated, please try again in a moment",
-	"code": "RULES_OUTDATED"
-}
-```
+<Card title="Error Handling Reference" icon="exclamation-triangle" href="/reference/error-handling">
+  Complete error codes, response formats, and debugging strategies
+</Card>
 
 ## Troubleshooting
 
-### Common Issues
-
 <AccordionGroup>
-
-<Accordion title="429 Rate Limited">
-
-The Access API has variable rate limits based on your subscription plan using a
-token bucket system. Each connection-id or user-id has its own independent rate
-limit.
-
-**Rate limits:**
-
-- Standard: 60 req/min (burst: 90)
-- Scale: No OFAuth limits
-
-Implement exponential backoff if you encounter rate limits.
-
-```json
-{
-	"error": "Rate limit exceeded for connection",
-	"code": "RATE_LIMITED",
-	"connection_id": "conn_abc123",
-	"retryAfter": 5
-}
-```
-
-**Solution**: Implement exponential backoff and respect retryAfter seconds. Note
-that other connections are not affected by this rate limit.
-
-</Accordion>
-
-<Accordion title="404 Connection Not Found">
-
-```json
-{
-	"error": "Connection not found",
-	"code": "CONNECTION_NOT_FOUND",
-	"connection_id": "conn_abc123"
-}
-```
-
-**Solution**: Verify connection ID and re-authenticate if needed
-
-</Accordion>
-
-<Accordion title="503 Service Unavailable">
-
-```json
-{
-	"error": "Rules are being updated",
-	"code": "RULES_UPDATING"
-}
-```
-
-**Solution**: Wait 5-10 seconds and retry
-
-</Accordion>
-
+  <Accordion title="429 Rate Limited">
+    Implement exponential backoff and respect the `retryAfter` value. Each connection has independent limits.
+  </Accordion>
+  <Accordion title="404 Connection Not Found">
+    Verify connection ID is correct. If expired, re-authenticate via [Link](/guides/link/overview).
+  </Accordion>
+  <Accordion title="503 Service Unavailable">
+    Dynamic rules are updating. Wait 5-10 seconds and retry.
+  </Accordion>
 </AccordionGroup>
 
 ## Security Considerations
@@ -445,9 +225,9 @@ that other connections are not affected by this rate limit.
 		Learn how to establish connections
 	</Card>
 	<Card
-		title="Webhook Configuration"
+		title="Webhooks"
 		icon="webhook"
-		href="/api-reference/account/overview">
+		href="/guides/webhooks">
 		Set up event notifications
 	</Card>
 	<Card

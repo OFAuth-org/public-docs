@@ -1,132 +1,34 @@
 ---
-title: "Access API Overview"
-description: "Managed data access and proxied OnlyFans requests under /v2/access"
+title: "Access API"
+sidebarTitle: "Overview"
+description: "Proxied access to OnlyFans data with automatic session management"
 ---
 
-## Overview
+The Access API provides managed endpoints for common operations and proxy endpoints for any OnlyFans API path. OFAuth handles request signing, session management, and retries automatically.
 
-The Access API exposes OFAuth's data access surface. Use managed endpoints for
-common resources with typed payloads, or the proxy endpoints when you need to
-reach any underlying OnlyFans path.
+<Card title="Access Guide" icon="book" href="/guides/access">
+  Complete guide with authentication, endpoints, media proxy, rate limiting, and troubleshooting
+</Card>
 
-<CardGroup cols={2}>
-  <Card title="Managed Endpoints" icon="database" href="/api-reference/access/managed">
-    Typed routes for users, posts, messages, vault, subscriptions, uploads, and more
-  </Card>
-  <Card title="Proxy Endpoints" icon="shuffle" href="/api-reference/access/proxy">
-    Flexible passthrough to any OnlyFans REST path while OFAuth handles auth and rotation
-  </Card>
-</CardGroup>
+## Quick Reference
 
-<Info>
-  Managed endpoints cover the most common use cases and include stability guarantees.
-  Reach for proxy routes when you need a path that is not yet modelled or you want the
-  raw OnlyFans response format.
-</Info>
-
-## Base URLs
-
-| Environment | Managed | Proxy |
-| ----------- | ------- | ----- |
-| Production  | `https://api.ofauth.com/v2/access` | `https://api.ofauth.com/v2/access/proxy` |
+| Type | Base URL | Use Case |
+|------|----------|----------|
+| Managed | `/v2/access/*` | Typed routes for users, posts, messages, vault |
+| Proxy | `/v2/access/proxy/*` | Any OnlyFans API path |
 
 ## Authentication
 
-Every request must include your OFAuth API key. Then choose one of two
-strategies for the user session that will power the request.
+```http
+apikey: YOUR_API_KEY
+x-connection-id: conn_abc123
+```
 
-<Tabs>
-  <Tab title="Headers">
-
-  | Header | Required | Notes |
-  | ------ | -------- | ----- |
-  | `apikey` | Yes | Found in the OFAuth dashboard |
-
-  </Tab>
-  <Tab title="User Session Options">
-
-  **Link Connection (recommended)**
-
-  - Header: `x-connection-id`
-  - Obtained from the Link API after a user authenticates
-  - OFAuth securely manages OnlyFans sessions so you don't handle raw cookies
-
-  **Direct Session Headers**
-
-  Provide the OnlyFans session yourself when you cannot use Link.
-
-  | Header | Required | Notes |
-  | ------ | -------- | ----- |
-  | `x-of-cookie` | Yes | Must contain `fp`, `auth_id`, and `sess` unless overridden by other headers |
-  | `x-of-user-agent` | Yes | User agent bound to the OnlyFans session |
-  | `x-of-bc` | Optional | Overrides the `fp` value from the cookie |
-  | `x-of-user-id` | Optional | Overrides the `auth_id` value from the cookie |
-
-  <Warning>
-    When you supply direct session headers you own expiry, rotation, and security. Link
-    connections offload that work to OFAuth.
-  </Warning>
-
-  </Tab>
-</Tabs>
-
-## Request Patterns
-
-| Goal | Managed Example | Proxy Example |
-| ---- | ---------------- | ------------- |
-| Current user | `GET /self/me` | `GET /users/me` |
-| Posts listing | `GET /posts` | `GET /users/{id}/posts` |
-| Messages | `GET /messages` | `GET /chats/{chatId}/messages` |
-| Upload media | `POST /upload` | `POST /posts/{id}/media` |
-
-Use standard HTTP verbs. Managed endpoints validate payloads and respond with
-stable schemas; proxy responses are passed through from OnlyFans.
-
-## Media Proxy
-
-The Access API includes an automatic media proxy that simplifies handling images and videos. **It's enabled by default with no setup required.**
-
-<Warning>
-Your API responses will automatically contain `media.ofauth.com/*` URLs instead of raw OnlyFans CDN links. **Using these URLs incurs bandwidth charges** according to your subscription plan.
-</Warning>
-
-**Benefits:**
-
-- **Enabled by Default**: No configuration needed—media URLs are automatically rewritten in API responses
-- **Longer-Lived URLs**: Converts quickly-expiring OnlyFans CDN links into URLs with extended validity
-- **CORS Support**: Display images and videos directly in web applications without cross-origin errors
-- **Edge Caching**: Content is cached globally for faster load times
-
-**How it works:**
-
-The Access API automatically detects OnlyFans media URLs in responses and rewrites them to `media.ofauth.com/*` URLs. You can use these directly in `<img>` or `<video>` tags without CORS issues.
-
-### Media Proxy Billing
-
-<Note>
-  Media proxy usage is metered and **charged per kilobyte (KB)** of bandwidth according to your plan's pricing schedule.
-</Note>
-
-| Factor | Impact on Billing |
-| ------ | ----------------- |
-| Image/video size | Larger files = more KB transferred |
-| Cache status | **Only cache misses are billed**—cached responses are free |
-| Cache TTL | Content cached for up to 7 days (may be purged sooner) |
-
-<Tip>
-**Cache hits are free.** When media is served from edge cache, no bandwidth charges apply. Only the initial fetch (cache miss) incurs billing.
-</Tip>
-
-## Related Guides
-
-<CardGroup cols={3}>
-  <Card title="Access Guide" icon="book" href="/guides/access">
-    End-to-end walkthrough with headers, examples, and troubleshooting tips
+<CardGroup cols={2}>
+  <Card title="Proxy Endpoints" icon="shuffle" href="/api-reference/access/proxy">
+    Passthrough to any OnlyFans path
   </Card>
-  <Card title="Link API" icon="link" href="/api-reference/link/overview">
-    Create user connections to power Access requests
-  </Card>
-  <Card title="Dynamic Rules" icon="cog" href="/api-reference/dynamic-rules/overview">
-    Required only if you sign OnlyFans requests yourself
+  <Card title="Link API" icon="link" href="/guides/link/overview">
+    Get connection IDs for authentication
   </Card>
 </CardGroup>

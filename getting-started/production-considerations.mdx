@@ -118,6 +118,40 @@ Accessing OnlyFans data through their unofficial API requires defensive strategi
 	**How OFAuth Helps**: Our Access API abstracts these moving pieces behind stable SDK contracts, provides typed responses, and ships backward-compatible shims when OnlyFans changes their payloads.
 </Info>
 
+## Security & Compliance
+
+### Data Protection
+
+OFAuth implements enterprise-grade security measures:
+
+- **Encryption**: AES-256 encryption for all stored data
+- **TLS 1.3**: All communications encrypted in transit
+- **Key Rotation**: Regular encryption key rotation
+- **Zero-Knowledge**: OFAuth never stores OnlyFans passwords
+
+### Access Control
+
+- **API Key Scoping**: Keys limited to specific permissions
+- **Connection Isolation**: Users can only access their own data
+- **Audit Logging**: All API access logged and monitored
+- **Rate Limiting**: Protection against abuse
+
+### Compliance
+
+- **GDPR**: Full compliance with EU data protection regulations
+- **SOC 2**: Type II compliance for security controls
+- **OWASP**: Security practices aligned with OWASP guidelines
+- **Penetration Testing**: Regular third-party security assessments
+
+<CardGroup cols={2}>
+  <Card title="API Key Security" icon="key">
+    Store in environment variables. Never commit to version control. Rotate regularly. Use server-side only.
+  </Card>
+  <Card title="Connection Security" icon="link">
+    Treat connection IDs as credentials. Monitor status via webhooks. Handle expiration gracefully.
+  </Card>
+</CardGroup>
+
 ## Conclusion
 
 Building production OnlyFans integrations means working with an API that was never intended for external use. Success comes from accepting that truth and partnering with tools that keep you nimble:
@@ -137,8 +171,8 @@ Building production OnlyFans integrations means working with an API that was nev
 	<Card title="Implementation Guides" icon="code" href="/guides/link/overview">
 		Review specific API implementation patterns with reliability in mind
 	</Card>
-	<Card title="Monitoring Setup" icon="chart-line" href="/api-reference/account/overview">
-		Set up webhooks and monitoring for your OnlyFans integrations
+	<Card title="Webhooks" icon="chart-line" href="/guides/webhooks">
+		Set up webhooks for connection monitoring
 	</Card>
 	<Card title="Support Resources" icon="life-ring" href="mailto:support@ofauth.com">
 		Contact OFAuth support for production deployment guidance

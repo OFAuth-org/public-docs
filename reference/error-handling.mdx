@@ -13,9 +13,10 @@ systematic approach helps developers quickly identify and resolve issues.
 ## Error Response Format
 
 All API errors return a consistent JSON structure with three core fields:
-- `error`: a human-readable description of what went wrong
-- `code`: a machine-readable identifier you can branch on in your client
-- `details`: optional contextual information such as the affected field
+
+* `error`: a human-readable description of what went wrong
+* `code`: a machine-readable identifier you can branch on in your client
+* `details`: optional contextual information such as the affected field
 
 ### Error Response Fields
 
@@ -76,7 +77,7 @@ All API errors return a consistent JSON structure with three core fields:
 | `VALIDATION_INVALID_VALUE`  | 422         | Field value is invalid       | Use valid field value        |
 | `VALIDATION_FIELD_TOO_LONG` | 422         | Field exceeds maximum length | Shorten field value          |
 
-### Rate Limiting Errors (RATE_LIMIT\_\*)
+### Rate Limiting Errors (RATE\_LIMIT\_\*)
 
 | Code                        | HTTP Status | Description                 | Resolution                     |
 | --------------------------- | ----------- | --------------------------- | ------------------------------ |
@@ -114,20 +115,22 @@ All API errors return a consistent JSON structure with three core fields:
 ### Basic Error Handling
 
 Follow these practices when calling the API from client code:
-- Check `response.ok` before parsing the body and surface the HTTP status in your logs.
-- Parse the JSON payload and branch on `errorData.code` to determine the recovery path.
-- Redirect users to re-authentication when you receive connection or session errors.
-- Respect the `X-RateLimit-Retry-After` header and pause before retrying rate-limited calls.
-- Bubble up unexpected errors so they can be reported to your monitoring stack.
+
+* Check `response.ok` before parsing the body and surface the HTTP status in your logs.
+* Parse the JSON payload and branch on `errorData.code` to determine the recovery path.
+* Redirect users to re-authentication when you receive connection or session errors.
+* Respect the `X-RateLimit-Retry-After` header and pause before retrying rate-limited calls.
+* Bubble up unexpected errors so they can be reported to your monitoring stack.
 
 ### Advanced Error Handler Class
 
 Build a reusable error-handling helper so every request is treated consistently. The helper should:
-- Centralize logging of HTTP status codes, request identifiers, and the parsed error payload.
-- Categorize errors (retryable, authentication, validation) to route them to the right recovery logic.
-- Apply backoff to retryable errors and honour server-provided retry hints.
-- Trigger re-authentication flows when connection or session errors are detected.
-- Raise typed exceptions (for example `ApiError`, `AuthError`, `ValidationError`) so downstream code can react precisely.
+
+* Centralize logging of HTTP status codes, request identifiers, and the parsed error payload.
+* Categorize errors (retryable, authentication, validation) to route them to the right recovery logic.
+* Apply backoff to retryable errors and honour server-provided retry hints.
+* Trigger re-authentication flows when connection or session errors are detected.
+* Raise typed exceptions (for example `ApiError`, `AuthError`, `ValidationError`) so downstream code can react precisely.
 
 ### Validation Error Details
 
@@ -138,18 +141,21 @@ Handle validation errors with user-friendly messages by mapping the fields in `d
 ## Debugging Tips
 
 <CardGroup cols={2}>
-	<Card title="Use Error Codes" icon="code">
-		Always check the `code` field for programmatic error handling
-	</Card>
-	<Card title="Log Full Responses" icon="file-text">
-		Log complete error responses for debugging and support
-	</Card>
-	<Card title="Monitor Error Patterns" icon="chart-line">
-		Track error frequency and types to identify issues
-	</Card>
-	<Card title="Test Error Scenarios" icon="flask">
-		Test your error handling with intentional invalid requests
-	</Card>
+  <Card title="Use Error Codes" icon="code">
+    Always check the `code` field for programmatic error handling
+  </Card>
+
+  <Card title="Log Full Responses" icon="file-text">
+    Log complete error responses for debugging and support
+  </Card>
+
+  <Card title="Monitor Error Patterns" icon="chart-line">
+    Track error frequency and types to identify issues
+  </Card>
+
+  <Card title="Test Error Scenarios" icon="flask">
+    Test your error handling with intentional invalid requests
+  </Card>
 </CardGroup>
 
 ### Error Monitoring
@@ -161,10 +167,11 @@ Implement error tracking for production applications by storing structured error
 ### Authentication Issues
 
 When you receive authentication or connection errors:
-- Inspect the response body for `CONNECTION_EXPIRED`, `AUTH_SESSION_EXPIRED`, or related codes.
-- Inform the user that they must reconnect and send them through the hosted re-authentication flow.
-- Clear cached credentials so the next attempt starts with a fresh session.
-- Log the status, code, and affected connection ID for support follow-up.
+
+* Inspect the response body for `CONNECTION_EXPIRED`, `AUTH_SESSION_EXPIRED`, or related codes.
+* Inform the user that they must reconnect and send them through the hosted re-authentication flow.
+* Clear cached credentials so the next attempt starts with a fresh session.
+* Log the status, code, and affected connection ID for support follow-up.
 
 ### Rate Limiting
 
@@ -173,13 +180,13 @@ Handle rate limits by adopting exponential backoff. Read the `X-RateLimit-Retry-
 ## Next Steps
 
 <CardGroup cols={3}>
-	<Card title="Rate Limiting" icon="gauge" href="/architecture/rate-limiting">
-		Understand rate limiting and backoff strategies
-	</Card>
-	<Card title="Performance" icon="chart-line" href="/architecture/performance">
-		Learn about caching and optimization
-	</Card>
-	<Card title="Quick Start" icon="rocket" href="/quickstart">
-		Try the API
-	</Card>
+  <Card title="Rate Limiting" icon="gauge" href="/reference/rate-limiting">
+    Token bucket system and backoff strategies
+  </Card>
+  <Card title="Access Guide" icon="key" href="/guides/access">
+    Using the Access API
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/getting-started/quickstart/index">
+    Get started with OFAuth
+  </Card>
 </CardGroup>

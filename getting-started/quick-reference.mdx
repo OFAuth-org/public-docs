@@ -11,7 +11,7 @@ description: "API endpoints, headers, response codes, and key terms at a glance"
 | **Link** | `https://api.ofauth.com/v2/link` | User authentication |
 | **Access** | `https://api.ofauth.com/v2/access` | OnlyFans data access |
 | **Connections** | `https://api.ofauth.com/v2/connections` | Manage connections |
-| **Account** | `https://api.ofauth.com/v2/account` | Webhooks, platform info |
+| **Account** | `https://api.ofauth.com/v2/account` | Platform info |
 | **Dynamic Rules** | `https://api.ofauth.com/v2/dynamic-rules` | Request signing (advanced) |
 
 ---
@@ -56,31 +56,34 @@ description: "API endpoints, headers, response codes, and key terms at a glance"
 
 ---
 
-## Error Codes
+## Common Error Codes
 
-| Code | Meaning |
-|------|---------|
-| `SESSION_EXPIRED` | Connection session expired - user needs to re-authenticate |
-| `CONNECTION_NOT_FOUND` | Invalid connection ID |
-| `INVALID_SESSION` | Session headers are invalid or expired |
-| `NO_AUTH` | Missing authentication headers |
-| `RATE_LIMITED` | Too many requests - wait and retry |
-| `RULES_OUTDATED` | Dynamic rules being updated - retry shortly |
+| Code | Meaning | Action |
+|------|---------|--------|
+| `SESSION_EXPIRED` | Connection expired | Re-authenticate via Link |
+| `CONNECTION_NOT_FOUND` | Invalid connection ID | Check ID or re-authenticate |
+| `RATE_LIMITED` | Too many requests | Wait and retry with backoff |
+
+<Card title="Full Error Reference" icon="exclamation-triangle" href="/reference/error-handling">
+  All error codes, response formats, and debugging strategies
+</Card>
 
 ---
 
-## Rate Limits by Plan
+## Rate Limits
+
+Rate limits are per connection ID. Each connection has independent limits.
 
 | Plan | Access API | Burst |
 |------|------------|-------|
-| **Pay as You Go** | 30 req/min | 50 |
-| **Starter** | 60 req/min | 90 |
-| **Launch** | 120 req/min | 200 |
-| **Scale** | No OFAuth limits | - |
+| **Standard** (Pay as You Go, Starter) | 60 req/min | 90 |
+| **Launch** | No OFAuth limit* | — |
 
-<Info>
-	Rate limits are per connection ID or user ID. Different connections have independent limits.
-</Info>
+*OnlyFans native limits still apply.
+
+<Card title="Full Rate Limiting Details" icon="gauge" href="/reference/rate-limiting">
+  Token bucket system, best practices, and monitoring tips
+</Card>
 
 ---
 
@@ -116,11 +119,14 @@ description: "API endpoints, headers, response codes, and key terms at a glance"
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
 | `/v2/account/whoami` | GET | Platform info |
-| `/v2/account/webhook` | PUT | Configure webhooks |
 
 ---
 
 ## Webhook Events
+
+<Info>
+  Webhooks are configured through the [OFAuth Dashboard](https://ofauth.com/platform/settings), not via API.
+</Info>
 
 | Event | Trigger |
 |-------|---------|
@@ -131,42 +137,31 @@ description: "API endpoints, headers, response codes, and key terms at a glance"
 
 ---
 
-## Glossary
-
-| Term | Definition |
-|------|------------|
-| **API Key** | Your OFAuth authentication key (starts with `sk_live_` or `sk_sandbox_`) |
-| **Connection** | A linked OnlyFans account |
-| **Connection ID** | Unique identifier for a connection (e.g., `conn_abc123`) |
-| **Link Session** | Temporary authentication flow (expires after 1 hour) |
-| **Client Secret** | Token identifying a Link session (e.g., `cs_xyz789`) |
-| **Dynamic Rules** | Current OnlyFans request signing parameters |
-| **Managed Endpoints** | Stable, typed Access API routes |
-| **Proxy Endpoints** | Raw passthrough to any OnlyFans API path |
-
----
-
-## Environment API Keys
+## Environments
 
 | Environment | Key Prefix | Purpose |
 |-------------|------------|---------|
 | **Live** | `sk_live_` | Production - real OnlyFans requests |
 | **Sandbox** | `sk_sandbox_` | Testing - deterministic fixtures |
 
+<Card title="Sandbox Test Credentials" icon="key" href="/getting-started/environments/sandbox">
+  Ready-to-use test emails, passwords, and OTP codes
+</Card>
+
 ---
 
-## Sandbox Test Credentials
+## Glossary
 
-| Scenario | Email Format | Password | OTP |
-|----------|--------------|----------|-----|
-| Creator (no 2FA) | `{id}@creator.sandbox.com` | `good-password` | - |
-| Creator (OTP) | `{id}@creator-otp.sandbox.com` | `good-password` | `123456` |
-| Fan (no 2FA) | `{id}@fan.sandbox.com` | `good-password` | - |
-| Fan (OTP) | `{id}@fan-otp.sandbox.com` | `good-password` | `123456` |
+| Term | Definition |
+|------|------------|
+| **Connection ID** | Unique identifier for a linked account (e.g., `conn_abc123`) |
+| **Client Secret** | Token identifying a Link session (e.g., `cs_xyz789`) |
+| **Managed Endpoints** | Stable, typed Access API routes |
+| **Proxy Endpoints** | Raw passthrough to any OnlyFans API path |
 
-<Tip>
-	Replace `{id}` with any identifier (e.g., `test`, `demo123`). The domain determines the behavior.
-</Tip>
+<Card title="Full Glossary" icon="book" href="/getting-started/concepts#glossary">
+  Complete terminology and definitions
+</Card>
 
 ---
 

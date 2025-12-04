@@ -1,87 +1,34 @@
 ---
-title: "Link API Overview"
-description: "Authenticate OnlyFans users and issue connection IDs via /v2/link"
+title: "Link API"
+sidebarTitle: "Overview"
+description: "Authenticate OnlyFans users and obtain connection IDs"
 ---
 
-## Overview
+The Link API handles user authentication through hosted flows. Users authenticate on OFAuth's secure pages, and you receive a connection ID to use with the Access API.
 
-The Link API provisions authenticated OnlyFans sessions on behalf of your
-application. Use it to obtain connection IDs for the Access API, deliver the
-hosted experience, and monitor session state.
+<Card title="Link Guide" icon="book" href="/guides/link/overview">
+  Complete guide with integration options, security configuration, and implementation examples
+</Card>
 
-<CardGroup cols={2}>
-  <Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
-    Redirect-based flow managed entirely by OFAuth
-  </Card>
-  <Card title="Link Embed" icon="window" href="/guides/link/embed">
-    Popup experience that keeps users inside your product
-  </Card>
-</CardGroup>
-
-## Base URL
-
-`https://api.ofauth.com/v2/link`
-
-## Core Endpoints
+## Quick Reference
 
 | Endpoint | Method | Purpose |
-| -------- | ------ | ------- |
-| `/init` | `POST` | Initialize a Link session |
-| `/{clientSecret}` | `GET` | Poll current session state |
-| `/{clientSecret}` | `DELETE` | Delete a login session |
-
-<Tip>
-  Hosted and embed integrations only need the `/init` endpoint plus webhook
-  events emitted when a session completes.
-</Tip>
+|----------|--------|---------|
+| `/v2/link/init` | POST | Initialize a Link session |
+| `/v2/link/{clientSecret}` | GET | Check session status |
+| `/v2/link/{clientSecret}` | DELETE | Delete a session |
 
 ## Authentication
-
-Include your API key on every request.
 
 ```http
 apikey: YOUR_API_KEY
 ```
 
-## Security Configuration
-
-- Allowed Redirect URIs: `successUrl` and `returnUrl` passed to `/init` must be pre-registered in your dashboard. Non-whitelisted URLs return `400` with an error.
-- Allowed Origins: the hosted Link page sets a CSP `frame-ancestors` directive so only configured origins can embed the iframe.
-
-See the Hosted and Embed guides for configuration details.
-
-## Session Types
-
-| Mode | Availability | UX ownership | Notes |
-| ---- | ------------ | ------------ | ----- |
-| Hosted | Default | OFAuth pages | Fastest to integrate; redirect or success/cancel URLs |
-| Embed | Default | OFAuth popup inside your app | Use the Link Embed library for best experience |
-
-<Info>
-  Looking for more control? [Enterprise Whitelabel](/enterprise/whitelabel) mode is available for approved partners who need custom authentication flows.
-</Info>
-
-## Responses & Webhooks
-
-- Successful sessions return a `connectionId` that you can store server-side
-- Webhooks (from the Account API) deliver updates for `connection.created`,
-  `connection.updated`, and `connection.expired`
-- Sessions expire after 1 hour if incomplete
-
-<Info>
-**Billing:** Only active connections count toward your monthly usage. When a connection expires, it's immediately removed from your billable count. See [Connections](/api-reference/account/connections) for details on connection statuses.
-</Info>
-
-## Related Docs
-
-<CardGroup cols={3}>
-  <Card title="Authentication Quickstart" icon="rocket" href="/getting-started/quickstart/authentication">
-    Step-by-step tutorial using hosted mode
+<CardGroup cols={2}>
+  <Card title="Hosted Mode" icon="external-link" href="/guides/link/hosted">
+    Redirect-based authentication
   </Card>
-  <Card title="Access API" icon="key" href="/api-reference/access/overview">
-    Use your connection IDs to query OnlyFans data
-  </Card>
-  <Card title="Account API" icon="user" href="/api-reference/account/overview">
-    Configure webhooks and monitor connections
+  <Card title="Link Embed" icon="window" href="/guides/link/embed">
+    Popup authentication without redirects
   </Card>
 </CardGroup>
