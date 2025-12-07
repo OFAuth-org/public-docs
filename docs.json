@@ -123,7 +123,7 @@
               "api-reference/link/overview",
               "POST /v2/link/init",
               "GET /v2/link/{clientSecret}",
-              "DELETE /v2/link/:clientSecret"
+              "DELETE /v2/link/{clientSecret}"
             ]
           },
           {
