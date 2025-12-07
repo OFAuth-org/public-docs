@@ -1,0 +1,333 @@
+---
+title: "Send a Message"
+description: "Step-by-step guide to send your first message via the OFAuth API"
+---
+
+Learn how to send direct messages to fans using the OFAuth API.
+
+## Prerequisites
+
+<Check>
+  You have a [connected OnlyFans account](/guides/how-to/connect-account) with a valid `connectionId`
+</Check>
+
+---
+
+## Send a Simple Text Message
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/chats/USER_ID/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Hey! Thanks for subscribing 💕"
+  })
+})
+
+const message = await response.json()
+console.log("Message sent! ID:", message.id)
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/access/chats/USER_ID/messages",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123",
+        "Content-Type": "application/json"
+    },
+    json={
+        "text": "Hey! Thanks for subscribing 💕"
+    }
+)
+
+message = response.json()
+print("Message sent! ID:", message["id"])
+```
+
+```bash cURL
+curl -X POST "https://api.ofauth.com/v2/access/chats/USER_ID/messages" \
+  -H "apikey: YOUR_API_KEY" \
+  -H "x-connection-id: conn_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hey! Thanks for subscribing 💕"}'
+```
+
+</CodeGroup>
+
+<Info>
+  Replace `USER_ID` with the OnlyFans user ID of the recipient. You can get user IDs from the [subscribers endpoint](/use-cases/fans).
+</Info>
+
+---
+
+## Find a User to Message
+
+First, get your subscribers to find someone to message:
+
+```javascript
+// Get active subscribers
+const response = await fetch("https://api.ofauth.com/v2/access/subscriptions/subscribers?type=active&limit=10", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const subscribers = await response.json()
+
+// Get the first subscriber's ID
+const userId = subscribers[0].id
+console.log("Will message user:", subscribers[0].username, "(ID:", userId, ")")
+```
+
+---
+
+## Send Message with Media
+
+Include images or videos in your message:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/USER_ID/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Check out this exclusive content 🔥",
+    mediaItems: [12345, 12346]  // Media IDs from vault
+  })
+})
+```
+
+### What You Can Pass in `mediaItems`
+
+The `mediaItems` array accepts several formats:
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| **Vault Media ID** | `12345` | Direct OnlyFans vault media ID (number) |
+| **Vault Media ID (string)** | `"12345"` | Same as above, auto-converted to number |
+| **Upload Reference** | `"ofauth_upload_abc123..."` | The `mediaUploadId` from upload flow |
+| **URL** | `"https://example.com/image.jpg"` | External HTTP/HTTPS URL |
+
+<Tip>
+  **Recommended**: Use the upload reference (`mediaUploadId`) directly! After completing an upload, you can pass the `mediaUploadId` string to `mediaItems` without needing to extract the vault ID yourself.
+</Tip>
+
+```javascript
+// Option 1: Use upload reference directly (recommended)
+const { mediaUploadId } = await initUpload(...)
+await uploadFile(mediaUploadId, fileBuffer)
+await completeUpload({ mediaUploadId })
+
+// Use mediaUploadId directly - system resolves to vault ID automatically
+body: JSON.stringify({
+  text: "New content!",
+  mediaItems: [mediaUploadId]  // "ofauth_upload_abc123..."
+})
+
+// Option 2: Use vault IDs if you already have them
+body: JSON.stringify({
+  text: "New content!",
+  mediaItems: [12345, 67890]  // Direct vault media IDs
+})
+```
+
+<Warning>
+  Upload references are single-use. Once used in a message or post, they're consumed and cannot be reused.
+</Warning>
+
+---
+
+## Send a PPV (Pay-Per-View) Message
+
+Lock content behind a paywall:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/USER_ID/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Exclusive content just for you 💋",
+    mediaItems: [12345],
+    price: 9.99,              // Price in USD ($3-$200)
+    previewMediaCount: 1      // Number of preview items before paywall
+  })
+})
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `price` | number | PPV price in USD ($3 min, $200 max) |
+| `previewMediaCount` | number | How many media items to show as preview |
+| `isLockedText` | boolean | Also lock the text behind paywall |
+
+---
+
+## Text Formatting
+
+Messages support markdown formatting by default:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/USER_ID/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "**Bold text** and *italic* work!\n\nNew paragraphs too.",
+    isMarkdown: true  // Default is true
+  })
+})
+```
+
+Supported formatting:
+- `**bold**` → **bold**
+- `*italic*` → *italic*
+- `\n\n` → New paragraph
+
+To send raw text without markdown parsing:
+
+```javascript
+{
+  "text": "This **won't** be bold",
+  "isMarkdown": false
+}
+```
+
+---
+
+## Read Chat History
+
+Before sending, you might want to see previous messages:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/USER_ID/messages?limit=20", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const messages = await response.json()
+
+messages.forEach(msg => {
+  const sender = msg.isFromMe ? "You" : "Fan"
+  console.log(`${sender}: ${msg.text}`)
+})
+```
+
+---
+
+## Unsend a Message
+
+Made a mistake? Delete a sent message:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/MESSAGE_ID", {
+  method: "DELETE",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    withUserId: USER_ID  // The user you were chatting with
+  })
+})
+```
+
+---
+
+## Complete Example
+
+Here's a full example that finds a subscriber and sends them a message:
+
+```javascript
+const API_KEY = "YOUR_API_KEY"
+const CONNECTION_ID = "conn_abc123"
+
+const headers = {
+  apikey: API_KEY,
+  "x-connection-id": CONNECTION_ID,
+  "Content-Type": "application/json"
+}
+
+async function sendWelcomeMessage() {
+  // 1. Get recent subscribers
+  const subsResponse = await fetch(
+    "https://api.ofauth.com/v2/access/subscriptions/subscribers?type=active&limit=1",
+    { headers }
+  )
+  const subscribers = await subsResponse.json()
+  
+  if (subscribers.length === 0) {
+    console.log("No subscribers found")
+    return
+  }
+  
+  const fan = subscribers[0]
+  console.log(`Sending message to ${fan.username}...`)
+  
+  // 2. Send welcome message
+  const msgResponse = await fetch(
+    `https://api.ofauth.com/v2/access/chats/${fan.id}/messages`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        text: `Hey ${fan.name}! 👋\n\nThanks so much for subscribing! Let me know if there's anything specific you'd like to see. 💕`
+      })
+    }
+  )
+  
+  const message = await msgResponse.json()
+  console.log("Message sent! ID:", message.id)
+}
+
+sendWelcomeMessage()
+```
+
+---
+
+## Rate Limits
+
+<Warning>
+  OnlyFans has rate limits on messaging. Avoid sending too many messages in quick succession.
+</Warning>
+
+Best practices:
+- Space out individual messages by at least 1-2 seconds
+- For bulk messaging, use the [mass message queue](/guides/how-to/mass-message) instead
+- Implement exponential backoff on 429 errors
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Mass Messaging" icon="envelopes-bulk" href="/guides/how-to/mass-message">
+    Send to multiple fans at once
+  </Card>
+  <Card title="Upload Media" icon="cloud-arrow-up" href="/guides/how-to/upload-media">
+    Upload content to include in messages
+  </Card>
+</CardGroup>
+

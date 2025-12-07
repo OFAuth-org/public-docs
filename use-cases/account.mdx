@@ -1,0 +1,297 @@
+---
+title: "Account Management"
+description: "Profile settings, notifications, and account configuration"
+---
+
+## What You Can Build
+
+- **Profile Management**: Update bio, avatar, banner, and display settings
+- **Notification Systems**: Monitor and respond to OnlyFans notifications
+- **Settings Dashboards**: Configure account preferences programmatically
+- **Multi-Account Tools**: Manage settings across multiple creator accounts
+
+---
+
+## Quick Example
+
+Get account profile information:
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/self/me", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const profile = await response.json()
+console.log("Logged in as:", profile.name)
+console.log("Username:", profile.username)
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.ofauth.com/v2/access/self/me",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123"
+    }
+)
+profile = response.json()
+print(f"Logged in as: {profile['name']}")
+```
+
+```typescript SDK
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+const sdk = new OFSDK({
+  mode: "access",
+  ofauthApiKey: process.env.OFAUTH_API_KEY
+})
+
+const { data: profile } = await sdk.account.getProfile({
+  authentication: { connectionId: "conn_abc123" }
+})
+```
+
+</CodeGroup>
+
+---
+
+## Common Operations
+
+### Get Profile
+
+Fetch the authenticated user's profile:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/self/me", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const profile = await response.json()
+// Returns full profile with stats, settings, etc.
+```
+
+### Update Profile
+
+Modify profile information:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/self/profile", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    name: "New Display Name",
+    about: "Updated bio here..."
+  })
+})
+```
+
+### Get Notifications
+
+List recent notifications:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/notifications", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const notifications = await response.json()
+```
+
+### Mark Notifications as Read
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/notifications/read", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    notificationIds: [123, 456, 789]
+  })
+})
+```
+
+### Get Account Settings
+
+Retrieve current settings:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/settings", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const settings = await response.json()
+```
+
+### Update Subscription Price
+
+Change the subscription price:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/settings/subscription", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    price: 9.99
+  })
+})
+```
+
+### Get Social Links
+
+List configured social media buttons:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/social-links", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const links = await response.json()
+```
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/self/me` | GET | Get current user profile |
+| `/v2/access/self/profile` | PUT | Update profile |
+| `/v2/access/notifications` | GET | List notifications |
+| `/v2/access/notifications/read` | POST | Mark notifications read |
+| `/v2/access/settings` | GET | Get account settings |
+| `/v2/access/social-links` | GET | List social links |
+
+<Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
+  See complete endpoint documentation
+</Card>
+
+---
+
+## SDK Methods
+
+If you're using the TypeScript SDK:
+
+```typescript
+// Get profile
+const { data: profile } = await sdk.account.getProfile({
+  authentication: { connectionId: "conn_abc123" }
+})
+
+// Update profile
+const { data: updated } = await sdk.account.updateProfile({
+  authentication: { connectionId: "conn_abc123" },
+  params: {
+    name: "New Name",
+    about: "New bio"
+  }
+})
+
+// Get notifications
+const { data: notifications } = await sdk.account.getNotifications({
+  authentication: { connectionId: "conn_abc123" }
+})
+```
+
+<Card title="SDK Account Module" icon="code" href="/sdk/modules/account">
+  Full SDK documentation for account management
+</Card>
+
+---
+
+## Profile Data Structure
+
+The profile object includes:
+
+```json
+{
+  "id": 123456,
+  "username": "creatorname",
+  "name": "Display Name",
+  "about": "Bio text here...",
+  "avatar": "https://media.ofauth.com/...",
+  "header": "https://media.ofauth.com/...",
+  "location": "Los Angeles, CA",
+  "website": "https://example.com",
+  "subscribersCount": 1500,
+  "postsCount": 250,
+  "photosCount": 200,
+  "videosCount": 50,
+  "isVerified": true,
+  "subscriptionPrice": 9.99,
+  "joinedAt": "2022-01-15T10:30:00Z"
+}
+```
+
+---
+
+## Notification Types
+
+| Type | Description |
+|------|-------------|
+| `new_subscriber` | New fan subscribed |
+| `subscription_expired` | Fan subscription ended |
+| `tip_received` | Received a tip |
+| `message_received` | New direct message |
+| `post_liked` | Post was liked |
+| `post_commented` | Post received a comment |
+| `purchase` | PPV content purchased |
+
+---
+
+## Tips & Best Practices
+
+<Tip>
+  **Polling Notifications**: For real-time notification monitoring, consider setting up webhooks instead of polling the notifications endpoint.
+</Tip>
+
+<Info>
+  **Profile Updates**: Some profile fields (like username) may have restrictions or require verification. Check OnlyFans policies for limitations.
+</Info>
+
+<Warning>
+  **Rate Limits**: Frequent profile updates may be rate limited. Batch changes when possible.
+</Warning>
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
+    Get notified of account events in real-time
+  </Card>
+  <Card title="Fans & Subscribers" icon="users" href="/use-cases/fans">
+    Manage your subscriber base
+  </Card>
+</CardGroup>
+

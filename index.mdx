@@ -1,151 +1,121 @@
 ---
-title: "Welcome to OFAuth"
-description:
-  "The infrastructure layer that powers OnlyFans integrations. Save development costs, ship 10x faster, launch in weeks not months."
+title: "OFAuth"
+description: "OnlyFans integration infrastructure for platforms. Connect accounts securely, access data instantly."
 ---
 
-## What is OFAuth?
+## The OnlyFans API for Platforms
 
-OFAuth is the infrastructure layer that powers OnlyFans integrations - **think Plaid for OnlyFans**. We handle authentication, request signing, session management, and API complexity so you can focus on building features that generate revenue.
+OFAuth is infrastructure that lets you integrate OnlyFans into your platform—without reverse engineering, credential handling, or maintenance headaches. Think **Plaid, but for OnlyFans**.
 
 <CardGroup cols={2}>
-	<Card title="Enterprise Security" icon="shield-check">
-		Bank-grade encryption and automatic session management protect your users' data
-	</Card>
-	<Card title="Ship 10x Faster" icon="rocket">
-		Deploy your first OnlyFans feature in days, not months
-	</Card>
-	<Card title="Always Up-to-Date" icon="refresh">
-		Dynamic rules engine adapts to OnlyFans changes automatically
-	</Card>
-	<Card title="Save $$$ in Dev Costs" icon="trending-down">
-		Skip months of infrastructure development
-	</Card>
+  <Card title="I'm evaluating OFAuth" icon="magnifying-glass" href="/overview/why-ofauth">
+    Understand how OFAuth works, security model, and why platforms choose us
+  </Card>
+  <Card title="I'm ready to build" icon="rocket" href="/quickstart">
+    Get your first API call working in under 2 minutes
+  </Card>
 </CardGroup>
-
----
-
-## Start Building
-
-<CardGroup cols={3}>
-	<Card title="Quick Start" icon="rocket" href="/getting-started/quickstart/index">
-		**10 minutes** - From zero to working integration with step-by-step guidance
-	</Card>
-	<Card title="TypeScript SDK" icon="code" href="/sdk/quickstart">
-		**5 minutes** - Install and configure our full-featured SDK
-	</Card>
-	<Card title="Create Account" icon="user-plus" href="https://ofauth.com/platform">
-		**2 minutes** - Sign up and get your API keys
-	</Card>
-</CardGroup>
-
-<Info>
-	**Not sure where to start?** Check out [Core Concepts](/getting-started/concepts) to understand how OFAuth works, or [Choose Your Path](/getting-started/choose-your-path) to pick the right integration approach for your stack.
-</Info>
 
 ---
 
 ## What You Can Build
 
-Build powerful OnlyFans integrations across these popular use cases:
-
 <CardGroup cols={3}>
-	<Card title="Creator Dashboards" icon="chart-line">
-		Analytics, content management, and performance insights for creators
-	</Card>
-	<Card title="Subscriber Management" icon="users">
-		Tools to organize and communicate with subscribers at scale
-	</Card>
-	<Card title="Content Automation" icon="calendar">
-		Scheduling, publishing, and workflow automation solutions
-	</Card>
-	<Card title="Message Management" icon="message-bot">
-		Automated fan interactions and response management systems
-	</Card>
-	<Card title="Revenue Analytics" icon="trending-up">
-		Pricing optimization and promotional effectiveness tools
-	</Card>
-	<Card title="Multi-Platform Tools" icon="grid">
-		Integrate OnlyFans with other creator economy platforms
-	</Card>
+  <Card title="Messaging & Chats" icon="messages" href="/use-cases/messaging">
+    Send messages, manage conversations, mass messaging at scale
+  </Card>
+  <Card title="Fans & Subscribers" icon="users" href="/use-cases/fans">
+    List fans, track subscriptions, manage user lists
+  </Card>
+  <Card title="Content & Posts" icon="image" href="/use-cases/content">
+    Create posts, schedule content, manage stories
+  </Card>
+  <Card title="Media & Vault" icon="photo-film" href="/use-cases/media">
+    Upload media, access vault, embed content
+  </Card>
+  <Card title="Earnings & Analytics" icon="chart-line" href="/use-cases/earnings">
+    Track revenue, view transactions, request payouts
+  </Card>
+  <Card title="Account Management" icon="user-gear" href="/use-cases/account">
+    Profile settings, notifications, account configuration
+  </Card>
 </CardGroup>
 
 ---
 
 ## How It Works
 
+<Steps>
+  <Step title="Connect accounts via Link">
+    Users authenticate on OFAuth's secure hosted page. You never touch credentials.
+  </Step>
+  <Step title="Receive a Connection ID">
+    After auth, you get a simple token representing that OnlyFans account.
+  </Step>
+  <Step title="Access data via API">
+    Use the Connection ID to fetch data, send messages, or take any action.
+  </Step>
+</Steps>
+
 ```mermaid
 graph LR
-    A[Your App] --> B[OFAuth]
+    A[Your Platform] --> B[OFAuth]
     B --> C[OnlyFans]
     C --> B
     B --> A
-    
-    style A fill:#e1f5fe
-    style B fill:#fff3e0
-    style C fill:#e8f5e8
 ```
 
-<Steps>
-	<Step title="Connect Users">
-		Use the **Link API** to authenticate OnlyFans users. They log in on our secure hosted page.
-	</Step>
-	<Step title="Get a Connection ID">
-		After authentication, you receive a Connection ID - a simple token representing the user's account.
-	</Step>
-	<Step title="Access Data">
-		Use the **Access API** with the Connection ID to fetch OnlyFans data. We handle signing and session management.
-	</Step>
-</Steps>
-
 <Tip>
-	Want to understand this better? Read [Core Concepts](/getting-started/concepts) for a complete explanation of Link, Access, Connections, and more.
+  **No credentials on your servers.** OFAuth handles authentication, session management, and request signing. You just use simple REST APIs.
 </Tip>
 
 ---
 
-## Explore the Docs
+## Why Teams Choose OFAuth
 
 <CardGroup cols={2}>
-	<Card title="Integration Guides" icon="book" href="/guides/link/overview">
-		Step-by-step guides for Link, Access, and Webhooks
-	</Card>
-	<Card title="API Reference" icon="square-terminal" href="/api-reference/access/overview">
-		Complete endpoint documentation with examples
-	</Card>
-	<Card title="SDK Documentation" icon="code" href="/sdk">
-		TypeScript SDK with full IntelliSense support
-	</Card>
-	<Card title="Going to Production" icon="shield" href="/getting-started/production-considerations">
-		Critical reliability and risk management information
-	</Card>
+  <Card title="Built for Platforms" icon="building">
+    Multi-tenant architecture designed for SaaS products managing multiple OnlyFans accounts
+  </Card>
+  <Card title="Enterprise Security" icon="shield-check">
+    Bank-grade encryption, no credential storage on your servers, SOC 2 compliant infrastructure
+  </Card>
+  <Card title="Always Current" icon="rotate">
+    Our dynamic rules engine adapts to OnlyFans API changes automatically—zero maintenance for you
+  </Card>
+  <Card title="Full TypeScript SDK" icon="code">
+    Type-safe SDK with IntelliSense, automatic retries, and structured error handling
+  </Card>
 </CardGroup>
 
 ---
 
-## Built by Industry Pioneers
+## Quick Links
 
-OFAuth was founded by the first person to reverse engineer OnlyFans' request signing algorithm. Our team has built and scaled multiple products in the creator economy.
-
-Every feature, security measure, and optimization has been battle-tested by thousands of users. When you choose OFAuth, you're getting the collective knowledge from the industry's most experienced OnlyFans integration experts.
+<CardGroup cols={2}>
+  <Card title="2-Minute Quickstart" icon="bolt" href="/quickstart">
+    From zero to working API call
+  </Card>
+  <Card title="API Reference" icon="square-terminal" href="/api-reference/access/overview">
+    Complete endpoint documentation
+  </Card>
+  <Card title="TypeScript SDK" icon="npm" href="/sdk">
+    Install and configure the SDK
+  </Card>
+  <Card title="Use Case Guides" icon="book" href="/use-cases/messaging">
+    Step-by-step integration guides
+  </Card>
+</CardGroup>
 
 ---
 
-## Need Help?
+## Get Help
 
 <CardGroup cols={2}>
-	<Card title="Join Community" icon="discord" href="https://discord.gg/ofauth">
-		Connect with developers and get community support
-	</Card>
-	<Card title="Contact Support" icon="envelope" href="mailto:support@ofauth.com">
-		Get direct help from our technical team
-	</Card>
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/ofauth">
+    Connect with other developers building on OFAuth
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:support@ofauth.com">
+    Direct support from our engineering team
+  </Card>
 </CardGroup>
-
-<Tip>
-	Compare our products on the marketing site:
-	[Link](https://ofauth.com/products/link),
-	[Access](https://ofauth.com/products/access),
-	[SDK](https://ofauth.com/products/sdk), and
-	[Dynamic Rules](https://ofauth.com/products/dynamic-rules).
-</Tip>

@@ -1,0 +1,138 @@
+---
+title: "Why OFAuth"
+description: "How OFAuth compares to building in-house or using alternatives"
+---
+
+## The Problem
+
+Building OnlyFans integrations is hard:
+
+- **Reverse engineering**: OnlyFans has no public API. You need to reverse engineer request signing, session management, and authentication flows.
+- **Constant changes**: OnlyFans changes their API frequently—sometimes multiple times per day. Every change breaks your integration.
+- **Security liability**: Storing OnlyFans credentials creates security and compliance risks for your platform.
+- **Maintenance burden**: Keeping integrations working requires dedicated engineering resources.
+
+---
+
+## OFAuth vs Building In-House
+
+| Aspect | Build In-House | OFAuth |
+|--------|----------------|--------|
+| **Time to launch** | 3-6 months | Days |
+| **Ongoing maintenance** | Constant | Zero |
+| **Credential handling** | Your responsibility | Never touches your servers |
+| **API changes** | Break your integration | Handled automatically |
+| **Engineering cost** | $100K+/year | Usage-based pricing |
+
+<Info>
+  **Real example**: A typical OnlyFans integration requires reverse engineering request signing, building session management, handling 2FA flows, and monitoring for API changes. Teams report spending 3-6 months just to get basic functionality working.
+</Info>
+
+---
+
+## Platform-First Architecture
+
+OFAuth is designed for multi-tenant platforms managing many OnlyFans accounts—not just single-account tools.
+
+<CardGroup cols={2}>
+  <Card title="Connection Management" icon="link">
+    Each connected account gets a unique Connection ID. Manage hundreds or thousands of connections through a single API.
+  </Card>
+  <Card title="Per-Connection Billing" icon="receipt">
+    Pay only for active connections. Expired sessions don't count toward your usage.
+  </Card>
+  <Card title="Webhooks at Scale" icon="webhook">
+    Get notified when connections expire, sessions refresh, or accounts need re-authentication.
+  </Card>
+  <Card title="Enterprise Features" icon="building">
+    Whitelabel options, dedicated support, and custom SLAs for high-volume platforms.
+  </Card>
+</CardGroup>
+
+---
+
+## Security Model
+
+OFAuth uses a **delegated authentication model** similar to Plaid or OAuth providers:
+
+<Steps>
+  <Step title="User authenticates on OFAuth">
+    Users enter credentials on our secure, hosted authentication page—never on your servers.
+  </Step>
+  <Step title="OFAuth manages sessions">
+    We handle session storage, refresh, and encryption. Credentials never touch your infrastructure.
+  </Step>
+  <Step title="You use Connection IDs">
+    Your platform only stores a simple Connection ID string. No sensitive data to protect.
+  </Step>
+</Steps>
+
+<Tip>
+  **Compliance benefit**: Since credentials never touch your servers, you reduce PCI-style compliance scope and security audit complexity.
+</Tip>
+
+---
+
+## Always Up-to-Date
+
+OnlyFans changes their API frequently. OFAuth's **Dynamic Rules Engine** handles this automatically:
+
+- **24/7 monitoring** detects API changes within minutes
+- **Automatic updates** to request signing parameters
+- **Zero downtime** for your integration
+- **Webhook notifications** for breaking changes that affect your integration
+
+<Warning>
+  Without automatic updates, a single OnlyFans API change can break your entire integration until you manually reverse engineer and deploy fixes—often taking days.
+</Warning>
+
+---
+
+## Full TypeScript SDK
+
+Unlike raw REST APIs, OFAuth provides a full TypeScript SDK:
+
+```typescript
+import OFSDK from "@ofauth/onlyfans-sdk"
+
+const sdk = new OFSDK({
+  mode: "access",
+  ofauthApiKey: process.env.OFAUTH_API_KEY
+})
+
+// Type-safe, with IntelliSense
+const { data, error } = await sdk.messages.sendChatMessage({
+  authentication: { connectionId: "conn_123" },
+  userId: 456,
+  params: { text: "Hello!" }
+})
+```
+
+<CardGroup cols={2}>
+  <Card title="Type Safety" icon="typescript">
+    Full TypeScript types for all API responses
+  </Card>
+  <Card title="Automatic Retries" icon="rotate">
+    Built-in retry logic for transient failures
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation">
+    Structured errors with actionable messages
+  </Card>
+  <Card title="IntelliSense" icon="lightbulb">
+    Autocomplete for all methods and parameters
+  </Card>
+</CardGroup>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="2-Minute Quickstart" icon="rocket" href="/quickstart">
+    See OFAuth in action with a working example
+  </Card>
+  <Card title="Security Details" icon="shield-check" href="/overview/security">
+    Deep dive into our security architecture
+  </Card>
+</CardGroup>
+

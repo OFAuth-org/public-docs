@@ -1,0 +1,277 @@
+---
+title: "Content & Posts"
+description: "Create posts, schedule content, and manage stories"
+---
+
+## What You Can Build
+
+- **Content Schedulers**: Plan and queue posts for optimal times
+- **Cross-Platform Publishing**: Sync content across multiple accounts
+- **Content Management Systems**: Organize, tag, and track post performance
+- **Story Automation**: Auto-post stories and manage ephemeral content
+
+---
+
+## Quick Example
+
+Create a new post:
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "New content just dropped! 🔥",
+    mediaItems: [123, 456] // Media IDs from vault
+  })
+})
+
+const post = await response.json()
+console.log("Post created:", post.id)
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/access/posts",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123",
+        "Content-Type": "application/json"
+    },
+    json={
+        "text": "New content just dropped! 🔥",
+        "mediaItems": [123, 456]
+    }
+)
+print("Post created:", response.json()["id"])
+```
+
+</CodeGroup>
+
+---
+
+## Common Operations
+
+### List Posts
+
+Get posts from a user (use `me` for your own account):
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/users/me/posts", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const posts = await response.json()
+```
+
+### Get Post Details
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts/POST_ID", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const post = await response.json()
+// Returns full post with media, likes, comments, etc.
+```
+
+### Schedule a Post
+
+Create a post to be published later:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Coming tomorrow! 🎉",
+    mediaItems: [123],
+    scheduledDate: "2024-12-25T12:00:00Z"
+  })
+})
+```
+
+### Create PPV Post
+
+Post with pay-per-view pricing:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Exclusive content 🔒",
+    mediaItems: [123, 456],
+    price: 14.99 // PPV price ($3-$200)
+  })
+})
+```
+
+### Edit a Post
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts/POST_ID", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Updated caption! ✨",
+    mediaItems: [123]
+  })
+})
+```
+
+### Delete a Post
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts/POST_ID", {
+  method: "DELETE",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+```
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/posts` | POST | Create a new post |
+| `/v2/access/posts/{postId}` | GET | Get post details |
+| `/v2/access/posts/{postId}` | PUT | Edit a post |
+| `/v2/access/posts/{postId}` | DELETE | Delete a post |
+| `/v2/access/users/{userId}/posts` | GET | List user's posts |
+
+<Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
+  See complete endpoint documentation
+</Card>
+
+---
+
+## Query Parameters
+
+### List Posts Query
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 10 | Results per page (1-10) |
+| `sortBy` | string | "publish_date" | Sort by: `publish_date`, `tips`, `favorites_count` |
+| `sortDirection` | string | "desc" | Sort direction: `asc`, `desc` |
+| `pinned` | boolean | false | Include pinned posts only |
+| `includePostCounts` | boolean | false | Include engagement counters |
+| `beforePublishTime` | string | - | Pagination cursor (ISO date) |
+
+---
+
+## Create Post Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | Post caption (supports markdown) |
+| `mediaItems` | (number\|string)[] | Media references (see below) |
+| `price` | number | PPV price ($3-$200, optional) |
+| `isLockedText` | boolean | Lock text behind paywall |
+| `previewMediaCount` | number | Number of preview media items |
+| `scheduledDate` | string | ISO date for scheduled posting |
+| `expireAfter` | number | Days until post expires (1-30) |
+| `fundRaisingTargetAmount` | number | Fundraising goal (min $10) |
+| `fundRaisingTipsPresets` | number[] | Tip amount presets (max 4) |
+
+### `mediaItems` Formats
+
+The `mediaItems` array accepts:
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| Vault Media ID | `12345` | Direct OnlyFans vault media ID |
+| Vault ID (string) | `"12345"` | Auto-converted to number |
+| Upload Reference | `"ofauth_upload_abc..."` | `mediaUploadId` from upload flow |
+| URL | `"https://..."` | External HTTP/HTTPS URL |
+
+<Tip>
+  You can pass the `mediaUploadId` from the upload flow directly - the API resolves it to the vault ID automatically. Upload references are single-use.
+</Tip>
+
+---
+
+## Post Data Structure
+
+Each post object includes:
+
+```json
+{
+  "id": 123456,
+  "text": "Post caption here",
+  "postedAt": "2024-01-15T10:30:00Z",
+  "price": null,
+  "isPinned": false,
+  "likesCount": 42,
+  "commentsCount": 5,
+  "media": [
+    {
+      "id": 789,
+      "type": "photo",
+      "files": {
+        "full": { "url": "https://media.ofauth.com/...", "width": 1920, "height": 1080 }
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Tips & Best Practices
+
+<Tip>
+  **Media First**: Always upload media to the vault first using the `/uploads/init` flow, then reference the media IDs in `mediaItems` when creating posts.
+</Tip>
+
+<Info>
+  **Scheduling**: Scheduled posts are stored in OnlyFans' queue. Use `scheduledDate` as an ISO 8601 date string.
+</Info>
+
+<Warning>
+  **Content Guidelines**: All content posted through OFAuth must comply with OnlyFans' terms of service. Violations can result in account suspension.
+</Warning>
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Media & Vault" icon="photo-film" href="/use-cases/media">
+    Upload media before creating posts
+  </Card>
+  <Card title="Messaging & Chats" icon="messages" href="/use-cases/messaging">
+    Share content via direct messages
+  </Card>
+</CardGroup>

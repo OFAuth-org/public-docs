@@ -5,7 +5,7 @@ description: "Account information and webhook event handling with the OnlyFans S
 
 ## Overview
 
-The Account module (`sdk.account`) provides access to account information. Webhook configuration is managed through the [OFAuth Dashboard](https://ofauth.com/platform/settings), not via API.
+The Account module (`sdk.account`) provides access to account information. Webhook configuration is managed through the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks), not via API.
 
 <Card title="Account Module" icon="cog">
   **sdk.account** - Account information
@@ -13,7 +13,7 @@ The Account module (`sdk.account`) provides access to account information. Webho
 
 ## Webhook Configuration
 
-Webhooks are configured exclusively through the [OFAuth Dashboard](https://ofauth.com/platform/settings). From the Settings page you can:
+Webhooks are configured exclusively through the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks). From the Settings page you can:
 
 - Set your webhook endpoint URL (HTTPS required)
 - Select which events to subscribe to
@@ -144,5 +144,5 @@ function handleWebhookEvent(event: any) {
 </CardGroup>
 
 <Note>
-  For more details on webhook delivery behavior and retry policies, see the [Webhooks guide](/guides/webhooks).
+  For more details on webhook delivery behavior and retry policies, see the [Webhooks guide](/reference/webhooks).
 </Note>

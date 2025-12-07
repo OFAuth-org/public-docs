@@ -1,16 +1,16 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "almond",
-  "name": "OFAuth Documentation",
+  "name": "OFAuth",
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
   "favicon": "/favicon.ico",
   "colors": {
-    "primary": "#5668DE",
-    "light": "#A3B0FF",
-    "dark": "#5668DE"
+    "primary": "#6366F1",
+    "light": "#818CF8",
+    "dark": "#4F46E5"
   },
   "contextual": {
     "options": ["copy", "view", "chatgpt", "claude"]
@@ -28,18 +28,16 @@
       "href": "https://ofauth.com"
     }
   },
+  "sidebar": {
+    "items": "border"
+  },
   "navigation": {
     "global": {
       "anchors": [
         {
-          "anchor": "LLMs.txt (Overview)",
+          "anchor": "llms.txt",
           "icon": "robot",
-          "href": "https://docs-next.ofauth.com/llms.txt"
-        },
-        {
-          "anchor": "LLMs.txt (Full)",
-          "icon": "robot",
-          "href": "https://docs-next.ofauth.com/llms-full.txt"
+          "href": "https://docs.ofauth.com/llms.txt"
         }
       ]
     },
@@ -49,49 +47,57 @@
         "icon": "book-open",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Overview",
             "pages": [
               "index",
-              "getting-started/concepts",
-              {
-                "group": "Quick Start",
-                "pages": [
-                  "getting-started/quickstart/index",
-                  "getting-started/quickstart/account-setup",
-                  "getting-started/quickstart/authentication",
-                  "getting-started/quickstart/data-access"
-                ]
-              },
-              {
-                "group": "Environments",
-                "pages": [
-                  "getting-started/environments/overview",
-                  "getting-started/environments/sandbox"
-                ]
-              },
-              "getting-started/choose-your-path",
-              "getting-started/quick-reference"
+              "overview/why-ofauth",
+              "overview/how-it-works",
+              "overview/security"
             ]
           },
           {
-            "group": "Integration Guides",
+            "group": "Quickstart",
             "pages": [
+              "quickstart",
+              "getting-started/environments/sandbox"
+            ]
+          },
+          {
+            "group": "Use Cases",
+            "pages": [
+              "use-cases/messaging",
+              "use-cases/fans",
+              "use-cases/content",
+              "use-cases/media",
+              "use-cases/earnings",
+              "use-cases/account"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/how-to/connect-account",
+              "guides/how-to/send-message",
+              "guides/how-to/create-post",
+              "guides/how-to/upload-media",
+              "guides/how-to/mass-message",
+              "guides/how-to/text-formatting",
               {
-                "group": "Link",
+                "group": "Authentication",
                 "pages": [
                   "guides/link/overview",
                   "guides/link/hosted",
                   "guides/link/embed"
                 ]
-              },
-              "guides/access",
-              "guides/connections",
-              "guides/webhooks"
+              }
             ]
           },
           {
             "group": "Reference",
             "pages": [
+              "reference/access",
+              "reference/connections",
+              "reference/webhooks",
               "reference/rate-limiting",
               "reference/error-handling",
               "getting-started/production-considerations"
@@ -107,7 +113,162 @@
         ]
       },
       {
-        "dropdown": "JavaScript SDK",
+        "dropdown": "API Reference",
+        "icon": "square-terminal",
+        "groups": [
+          {
+            "group": "Link API",
+            "openapi": "https://api-next.ofauth.com/openapi-link.json",
+            "pages": [
+              "api-reference/link/overview",
+              "POST /v2/link/init",
+              "GET /v2/link/{clientSecret}",
+              "DELETE /v2/link/:clientSecret"
+            ]
+          },
+          {
+            "group": "Access API",
+            "openapi": "https://api-next.ofauth.com/openapi-access.json",
+            "pages": [
+              "api-reference/access/overview",
+              "api-reference/access/proxy",
+              "api-reference/access/managed",
+              {
+                "group": "Account",
+                "pages": [
+                  "GET /v2/access/self/me",
+                  "PATCH /v2/access/self/me",
+                  "GET /v2/access/self/notifications",
+                  "GET /v2/access/self/release-forms",
+                  "GET /v2/access/self/tagged-friend-users"
+                ]
+              },
+              {
+                "group": "Messages & Chats",
+                "pages": [
+                  "GET /v2/access/chats",
+                  "GET /v2/access/chats/:userId/messages",
+                  "POST /v2/access/chats/:userId/messages",
+                  "DELETE /v2/access/messages/:messageId"
+                ]
+              },
+              {
+                "group": "Mass Messages",
+                "pages": [
+                  "POST /v2/access/messages/queue",
+                  "GET /v2/access/messages/queue/:queueMessageId",
+                  "PUT /v2/access/messages/queue/:queueMessageId",
+                  "DELETE /v2/access/messages/queue/:queueMessageId",
+                  "GET /v2/access/messages/queue/stats"
+                ]
+              },
+              {
+                "group": "Posts",
+                "pages": [
+                  "POST /v2/access/posts",
+                  "GET /v2/access/posts/:postId",
+                  "PUT /v2/access/posts/:postId",
+                  "DELETE /v2/access/posts/:postId",
+                  "GET /v2/access/users/:userId/posts"
+                ]
+              },
+              {
+                "group": "Users",
+                "pages": [
+                  "GET /v2/access/users/:userId",
+                  "POST /v2/access/users/:userId/restrict",
+                  "DELETE /v2/access/users/:userId/restrict",
+                  "GET /v2/access/users/restrict",
+                  "GET /v2/access/users/blocked"
+                ]
+              },
+              {
+                "group": "User Lists",
+                "pages": [
+                  "GET /v2/access/users/lists",
+                  "POST /v2/access/users/lists",
+                  "GET /v2/access/users/lists/:listId",
+                  "PATCH /v2/access/users/lists/:listId",
+                  "DELETE /v2/access/users/lists/:listId",
+                  "GET /v2/access/users/lists/:listId/users",
+                  "POST /v2/access/users/lists/:listId/users",
+                  "DELETE /v2/access/users/lists/:listId/users/:userId",
+                  "GET /v2/access/users/lists/:listId/users/pinned",
+                  "POST /v2/access/users/lists/sort"
+                ]
+              },
+              {
+                "group": "Subscriptions",
+                "pages": [
+                  "GET /v2/access/subscriptions/subscribers",
+                  "POST /v2/access/subscriptions/users/:userId/subscribe"
+                ]
+              },
+              {
+                "group": "Vault",
+                "pages": [
+                  "GET /v2/access/vault/media",
+                  "GET /v2/access/vault/lists",
+                  "POST /v2/access/vault/lists",
+                  "PATCH /v2/access/vault/lists/:listId",
+                  "DELETE /v2/access/vault/lists/:listId",
+                  "GET /v2/access/vault/lists/:listId/media",
+                  "POST /v2/access/vault/lists/:listId/media",
+                  "POST /v2/access/vault/lists/sort"
+                ]
+              },
+              {
+                "group": "Media Uploads",
+                "pages": [
+                  "POST /v2/access/uploads/check",
+                  "POST /v2/access/uploads/init",
+                  "PUT /v2/access/uploads/:mediaUploadId/parts/:partNumber",
+                  "PUT /v2/access/uploads/:mediaUploadId",
+                  "POST /v2/access/uploads/complete"
+                ]
+              },
+              {
+                "group": "Statistics",
+                "pages": [
+                  "GET /v2/access/statistics/earnings/chart",
+                  "GET /v2/access/statistics/transactions",
+                  "GET /v2/access/statistics/chargebacks",
+                  "GET /v2/access/statistics/posts/chart",
+                  "GET /v2/access/statistics/posts/top",
+                  "GET /v2/access/statistics/posts/:postId/stats",
+                  "GET /v2/access/statistics/stories/chart",
+                  "GET /v2/access/statistics/stories/top",
+                  "GET /v2/access/statistics/streams/chart",
+                  "GET /v2/access/statistics/streams/top",
+                  "GET /v2/access/statistics/mass-messages/chart",
+                  "GET /v2/access/statistics/mass-messages/bought",
+                  "GET /v2/access/statistics/messages/queue/:queueMessageId/buyers",
+                  "GET /v2/access/statistics/promotions/chart",
+                  "GET /v2/access/statistics/promotions/top",
+                  "GET /v2/access/statistics/trials/chart",
+                  "GET /v2/access/statistics/trials/top",
+                  "GET /v2/access/statistics/campaigns/chart",
+                  "GET /v2/access/statistics/campaigns/top",
+                  "GET /v2/access/statistics/visitor-countries/chart",
+                  "GET /v2/access/statistics/visitor-countries/top"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Dynamic Rules API",
+            "openapi": "https://api-next.ofauth.com/openapi-dynamic-rules.json",
+            "pages": [
+              "api-reference/dynamic-rules/overview",
+              "GET /v2/dynamic-rules",
+              "POST /v2/dynamic-rules/sign",
+              "GET /v2/dynamic-rules/status"
+            ]
+          }
+        ]
+      },
+      {
+        "dropdown": "SDK",
         "icon": "code",
         "groups": [
           {
@@ -151,42 +312,25 @@
             ]
           }
         ]
-      },
-      {
-        "dropdown": "API Reference",
-        "icon": "square-terminal",
-        "groups": [
-          {
-            "group": "Link",
-            "openapi": "https://api-next.ofauth.com/openapi-link.json",
-            "pages": [
-              "api-reference/link/overview"
-            ]
-          },
-          {
-            "group": "Access",
-            "openapi": "https://api-next.ofauth.com/openapi-access.json",
-            "pages": [
-              "api-reference/access/overview",
-              "api-reference/access/proxy"
-            ]
-          },
-          {
-            "group": "Dynamic Rules",
-            "openapi": "https://api-next.ofauth.com/openapi-dynamic-rules.json"
-          }
-        ]
       }
     ]
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/ofauth-org"
+      "discord": "https://discord.gg/ofauth",
+      "telegram": "https://t.me/ofauth",
+      "github": "https://github.com/ofauth-org",
+      "x": "https://x.com/ofauth"
     }
   },
   "api": {
     "mdx": {
       "server": "https://api-next.ofauth.com"
     }
-  }
+  },
+  "openapi": [
+    "https://api-next.ofauth.com/openapi-link.json",
+    "https://api-next.ofauth.com/openapi-access.json",
+    "https://api-next.ofauth.com/openapi-dynamic-rules.json"
+  ]
 }

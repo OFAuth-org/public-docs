@@ -1,0 +1,165 @@
+---
+title: "Security & Compliance"
+description: "How OFAuth protects your users' data and credentials"
+---
+
+## Security Architecture
+
+OFAuth is designed with a **zero-credential architecture**—your servers never see or store OnlyFans credentials.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Your App
+    participant OFAuth
+    participant OnlyFans
+
+    User->>Your App: Clicks "Connect OnlyFans"
+    Your App->>OFAuth: Create Link session
+    OFAuth-->>Your App: Auth URL
+    Your App->>User: Redirect to OFAuth
+    User->>OFAuth: Enter credentials
+    OFAuth->>OnlyFans: Authenticate
+    OnlyFans-->>OFAuth: Session established
+    OFAuth-->>User: Redirect to your app
+    User->>Your App: Connection ID received
+    Note over Your App: Only stores Connection ID
+```
+
+---
+
+## Credential Handling
+
+<CardGroup cols={2}>
+  <Card title="Your Servers" icon="server">
+    **Only store Connection IDs**—simple string tokens like `conn_abc123`. No credentials, no session data.
+  </Card>
+  <Card title="OFAuth Infrastructure" icon="shield-check">
+    Credentials encrypted at rest with AES-256. Sessions managed in isolated, encrypted storage.
+  </Card>
+</CardGroup>
+
+### What You Store vs What OFAuth Stores
+
+| Data | Your Servers | OFAuth |
+|------|--------------|--------|
+| Connection ID | ✅ | ✅ |
+| OnlyFans credentials | ❌ Never | ✅ Encrypted |
+| Session tokens | ❌ Never | ✅ Encrypted |
+| User content/data | Your choice | ❌ Not stored |
+
+<Tip>
+  **Compliance benefit**: Since you never handle credentials, you avoid the security audit scope that comes with storing sensitive authentication data.
+</Tip>
+
+---
+
+## Encryption Standards
+
+All data in OFAuth is protected with industry-standard encryption:
+
+- **In transit**: TLS 1.3 for all API communications
+- **At rest**: AES-256 encryption for stored credentials and sessions
+- **Key management**: Keys rotated regularly, stored in hardware security modules (HSMs)
+
+---
+
+## Data Flow
+
+OFAuth operates as a **transparent proxy**. We don't store OnlyFans content data:
+
+<Steps>
+  <Step title="Request from your app">
+    Your server sends a request to OFAuth with a Connection ID
+  </Step>
+  <Step title="OFAuth signs and forwards">
+    We sign the request using the connection's session and forward to OnlyFans
+  </Step>
+  <Step title="Response returned">
+    OnlyFans response is returned directly to you—we don't store content
+  </Step>
+</Steps>
+
+<Info>
+  **What OFAuth stores**: Connection metadata (status, timestamps), encrypted session data, and usage metrics for billing. **What OFAuth doesn't store**: OnlyFans content, messages, media, or user data.
+</Info>
+
+---
+
+## Infrastructure Security
+
+<CardGroup cols={2}>
+  <Card title="Cloud Infrastructure" icon="cloud">
+    Hosted on enterprise cloud providers with SOC 2 Type II certification
+  </Card>
+  <Card title="Network Security" icon="network-wired">
+    All traffic encrypted, DDoS protection, WAF-protected endpoints
+  </Card>
+  <Card title="Access Controls" icon="lock">
+    Role-based access, MFA required, audit logging for all operations
+  </Card>
+  <Card title="Monitoring" icon="chart-line">
+    24/7 monitoring, automated alerting, incident response procedures
+  </Card>
+</CardGroup>
+
+---
+
+## API Key Security
+
+Your OFAuth API key authenticates requests from your servers:
+
+<Warning>
+  **Never expose your API key in client-side code.** API keys should only be used in server-side code and stored in environment variables.
+</Warning>
+
+Best practices:
+- Store API keys in environment variables, not code
+- Use different API keys for development and production
+- Rotate keys periodically
+- Monitor API key usage in your dashboard
+
+---
+
+## Session Management
+
+OFAuth automatically manages OnlyFans session lifecycle:
+
+| Event | OFAuth Action | Your Action |
+|-------|---------------|-------------|
+| Session expires | Attempts automatic refresh | None required |
+| Refresh fails | Marks connection as expired | Re-authenticate user via Link |
+| 2FA required | Notifies via webhook | Prompt user to re-authenticate |
+
+<Tip>
+  Set up webhooks to get notified when connections need re-authentication. This lets you proactively reach out to users before their integration stops working.
+</Tip>
+
+---
+
+## Compliance Considerations
+
+Using OFAuth simplifies your compliance posture:
+
+<AccordionGroup>
+  <Accordion title="SOC 2">
+    OFAuth infrastructure is hosted on SOC 2 Type II certified cloud providers. Contact us for detailed security documentation.
+  </Accordion>
+  <Accordion title="GDPR">
+    OFAuth processes data as a data processor on your behalf. We provide DPAs upon request and support data deletion requests.
+  </Accordion>
+  <Accordion title="Data Residency">
+    Contact us for information about data residency options for enterprise deployments.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Contact
+
+For security concerns or to report vulnerabilities:
+
+<Card title="Security Team" icon="shield" href="mailto:security@ofauth.com">
+  security@ofauth.com
+</Card>
+

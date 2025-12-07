@@ -1,0 +1,391 @@
+---
+title: "Create a Post"
+description: "Step-by-step guide to create posts with media via the OFAuth API"
+---
+
+Learn how to create posts on OnlyFans using the OFAuth API, including adding media, scheduling, and PPV pricing.
+
+## Prerequisites
+
+<Check>
+  You have a [connected OnlyFans account](/guides/how-to/connect-account) with a valid `connectionId`
+</Check>
+
+<Check>
+  Media uploaded to vault (see [Upload Media](/guides/how-to/upload-media)) if including images/videos
+</Check>
+
+---
+
+## Create a Simple Text Post
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Just posted something new! 🔥"
+  })
+})
+
+const post = await response.json()
+console.log("Post created! ID:", post.id)
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/access/posts",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123",
+        "Content-Type": "application/json"
+    },
+    json={
+        "text": "Just posted something new! 🔥"
+    }
+)
+
+post = response.json()
+print("Post created! ID:", post["id"])
+```
+
+```bash cURL
+curl -X POST "https://api.ofauth.com/v2/access/posts" \
+  -H "apikey: YOUR_API_KEY" \
+  -H "x-connection-id: conn_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Just posted something new! 🔥"}'
+```
+
+</CodeGroup>
+
+---
+
+## Create Post with Media
+
+Include images or videos in your post:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "New content just dropped! 📸",
+    mediaItems: [12345, 12346, 12347]  // Media IDs from vault
+  })
+})
+```
+
+### What You Can Pass in `mediaItems`
+
+The `mediaItems` array accepts several formats:
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| **Vault Media ID** | `12345` | Direct OnlyFans vault media ID (number) |
+| **Vault Media ID (string)** | `"12345"` | Same as above, auto-converted to number |
+| **Upload Reference** | `"ofauth_upload_abc123..."` | The `mediaUploadId` from upload flow |
+| **URL** | `"https://example.com/image.jpg"` | External HTTP/HTTPS URL |
+
+<Tip>
+  **Recommended**: Use the upload reference (`mediaUploadId`) directly! After completing an upload, pass the `mediaUploadId` string to `mediaItems` - the system resolves it to the vault ID automatically.
+</Tip>
+
+```javascript
+// Option 1: Use upload reference directly (recommended)
+const { mediaUploadId } = await initUpload(...)
+await uploadFile(mediaUploadId, fileBuffer)
+await completeUpload({ mediaUploadId })
+
+body: JSON.stringify({
+  text: "New post!",
+  mediaItems: [mediaUploadId]  // "ofauth_upload_abc123..."
+})
+
+// Option 2: Use vault IDs if you already have them
+body: JSON.stringify({
+  text: "New post!",
+  mediaItems: [12345, 67890]  // Direct vault media IDs
+})
+```
+
+<Warning>
+  Upload references are single-use. Once used in a post or message, they're consumed and cannot be reused.
+</Warning>
+
+---
+
+## Create a PPV (Pay-Per-View) Post
+
+Lock content behind a paywall:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Exclusive content! 🔒 Unlock to see more...",
+    mediaItems: [12345, 12346],
+    price: 14.99,             // Price in USD ($3-$200)
+    previewMediaCount: 1      // Show 1 item as preview
+  })
+})
+```
+
+### PPV Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `price` | number | PPV price in USD ($3 min, $200 max) |
+| `previewMediaCount` | number | Number of media items visible before unlock |
+| `isLockedText` | boolean | Also hide the caption until purchased |
+
+---
+
+## Schedule a Post
+
+Create a post to publish later:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "This will go live tomorrow! 🎉",
+    mediaItems: [12345],
+    scheduledDate: "2024-12-25T12:00:00Z"  // ISO 8601 format
+  })
+})
+
+const post = await response.json()
+console.log("Scheduled for:", post.scheduledDate)
+```
+
+<Info>
+  Scheduled posts are stored in OnlyFans' queue. Use an ISO 8601 date string for `scheduledDate`.
+</Info>
+
+---
+
+## Create Expiring Post
+
+Post that auto-deletes after a set period:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Limited time only! ⏰",
+    mediaItems: [12345],
+    expireAfter: 7  // Days until post expires (1-30)
+  })
+})
+```
+
+---
+
+## Create Fundraising Post
+
+Create a post with fundraising goal:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Help me reach my goal! 🎯",
+    fundRaisingTargetAmount: 500,       // Target in USD (min $10)
+    fundRaisingTipsPresets: [5, 10, 25, 50]  // Suggested tip amounts (max 4)
+  })
+})
+```
+
+---
+
+## Text Formatting
+
+Posts support markdown formatting:
+
+```javascript
+{
+  "text": "**Bold headline**\n\n*Italic text* and regular text.\n\nNew paragraph here!",
+  "isMarkdown": true  // Default
+}
+```
+
+Supported:
+- `**bold**` → **bold**
+- `*italic*` → *italic*  
+- `\n\n` → New paragraph
+
+---
+
+## Edit an Existing Post
+
+Update a post's content:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts/POST_ID", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Updated caption! ✨",
+    mediaItems: [12345, 12346]  // Can add/remove media
+  })
+})
+```
+
+---
+
+## Delete a Post
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/posts/POST_ID", {
+  method: "DELETE",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+if (response.ok) {
+  console.log("Post deleted!")
+}
+```
+
+---
+
+## Complete Example
+
+Full workflow: upload media, then create post:
+
+```javascript
+const API_KEY = "YOUR_API_KEY"
+const CONNECTION_ID = "conn_abc123"
+
+const headers = {
+  apikey: API_KEY,
+  "x-connection-id": CONNECTION_ID,
+  "Content-Type": "application/json"
+}
+
+async function createPostWithMedia(imageBuffer, caption) {
+  // Step 1: Initialize upload
+  const initResponse = await fetch("https://api.ofauth.com/v2/access/uploads/init", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      filename: "photo.jpg",
+      filesize: imageBuffer.length,
+      mimeType: "image/jpeg"
+    })
+  })
+  
+  const { mediaUploadId } = await initResponse.json()
+  
+  // Step 2: Upload the file
+  await fetch(`https://api.ofauth.com/v2/access/uploads/${mediaUploadId}`, {
+    method: "PUT",
+    headers: {
+      ...headers,
+      "Content-Type": "image/jpeg"
+    },
+    body: imageBuffer
+  })
+  
+  // Step 3: Complete upload
+  const completeResponse = await fetch("https://api.ofauth.com/v2/access/uploads/complete", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ mediaUploadId })
+  })
+  
+  const { media } = await completeResponse.json()
+  console.log("Media uploaded! ID:", media.id)
+  
+  // Step 4: Create post with the uploaded media
+  const postResponse = await fetch("https://api.ofauth.com/v2/access/posts", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      text: caption,
+      mediaItems: [media.id]
+    })
+  })
+  
+  const post = await postResponse.json()
+  console.log("Post created! ID:", post.id)
+  
+  return post
+}
+
+// Usage
+const imageBuffer = fs.readFileSync("photo.jpg")
+createPostWithMedia(imageBuffer, "New photo! 📸")
+```
+
+---
+
+## All Post Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `text` | string | Post caption (supports markdown) |
+| `mediaItems` | number[] | Array of media IDs from vault |
+| `price` | number | PPV price ($3-$200) |
+| `isLockedText` | boolean | Lock caption behind paywall |
+| `previewMediaCount` | number | Preview items before paywall |
+| `scheduledDate` | string | ISO date for scheduled posting |
+| `expireAfter` | number | Days until auto-delete (1-30) |
+| `fundRaisingTargetAmount` | number | Fundraising goal (min $10) |
+| `fundRaisingTipsPresets` | number[] | Suggested tip amounts (max 4) |
+| `isMarkdown` | boolean | Parse text as markdown (default: true) |
+| `userTags` | number[] | Tag users in post |
+| `releaseForms` | object | Release form attachments |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Media" icon="cloud-arrow-up" href="/guides/how-to/upload-media">
+    Learn the full media upload flow
+  </Card>
+  <Card title="Send Message" icon="paper-plane" href="/guides/how-to/send-message">
+    Share content via DM
+  </Card>
+</CardGroup>
+

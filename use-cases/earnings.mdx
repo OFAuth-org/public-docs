@@ -1,0 +1,402 @@
+---
+title: "Earnings & Analytics"
+description: "Track revenue, view transactions, and analyze performance"
+---
+
+## What You Can Build
+
+- **Revenue Dashboards**: Real-time earnings tracking and visualization
+- **Financial Reports**: Transaction history, chargebacks, tax preparation
+- **Performance Analytics**: Track revenue by content type, time period, or category
+- **Content Insights**: See which posts, stories, and streams perform best
+
+---
+
+## Quick Example
+
+Get earnings chart data:
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/earnings/chart?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  by: "total"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const chart = await response.json()
+console.log("Earnings data:", chart)
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.ofauth.com/v2/access/statistics/earnings/chart",
+    params={
+        "startDate": "2024-01-01",
+        "endDate": "2024-01-31",
+        "by": "total"
+    },
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123"
+    }
+)
+chart = response.json()
+print("Earnings data:", chart)
+```
+
+</CodeGroup>
+
+---
+
+## Common Operations
+
+### Get Earnings Chart
+
+Overview of earnings with time-series data:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/earnings/chart?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  by: "total",        // See filter options below
+  withTotal: "true"   // Include totals
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const chartData = await response.json()
+```
+
+### Earnings Filter Options
+
+Filter by earnings category:
+
+```javascript
+// By total (default)
+?by=total
+
+// By source type
+?by=subscribes    // Subscription earnings
+?by=tips          // All tips
+?by=messages      // PPV messages
+?by=post          // PPV posts
+?by=stream        // Stream earnings
+
+// By tip source
+?by=tips_profile  // Profile tips
+?by=tips_post     // Post tips
+?by=tips_chat     // Chat tips
+?by=tips_stream   // Stream tips
+?by=tips_story    // Story tips
+
+// Referrals
+?by=ref           // Referral earnings
+```
+
+### List Transactions
+
+Get detailed transaction history:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/transactions?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  type: "subscribes"  // Filter by type
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const transactions = await response.json()
+```
+
+### Transaction Types
+
+```javascript
+// Subscription payments
+?type=subscribes
+
+// Chat message purchases (PPV)
+?type=chat_messages
+
+// Post purchases
+?type=post
+
+// Stream purchases
+?type=stream
+
+// Tips (with optional source filter)
+?type=tips&tipsSource=chat      // Chat tips
+?type=tips&tipsSource=post_all  // Post tips
+?type=tips&tipsSource=profile   // Profile tips
+?type=tips&tipsSource=story     // Story tips
+?type=tips&tipsSource=stream    // Stream tips
+```
+
+### Get Chargebacks
+
+Monitor disputed transactions:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/chargebacks?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  limit: "20",
+  offset: "0"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const chargebacks = await response.json()
+```
+
+---
+
+## Content Performance
+
+### Top Posts
+
+See your best performing posts:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/posts/top?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  by: "purchases",  // purchases | tips | views | likes | comments
+  limit: "10"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const topPosts = await response.json()
+```
+
+### Posts Chart
+
+Time-series post performance:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/posts/chart?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  by: "purchases",  // purchases | posts | tips | views | likes | comments
+  withTotal: "true"
+}), {
+  headers }
+)
+```
+
+### Top Stories
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/stories/top?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  by: "views",  // views | tips | likes | comments
+  limit: "10"
+}), {
+  headers
+})
+```
+
+### Top Streams
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/streams/top?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31",
+  by: "purchases",  // purchases | duration | tips | views | likes | comments
+  limit: "10"
+}), {
+  headers
+})
+```
+
+### Post Stats by ID
+
+Get detailed stats for a specific post:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/posts/POST_ID/stats", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const postStats = await response.json()
+// Returns stats with chart data
+```
+
+---
+
+## Marketing Performance
+
+### Promotions Stats
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/promotions/top?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31"
+}), {
+  headers
+})
+```
+
+### Trials Stats
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/trials/top?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31"
+}), {
+  headers
+})
+```
+
+### Campaigns Stats
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/campaigns/top?" + new URLSearchParams({
+  startDate: "2024-01-01",
+  endDate: "2024-01-31"
+}), {
+  headers
+})
+```
+
+### Mass Message Buyers
+
+See who purchased from a specific mass message:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/messages/queue/QUEUE_ID/buyers?" + new URLSearchParams({
+  limit: "20",
+  offset: "0"
+}), {
+  headers
+})
+
+const buyers = await response.json()
+```
+
+---
+
+## API Endpoints
+
+### Earnings & Transactions
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/statistics/earnings/chart` | GET | Earnings time-series data |
+| `/v2/access/statistics/transactions` | GET | Transaction history |
+| `/v2/access/statistics/chargebacks` | GET | Chargebacks list |
+
+### Content Performance
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/statistics/posts/chart` | GET | Posts chart data |
+| `/v2/access/statistics/posts/top` | GET | Top performing posts |
+| `/v2/access/statistics/posts/{postId}/stats` | GET | Single post stats |
+| `/v2/access/statistics/stories/chart` | GET | Stories chart data |
+| `/v2/access/statistics/stories/top` | GET | Top stories |
+| `/v2/access/statistics/streams/chart` | GET | Streams chart data |
+| `/v2/access/statistics/streams/top` | GET | Top streams |
+
+### Marketing
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/statistics/promotions/chart` | GET | Promotions chart |
+| `/v2/access/statistics/promotions/top` | GET | Top promotions |
+| `/v2/access/statistics/trials/chart` | GET | Trials chart |
+| `/v2/access/statistics/trials/top` | GET | Trials stats |
+| `/v2/access/statistics/campaigns/chart` | GET | Campaigns chart |
+| `/v2/access/statistics/campaigns/top` | GET | Campaigns stats |
+| `/v2/access/statistics/mass-messages/chart` | GET | Mass messages chart |
+| `/v2/access/statistics/mass-messages/bought` | GET | Mass messages bought |
+| `/v2/access/statistics/messages/queue/{id}/buyers` | GET | Queue message buyers |
+
+### Other
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/statistics/visitor-countries/chart` | GET | Visitor countries chart |
+| `/v2/access/statistics/visitor-countries/top` | GET | Top visitor countries |
+
+<Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
+  See complete endpoint documentation
+</Card>
+
+---
+
+## Query Parameters
+
+### Date Range
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `startDate` | string | Start date (ISO format or `YYYY-MM-DD`) |
+| `endDate` | string | End date (ISO format or `YYYY-MM-DD`) |
+| `withTotal` | boolean | Include totals in response |
+
+### Pagination
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 20 | Results per page (1-20 for stats, 1-100 for some endpoints) |
+| `offset` | number | 0 | Pagination offset |
+| `marker` | number | - | Transaction pagination cursor |
+
+---
+
+## Tips & Best Practices
+
+<Tip>
+  **Date Ranges**: All statistics endpoints accept `startDate` and `endDate` for filtering. Use ISO format or `YYYY-MM-DD`.
+</Tip>
+
+<Info>
+  **Currency**: All amounts are in USD. OnlyFans converts payments from other currencies automatically.
+</Info>
+
+<Warning>
+  **Financial Data**: Handle earnings data securely. This is sensitive financial information that should be protected appropriately.
+</Warning>
+
+<Info>
+  **Chart Data**: Chart endpoints return time-series data useful for visualizations. Use `withTotal: true` to include summary totals.
+</Info>
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Fans & Subscribers" icon="users" href="/use-cases/fans">
+    See revenue by subscriber
+  </Card>
+  <Card title="Content & Posts" icon="image" href="/use-cases/content">
+    Track earnings by content
+  </Card>
+</CardGroup>

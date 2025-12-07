@@ -1,0 +1,385 @@
+---
+title: "Messaging & Chats"
+description: "Send messages, manage conversations, and mass message at scale"
+---
+
+## What You Can Build
+
+- **AI Chatbots**: Automated fan interactions and response management
+- **CRM Systems**: Message history, conversation tracking, fan engagement tools
+- **Mass Messaging**: Send promotions, updates, or PPV content to multiple fans
+- **Chat Analytics**: Message volume, response times, engagement metrics
+
+---
+
+## Quick Example
+
+Send a message to a fan:
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Hey! Thanks for subscribing 💕"
+  })
+})
+
+const message = await response.json()
+console.log("Message sent:", message.id)
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/access/chats/123456/messages",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123",
+        "Content-Type": "application/json"
+    },
+    json={
+        "text": "Hey! Thanks for subscribing 💕"
+    }
+)
+print("Message sent:", response.json()["id"])
+```
+
+</CodeGroup>
+
+---
+
+## Common Operations
+
+### List Chats
+
+Get a list of all conversations:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats?" + new URLSearchParams({
+  limit: "10",
+  offset: "0",
+  order: "recent"  // "recent" | "old"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const chats = await response.json()
+// Returns array of chat objects with last message, fan info, etc.
+```
+
+### Filter Chats
+
+```javascript
+// Priority chats only
+const priority = await fetch(
+  "https://api.ofauth.com/v2/access/chats?filter=priority",
+  { headers }
+)
+
+// Unread chats
+const unread = await fetch(
+  "https://api.ofauth.com/v2/access/chats?filter=unread",
+  { headers }
+)
+
+// Fans who tipped
+const tippers = await fetch(
+  "https://api.ofauth.com/v2/access/chats?filter=who_tipped",
+  { headers }
+)
+```
+
+### Get Chat Messages
+
+Fetch messages from a specific conversation:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/messages?" + new URLSearchParams({
+  limit: "20",
+  offset: "0"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const messages = await response.json()
+```
+
+### Send Message with Media
+
+Include images or videos in your message:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Check this out! 🔥",
+    mediaItems: [789, 790] // Media IDs from vault
+  })
+})
+```
+
+### Send PPV Message
+
+Send pay-per-view content:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/messages", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Exclusive content just for you 💋",
+    mediaItems: [789],
+    price: 9.99,  // $3-$200
+    previewMediaCount: 1  // Number of preview items
+  })
+})
+```
+
+### Unsend a Message
+
+Delete a sent message:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/MESSAGE_ID", {
+  method: "DELETE",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    withUserId: 123456  // The user ID from the chat
+  })
+})
+```
+
+---
+
+## Mass Messaging (Queue)
+
+Send to multiple fans at once using the message queue:
+
+### Create Queued Message
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "New content dropping tomorrow! 🎉",
+    userIds: [123, 456, 789],
+    // Or target by lists:
+    // userLists: [1, 2, 3],
+    // excludeUserLists: [4, 5]  // Exclude specific lists
+  })
+})
+```
+
+### Schedule Mass Message
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Scheduled announcement! 📅",
+    userLists: [1],
+    scheduledDate: "2024-12-25T12:00:00Z"
+  })
+})
+```
+
+### Get Queue Stats
+
+View mass message history:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/stats?" + new URLSearchParams({
+  type: "sent",  // "sent" | "unsent" | "scheduled"
+  limit: "20",
+  offset: "0"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const queueStats = await response.json()
+```
+
+### Update Queued Message
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/QUEUE_MESSAGE_ID", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    text: "Updated message content!",
+    userIds: [123, 456]
+  })
+})
+```
+
+### Delete Queued Message
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/QUEUE_MESSAGE_ID", {
+  method: "DELETE",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+```
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/chats` | GET | List all chats |
+| `/v2/access/chats/{userId}/messages` | GET | Get messages in a chat |
+| `/v2/access/chats/{userId}/messages` | POST | Send a message |
+| `/v2/access/messages/{messageId}` | DELETE | Unsend a message |
+| `/v2/access/messages/queue` | POST | Create queued/mass message |
+| `/v2/access/messages/queue/stats` | GET | Get queue stats |
+| `/v2/access/messages/queue/{queueMessageId}` | GET | Get queued message |
+| `/v2/access/messages/queue/{queueMessageId}` | PUT | Update queued message |
+| `/v2/access/messages/queue/{queueMessageId}` | DELETE | Delete queued message |
+
+<Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
+  See complete endpoint documentation
+</Card>
+
+---
+
+## Query Parameters
+
+### List Chats Query
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 10 | Results per page (1-20) |
+| `offset` | number | 0 | Pagination offset |
+| `order` | string | "recent" | Sort order: `recent`, `old` |
+| `filter` | string | - | Filter: `priority`, `who_tipped`, `unread` |
+| `query` | string | - | Search query |
+| `userListId` | number | - | Filter by user list ID |
+
+### Chat Messages Query
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 10 | Results per page (1-20) |
+| `offset` | number | 0 | Pagination offset |
+| `query` | string | - | Search within messages |
+
+---
+
+## Message Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | Message content ([supports markdown](/guides/how-to/text-formatting)) |
+| `mediaItems` | (number\|string)[] | Media references (see below) |
+| `price` | number | PPV price ($3-$200) |
+| `isLockedText` | boolean | Lock text behind paywall |
+| `previewMediaCount` | number | Number of preview media items |
+| `isMarkdown` | boolean | Parse text as markdown (default: true) |
+| `userTags` | number[] | Tag users in message |
+| `releaseForms` | object | Release form attachments |
+
+<Tip>
+  Use markdown formatting like `**bold**`, `*italic*`, and `# headers` in your messages. See [Text Formatting Guide](/guides/how-to/text-formatting) for all options.
+</Tip>
+
+### `mediaItems` Formats
+
+The `mediaItems` array accepts:
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| Vault Media ID | `12345` | Direct OnlyFans vault media ID |
+| Vault ID (string) | `"12345"` | Auto-converted to number |
+| Upload Reference | `"ofauth_upload_abc..."` | `mediaUploadId` from upload flow |
+| URL | `"https://..."` | External HTTP/HTTPS URL |
+
+<Tip>
+  You can pass the `mediaUploadId` from the upload flow directly - the API resolves it to the vault ID automatically. Upload references are single-use.
+</Tip>
+
+### Queue-specific Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `userIds` | number[] | Target specific user IDs |
+| `userLists` | number[] | Target user list IDs |
+| `excludeUserLists` | number[] | Exclude user list IDs |
+| `scheduledDate` | string | ISO date for scheduled sending |
+| `subscribedAfterDate` | string | Target users subscribed after date |
+
+---
+
+## Tips & Best Practices
+
+<Tip>
+  **Rate Limiting**: OnlyFans has strict rate limits on messaging. Space out mass messages and implement exponential backoff for retries.
+</Tip>
+
+<Warning>
+  **Content Guidelines**: Messages sent through OFAuth are subject to OnlyFans' terms of service. Automated spam or harassment can result in account suspension.
+</Warning>
+
+<Info>
+  **Media First**: When sending messages with media, upload the media to the vault first using `/uploads/init` to get media IDs, then reference those IDs in `mediaItems`.
+</Info>
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Media & Vault" icon="photo-film" href="/use-cases/media">
+    Upload media before sending in messages
+  </Card>
+  <Card title="Fans & Subscribers" icon="users" href="/use-cases/fans">
+    Get fan lists for targeted messaging
+  </Card>
+</CardGroup>

@@ -1,0 +1,172 @@
+---
+title: "Text Formatting"
+description: "Format message and post text with markdown-style syntax"
+---
+
+OFAuth supports markdown-style formatting for messages and posts. When `isMarkdown: true` (the default), your text is automatically converted to OnlyFans-compatible formatting.
+
+## Text Styles
+
+### Bold
+
+```
+**bold text**
+__bold text__
+```
+
+### Italic
+
+```
+*italic text*
+_italic text_
+```
+
+### Bold + Italic + Blue Accent
+
+```
+***bold italic blue***
+___bold italic blue___
+```
+
+<Note>
+Triple-wrapped text appears in OnlyFans' accent blue color (#00aff0) in addition to being bold and italic.
+</Note>
+
+---
+
+## Text Sizes
+
+Use hash symbols at the start of a line for larger text:
+
+| Syntax | Size |
+|--------|------|
+| `# text` | Largest |
+| `## text` | Large |
+
+```
+# Largest Heading
+## Large Heading
+```
+
+<Tip>
+Default text size requires no special syntax - just write plain text.
+</Tip>
+
+---
+
+## Text Colors
+
+| Color | Syntax |
+|-------|--------|
+| Gray | `~text~` |
+| Blue 1 (accent) | `***text***` |
+| Blue 2 | `~~text~~` |
+
+### Gray Text
+
+```
+~This is gray text~
+```
+
+### Blue Text
+
+```
+~~This is blue text~~
+```
+
+<Info>
+Blue 1 (accent) color is achieved with `***text***` which also applies bold and italic.
+</Info>
+
+---
+
+## Line Breaks
+
+Newlines in your text are automatically converted to line breaks:
+
+```
+Line one
+Line two
+Line three
+```
+
+---
+
+## Quick Reference
+
+| Pattern | Result |
+|---------|--------|
+| `*text*` | Italic |
+| `**text**` | Bold |
+| `***text***` | Bold + Italic + Blue |
+| `~text~` | Gray text |
+| `~~text~~` | Blue text |
+| `# text` | Largest |
+| `## text` | Large |
+
+<Warning>
+Patterns must be surrounded by whitespace or at start/end of text to be recognized.
+</Warning>
+
+---
+
+## Examples
+
+<CodeGroup>
+
+```typescript Send Message
+await fetch('https://api.ofauth.com/v2/access/chats/123456/messages', {
+  method: 'POST',
+  headers: {
+    'x-of-auth-api-key': 'YOUR_API_KEY',
+    'x-connection-id': 'conn_abc123',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    text: "**Hey!** Check out my *exclusive* content 💕\n\n~~Click here~~ for something special"
+  })
+});
+```
+
+```typescript Create Post
+await fetch('https://api.ofauth.com/v2/access/posts', {
+  method: 'POST',
+  headers: {
+    'x-of-auth-api-key': 'YOUR_API_KEY',
+    'x-connection-id': 'conn_abc123',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    text: "**Thank you** for all the support!\n\n~Limited time only~\n\nCheck out this ***exclusive*** content below 👇",
+    mediaItems: [12345678]
+  })
+});
+```
+
+</CodeGroup>
+
+---
+
+## Disabling Markdown
+
+To send raw HTML instead, set `isMarkdown: false`:
+
+```typescript
+{
+  text: '<p>Raw HTML content</p>',
+  isMarkdown: false
+}
+```
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Send a Message" icon="paper-plane" href="/guides/how-to/send-message">
+    Complete guide to sending messages
+  </Card>
+  <Card title="Create a Post" icon="image" href="/guides/how-to/create-post">
+    Complete guide to creating posts
+  </Card>
+</CardGroup>

@@ -1,0 +1,156 @@
+---
+title: "How OFAuth Works"
+description: "Understanding the core concepts: Link, Access, and Connections"
+---
+
+## The Big Picture
+
+OFAuth is like **Plaid for OnlyFans**. Just as Plaid lets apps connect to bank accounts without handling banking credentials, OFAuth lets your platform connect to OnlyFans accounts without managing authentication complexity.
+
+```mermaid
+graph LR
+    A[Your Platform] --> B[OFAuth]
+    B --> C[OnlyFans]
+    C --> B
+    B --> A
+```
+
+**You focus on your product. OFAuth handles OnlyFans.**
+
+---
+
+## Core Concepts
+
+### Connections
+
+A **Connection** represents a linked OnlyFans account. When a user authenticates through OFAuth, you receive a Connection ID that you use to access their data.
+
+<CardGroup cols={2}>
+  <Card title="What You Store" icon="database">
+    Just the Connection ID (e.g., `conn_abc123`)—a simple string in your database
+  </Card>
+  <Card title="What OFAuth Handles" icon="shield-check">
+    Sessions, credentials, expiration, re-authentication—all the complexity
+  </Card>
+</CardGroup>
+
+**Think of a Connection ID like an access token**—it represents permission to act on behalf of a user.
+
+---
+
+### Link API
+
+The **Link API** handles user authentication. It's how OnlyFans users connect their accounts to your platform.
+
+<Steps>
+  <Step title="Create a Link session">
+    Your backend calls OFAuth to get an authentication URL
+  </Step>
+  <Step title="User authenticates">
+    They log into OnlyFans on a secure OFAuth-hosted page
+  </Step>
+  <Step title="Receive a Connection">
+    OFAuth redirects back with a Connection ID you can use
+  </Step>
+</Steps>
+
+**Link is similar to OAuth**—users see a branded consent flow, enter their credentials on a trusted page, and your app receives a token (the Connection ID) to use.
+
+<Info>
+  You never see or handle OnlyFans passwords. Authentication happens entirely on OFAuth's secure pages.
+</Info>
+
+---
+
+### Access API
+
+The **Access API** lets you fetch OnlyFans data using a Connection ID. It's a proxy that handles request signing, session management, and API complexity.
+
+```
+Your App → Access API → OnlyFans → Access API → Your App
+              ↑
+     Handles signing, retries,
+     rate limits, and errors
+```
+
+**Two ways to use it:**
+
+| Method | Best For |
+|--------|----------|
+| **Managed Endpoints** | Common operations like fetching profiles, posts, messages—stable, typed responses |
+| **Proxy Endpoints** | Any OnlyFans API path—raw responses for advanced use cases |
+
+<Tip>
+  Most integrations only use Managed Endpoints. The Proxy is there when you need something specific that isn't covered.
+</Tip>
+
+---
+
+### Dynamic Rules (Advanced)
+
+OnlyFans requires cryptographically signed requests. These signing rules **change frequently**—sometimes multiple times per day.
+
+<Warning>
+  **Most users don't need Dynamic Rules.** If you're using the Access API or SDK, signing is automatic. Dynamic Rules are only for advanced use cases where you call OnlyFans APIs directly.
+</Warning>
+
+| If you're using... | Do you need Dynamic Rules? |
+|-------------------|---------------------------|
+| Access API | No—signing is automatic |
+| JavaScript SDK | No—handled by the SDK |
+| Direct OnlyFans calls | Yes—you need current signing rules |
+
+---
+
+## The Complete Flow
+
+Here's how a typical OFAuth integration works:
+
+```mermaid
+sequenceDiagram
+    participant App as Your App
+    participant Auth as Link API
+    participant User
+    participant Access as Access API
+    participant OF as OnlyFans
+
+    App->>Auth: Create session
+    Auth-->>App: Auth URL
+    App->>User: Redirect to auth URL
+    User->>Auth: Enter credentials
+    Auth->>User: Redirect to success URL
+    User->>App: Connection ID received
+    App->>Access: Fetch data (with Connection ID)
+    Access->>OF: Signed request
+    OF-->>Access: Data
+    Access-->>App: Response
+```
+
+1. **Link** creates the connection (one-time per user)
+2. **Access** fetches data using that connection (ongoing)
+
+---
+
+## Glossary
+
+| Term | Definition |
+|------|------------|
+| **Connection** | A linked OnlyFans account, represented by a Connection ID |
+| **Connection ID** | Unique identifier (e.g., `conn_abc123`) used to access a user's data |
+| **Link Session** | Temporary authentication flow—expires after 1 hour |
+| **API Key** | Your OFAuth API key for authenticating requests |
+| **Dynamic Rules** | Current OnlyFans request signing parameters |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="2-Minute Quickstart" icon="rocket" href="/quickstart">
+    See this in action with working code
+  </Card>
+  <Card title="Security Model" icon="shield-check" href="/overview/security">
+    How we protect credentials and data
+  </Card>
+</CardGroup>
+

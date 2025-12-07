@@ -1,0 +1,381 @@
+---
+title: "Media & Vault"
+description: "Upload media, access vault, and embed content"
+---
+
+## What You Can Build
+
+- **Media Management**: Upload, organize, and manage content libraries
+- **Content Embedding**: Display OnlyFans media on your platform
+- **Backup Tools**: Download and archive creator content
+- **Cross-Platform Sync**: Manage media across multiple accounts
+
+---
+
+## Quick Example
+
+List media from the vault:
+
+<CodeGroup>
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/access/vault/media", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const { list, hasMore } = await response.json()
+console.log(`Found ${list.length} media items`)
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "https://api.ofauth.com/v2/access/vault/media",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "x-connection-id": "conn_abc123"
+    }
+)
+data = response.json()
+print(f"Found {len(data['list'])} media items")
+```
+
+</CodeGroup>
+
+---
+
+## Common Operations
+
+### List Vault Media
+
+Get media from the vault with optional filters:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/vault/media?" + new URLSearchParams({
+  limit: "24",
+  offset: "0",
+  sortBy: "recent",         // "recent" | "most-liked" | "highest-tips"
+  sortDirection: "desc",    // "asc" | "desc"
+  mediaType: "photo"        // "photo" | "video" | "audio" | "gif"
+}), {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const { list, hasMore } = await response.json()
+```
+
+### Get Vault Lists (Folders)
+
+OnlyFans organizes vault media into lists/folders:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/vault/lists", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const { list, all, hasMore } = await response.json()
+// list: array of vault folders
+// all: summary with total counts by type
+```
+
+### Get Media in a Specific List
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/vault/lists/LIST_ID/media", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const { list, hasMore } = await response.json()
+```
+
+### Create a Vault List
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/vault/lists", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    name: "My Custom Folder"
+  })
+})
+
+const newList = await response.json()
+```
+
+### Add Media to a List
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/vault/lists/LIST_ID/media", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    mediaIds: [123, 456, 789]
+  })
+})
+```
+
+---
+
+## Uploading Media
+
+Media uploads use a multi-step process:
+
+<Steps>
+  <Step title="Initialize Upload">
+    Call `/uploads/init` to get an upload session
+  </Step>
+  <Step title="Upload File">
+    Upload the file using the returned session info
+  </Step>
+  <Step title="Complete Upload">
+    Call `/uploads/complete` to finalize and process the media
+  </Step>
+</Steps>
+
+```javascript
+// Step 1: Initialize upload
+const initResponse = await fetch("https://api.ofauth.com/v2/access/uploads/init", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    filename: "photo.jpg",
+    filesize: 1024000,  // File size in bytes
+    mimeType: "image/jpeg"
+  })
+})
+
+const { mediaUploadId } = await initResponse.json()
+// Check x-ofauth-upload-total-parts header for chunking info
+
+// Step 2: Upload file (single part for small files)
+await fetch(`https://api.ofauth.com/v2/access/uploads/${mediaUploadId}`, {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "image/jpeg"
+  },
+  body: fileBuffer
+})
+
+// For multi-part uploads, use /uploads/:mediaUploadId/parts/:partNumber
+
+// Step 3: Complete upload (if using chunked upload)
+const completeResponse = await fetch("https://api.ofauth.com/v2/access/uploads/complete", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ mediaUploadId })
+})
+
+const { media } = await completeResponse.json()
+console.log("Uploaded media ID:", media.id)
+```
+
+---
+
+## Media Proxy
+
+OFAuth automatically proxies OnlyFans CDN URLs, making media embeddable on your platform.
+
+<Info>
+  **Automatic**: API responses already contain proxied `media.ofauth.com` URLs. No extra configuration needed.
+</Info>
+
+### Why Media Proxy?
+
+| OnlyFans CDN | OFAuth Media Proxy |
+|--------------|-------------------|
+| URLs expire quickly | Extended validity |
+| CORS blocked | CORS enabled |
+| No caching control | Edge-cached globally |
+| Cannot embed | Embeddable in `<img>` / `<video>` |
+
+### Using Proxied URLs
+
+```javascript
+// API responses automatically include proxied URLs in files.full.url
+const media = list[0]
+
+// Use directly in HTML
+const imgUrl = media.files.full.url
+// https://media.ofauth.com/v1/abc123/photo.jpg
+```
+
+```html
+<!-- Embed in your app -->
+<img src="https://media.ofauth.com/v1/abc123/photo.jpg" alt="Content" />
+<video src="https://media.ofauth.com/v1/xyz789/video.mp4" controls />
+```
+
+### Billing
+
+<Warning>
+  Media proxy usage is billed per KB of bandwidth. Cache hits (up to 7 days) are free. See your dashboard for usage details.
+</Warning>
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v2/access/vault/media` | GET | List all vault media |
+| `/v2/access/vault/lists` | GET | Get vault lists/folders |
+| `/v2/access/vault/lists` | POST | Create a vault list |
+| `/v2/access/vault/lists/{listId}` | PATCH | Update a vault list |
+| `/v2/access/vault/lists/{listId}` | DELETE | Delete a vault list |
+| `/v2/access/vault/lists/{listId}/media` | GET | Get media in a list |
+| `/v2/access/vault/lists/{listId}/media` | POST | Add media to a list |
+| `/v2/access/uploads/init` | POST | Initialize media upload |
+| `/v2/access/uploads/{mediaUploadId}` | PUT | Upload single-part file |
+| `/v2/access/uploads/{mediaUploadId}/parts/{partNumber}` | PUT | Upload chunk |
+| `/v2/access/uploads/complete` | POST | Complete upload |
+
+<Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
+  See complete endpoint documentation
+</Card>
+
+---
+
+## Query Parameters
+
+### Vault Media Query
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 24 | Results per page (1-40) |
+| `offset` | number | 0 | Pagination offset |
+| `sortBy` | string | "recent" | Sort by: `recent`, `most-liked`, `highest-tips` |
+| `sortDirection` | string | "desc" | Sort direction: `asc`, `desc` |
+| `mediaType` | string | - | Filter by type: `photo`, `video`, `audio`, `gif` |
+| `query` | string | - | Search query |
+
+---
+
+## Media Data Structure
+
+Each media item includes:
+
+```json
+{
+  "id": 123456,
+  "type": "photo",
+  "canView": true,
+  "hasError": false,
+  "isReady": true,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "files": {
+    "full": {
+      "url": "https://media.ofauth.com/v1/abc123/photo.jpg",
+      "width": 1920,
+      "height": 1080,
+      "size": 245000
+    },
+    "thumb": {
+      "url": "https://media.ofauth.com/v1/abc123/thumb.jpg",
+      "width": 200,
+      "height": 200
+    },
+    "preview": {
+      "url": "https://media.ofauth.com/v1/abc123/preview.jpg",
+      "width": 480,
+      "height": 480
+    }
+  },
+  "counters": {
+    "likesCount": 42,
+    "tipsSumm": 25.00
+  }
+}
+```
+
+For videos, additional fields:
+
+```json
+{
+  "type": "video",
+  "duration": 120,
+  "videoSources": {
+    "240": "https://media.ofauth.com/v1/xyz789/240p.mp4",
+    "720": "https://media.ofauth.com/v1/xyz789/720p.mp4"
+  }
+}
+```
+
+---
+
+## Vault List Structure
+
+```json
+{
+  "id": 12345,
+  "type": "custom",
+  "name": "My Photos",
+  "hasMedia": true,
+  "canUpdate": true,
+  "canDelete": true,
+  "medias": [
+    { "type": "photo", "url": "https://..." }
+  ]
+}
+```
+
+List types: `custom`, `messages`, `posts`, `stories`, `streams`, `media_stickers`
+
+---
+
+## Tips & Best Practices
+
+<Tip>
+  **Upload First**: Always upload media to the vault before referencing it in posts or messages. You can't upload inline.
+</Tip>
+
+<Info>
+  **Supported Formats**: Images (JPEG, PNG, GIF, WebP), Videos (MP4, MOV), Audio (MP3, M4A). Check OnlyFans' guidelines for size limits.
+</Info>
+
+<Warning>
+  **Bandwidth Costs**: Frequently accessed media (profile pictures, popular posts) may generate significant bandwidth charges. Monitor usage in your dashboard.
+</Warning>
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Content & Posts" icon="image" href="/use-cases/content">
+    Use media in posts and stories
+  </Card>
+  <Card title="Messaging & Chats" icon="messages" href="/use-cases/messaging">
+    Send media in direct messages
+  </Card>
+</CardGroup>
