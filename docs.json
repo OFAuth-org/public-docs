@@ -121,19 +121,9 @@
             "openapi": "https://api-next.ofauth.com/openapi-core.json",
             "pages": [
               "api-reference/core/overview",
-              {
-                "group": "Account",
-                "pages": [
-                  "GET /v2/account/whoami"
-                ]
-              },
-              {
-                "group": "Connections",
-                "pages": [
-                  "GET /v2/connections",
-                  "DELETE /v2/connections/{connectionId}"
-                ]
-              }
+              "GET /v2/account/whoami",
+              "GET /v2/connections",
+              "DELETE /v2/connections/{connectionId}"
             ]
           },
           {
