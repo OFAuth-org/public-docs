@@ -141,7 +141,7 @@
             "openapi": "https://api-next.ofauth.com/openapi-link.json",
             "pages": [
               "api-reference/link/overview",
-              "POST /v2/link/init",
+              "POST /v2/link/init"
             ]
           },
           {
@@ -335,10 +335,8 @@
   },
   "footer": {
     "socials": {
-      "discord": "https://discord.gg/ofauth",
       "telegram": "https://t.me/ofauth",
-      "github": "https://github.com/ofauth-org",
-      "x": "https://x.com/ofauth"
+      "github": "https://github.com/ofauth-org"
     }
   },
   "api": {
