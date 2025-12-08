@@ -117,13 +117,31 @@
         "icon": "square-terminal",
         "groups": [
           {
+            "group": "Account",
+            "openapi": "https://api-next.ofauth.com/openapi-core.json",
+            "pages": [
+              "api-reference/core/overview",
+              {
+                "group": "Account",
+                "pages": [
+                  "GET /v2/account/whoami"
+                ]
+              },
+              {
+                "group": "Connections",
+                "pages": [
+                  "GET /v2/connections",
+                  "DELETE /v2/connections/{connectionId}"
+                ]
+              }
+            ]
+          },
+          {
             "group": "Link API",
             "openapi": "https://api-next.ofauth.com/openapi-link.json",
             "pages": [
               "api-reference/link/overview",
               "POST /v2/link/init",
-              "GET /v2/link/{clientSecret}",
-              "DELETE /v2/link/{clientSecret}"
             ]
           },
           {
@@ -329,6 +347,7 @@
     }
   },
   "openapi": [
+    "https://api-next.ofauth.com/openapi-core.json",
     "https://api-next.ofauth.com/openapi-link.json",
     "https://api-next.ofauth.com/openapi-access.json",
     "https://api-next.ofauth.com/openapi-dynamic-rules.json"
