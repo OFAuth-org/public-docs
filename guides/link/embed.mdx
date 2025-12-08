@@ -294,7 +294,7 @@ interface SuccessMetadata {
 	successUrl: string;     // /v2/link/init successUrl with {CONNECTION_ID} resolved
 	redirect: boolean;      // if redirect should occur based on your configuration
 	connection: {
-		id: string;
+		id: string;         // The connection ID to store and use with Access API
 		userData: {
 			id: string;
 			name: string;
@@ -303,6 +303,27 @@ interface SuccessMetadata {
 		};
 	};
 }
+```
+
+<Tip>
+The `onSuccess` callback is where you receive the connection ID for embedded flows. Use this alongside the `clientReferenceId` you provided when [initializing the Link session](/api-reference/link/init) to store the connection for the correct user.
+</Tip>
+
+```javascript
+// Example: Store connection ID when authentication succeeds
+const handler = OFAuthLinkEmbed.create({
+	async onSuccess(metadata) {
+		// metadata.connection.id is the connection ID
+		await fetch('/api/store-connection', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				connectionId: metadata.connection.id,
+				userId: currentUserId // Your internal user ID
+			})
+		});
+	}
+});
 ```
 
 If you supplied a success URL containing `{CONNECTION_ID}`, the success event
