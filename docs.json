@@ -37,7 +37,8 @@
         {
           "anchor": "llms.txt",
           "icon": "robot",
-          "href": "https://docs.ofauth.com/llms.txt"
+          "iconType": "solid",
+          "href": "https://docs-next.ofauth.com/llms.txt"
         }
       ]
     },
@@ -45,25 +46,41 @@
       {
         "dropdown": "Documentation",
         "icon": "book-open",
+        "iconType": "solid",
         "groups": [
           {
             "group": "Overview",
+            "icon": "circle-info",
+            "iconType": "solid",
             "pages": [
               "index",
               "overview/why-ofauth",
               "overview/how-it-works",
-              "overview/security"
+              "overview/security",
+              "overview/onlyfans-api"
             ]
           },
           {
             "group": "Quickstart",
+            "icon": "rocket",
+            "iconType": "solid",
             "pages": [
               "quickstart",
-              "getting-started/environments/sandbox"
+              {
+                "group": "Environments",
+                "icon": "user-circle",
+                "iconType": "solid",
+                "pages": [
+                  "environments/overview",
+                  "environments/sandbox"
+                ]
+              }
             ]
           },
           {
             "group": "Use Cases",
+            "icon": "lightbulb",
+            "iconType": "solid",
             "pages": [
               "use-cases/messaging",
               "use-cases/fans",
@@ -75,6 +92,8 @@
           },
           {
             "group": "Guides",
+            "icon": "map",
+            "iconType": "solid",
             "pages": [
               "guides/how-to/connect-account",
               "guides/how-to/send-message",
@@ -84,6 +103,8 @@
               "guides/how-to/text-formatting",
               {
                 "group": "Authentication",
+                "icon": "key",
+                "iconType": "solid",
                 "pages": [
                   "guides/link/overview",
                   "guides/link/hosted",
@@ -94,17 +115,20 @@
           },
           {
             "group": "Reference",
+            "icon": "book-bookmark",
+            "iconType": "solid",
             "pages": [
               "reference/access",
               "reference/connections",
               "reference/webhooks",
               "reference/rate-limiting",
-              "reference/error-handling",
-              "getting-started/production-considerations"
+              "reference/error-handling"
             ]
           },
           {
             "group": "Advanced",
+            "icon": "wand-magic-sparkles",
+            "iconType": "solid",
             "pages": [
               "guides/dynamic-rules",
               "enterprise/whitelabel"
@@ -114,20 +138,25 @@
       },
       {
         "dropdown": "API Reference",
-        "icon": "square-terminal",
+        "icon": "terminal",
+        "iconType": "solid",
         "groups": [
           {
-            "group": "Account",
+            "group": "OFAuth Account",
+            "icon": "building",
+            "iconType": "solid",
             "openapi": "https://api-next.ofauth.com/openapi-core.json",
             "pages": [
               "api-reference/core/overview",
               "GET /v2/account/whoami",
               "GET /v2/connections",
-              "DELETE /v2/connections/{connectionId}"
+              "DELETE /v2/connections/{connectionId}",
+              "POST /v2/connections/{connectionId}/invalidate"
             ]
           },
           {
             "group": "Link API",
+            "icon": "https://next.ofauth.com/link_icon.png",
             "openapi": "https://api-next.ofauth.com/openapi-link.json",
             "pages": [
               "api-reference/link/overview",
@@ -136,135 +165,339 @@
           },
           {
             "group": "Access API",
+            "icon": "https://next.ofauth.com/access_icon.png",
             "openapi": "https://api-next.ofauth.com/openapi-access.json",
             "pages": [
               "api-reference/access/overview",
               "api-reference/access/proxy",
-              "api-reference/access/managed",
               {
-                "group": "Account",
+                "group": "Account (Self)",
+                "icon": "user-circle",
+                "iconType": "solid",
                 "pages": [
-                  "GET /v2/access/self/me",
-                  "PATCH /v2/access/self/me",
+                  "GET /v2/access/self",
+                  "PATCH /v2/access/self",
                   "GET /v2/access/self/notifications",
                   "GET /v2/access/self/release-forms",
                   "GET /v2/access/self/tagged-friend-users"
                 ]
               },
               {
-                "group": "Messages & Chats",
+                "group": "Chats & Messages",
+                "icon": "comments",
+                "iconType": "solid",
                 "pages": [
-                  "GET /v2/access/chats",
-                  "GET /v2/access/chats/:userId/messages",
-                  "POST /v2/access/chats/:userId/messages",
-                  "DELETE /v2/access/messages/:messageId"
+                  {
+                    "group": "Direct Messages",
+                    "icon": "comment",
+                    "iconType": "solid",
+                    "pages": [
+                      {
+                        "group": "Messages",
+                        "pages": [
+                          "GET /v2/access/chats",
+                          "GET /v2/access/chats/:userId/messages",
+                          "POST /v2/access/chats/:userId/messages",
+                          "DELETE /v2/access/chats/:userId/messages/:messageId"
+                        ]
+                      },
+                      {
+                        "group": "Media",
+                        "pages": [
+                          "GET /v2/access/chats/:userId/media"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Mass Messages",
+                    "icon": "comments",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/mass-messages",
+                      "GET /v2/access/mass-messages/:massMessageId",
+                      "POST /v2/access/mass-messages",
+                      "PUT /v2/access/mass-messages/:massMessageId",
+                      "DELETE /v2/access/mass-messages/:massMessageId"
+                    ]
+                  }
                 ]
               },
               {
-                "group": "Mass Messages",
+                "group": "Subscribers",
+                "icon": "users",
+                "iconType": "solid",
                 "pages": [
-                  "POST /v2/access/messages/queue",
-                  "GET /v2/access/messages/queue/:queueMessageId",
-                  "PUT /v2/access/messages/queue/:queueMessageId",
-                  "DELETE /v2/access/messages/queue/:queueMessageId",
-                  "GET /v2/access/messages/queue/stats"
-                ]
-              },
-              {
-                "group": "Posts",
-                "pages": [
-                  "POST /v2/access/posts",
-                  "GET /v2/access/posts/:postId",
-                  "PUT /v2/access/posts/:postId",
-                  "DELETE /v2/access/posts/:postId",
-                  "GET /v2/access/users/:userId/posts"
-                ]
-              },
-              {
-                "group": "Users",
-                "pages": [
-                  "GET /v2/access/users/:userId",
-                  "POST /v2/access/users/:userId/restrict",
-                  "DELETE /v2/access/users/:userId/restrict",
-                  "GET /v2/access/users/restrict",
-                  "GET /v2/access/users/blocked"
-                ]
-              },
-              {
-                "group": "User Lists",
-                "pages": [
-                  "GET /v2/access/users/lists",
-                  "POST /v2/access/users/lists",
-                  "GET /v2/access/users/lists/:listId",
-                  "PATCH /v2/access/users/lists/:listId",
-                  "DELETE /v2/access/users/lists/:listId",
-                  "GET /v2/access/users/lists/:listId/users",
-                  "POST /v2/access/users/lists/:listId/users",
-                  "DELETE /v2/access/users/lists/:listId/users/:userId",
-                  "GET /v2/access/users/lists/:listId/users/pinned",
-                  "POST /v2/access/users/lists/sort"
+                  "GET /v2/access/subscribers",
+                  "PUT /v2/access/subscribers/:userId/note",
+                  "PUT /v2/access/subscribers/:userId/discount",
+                  "PUT /v2/access/subscribers/:userId/custom-name"
                 ]
               },
               {
                 "group": "Subscriptions",
+                "icon": "user-check",
+                "iconType": "solid",
                 "pages": [
-                  "GET /v2/access/subscriptions/subscribers",
-                  "POST /v2/access/subscriptions/users/:userId/subscribe"
+                  "GET /v2/access/subscriptions",
+                  "GET /v2/access/subscriptions/count",
+                  "GET /v2/access/subscriptions/:subscriptionId",
+                  {
+                    "group": "History",
+                    "pages": [
+                      "GET /v2/access/subscriptions/:subscriptionId/history"
+                    ]
+                  }
                 ]
               },
               {
-                "group": "Vault",
+                "group": "Users",
+                "icon": "user",
+                "iconType": "solid",
+                "pages": [
+                  {
+                    "group": "Lookup",
+                    "pages": [
+                      "GET /v2/access/users/:userId",
+                      "GET /v2/access/users/list",
+                      "GET /v2/access/users/performers-search"
+                    ]
+                  },
+                  {
+                    "group": "Restrictions",
+                    "pages": [
+                      "POST /v2/access/users/:userId/restrict",
+                      "DELETE /v2/access/users/:userId/restrict",
+                      "GET /v2/access/users/restrict",
+                      "GET /v2/access/users/blocked"
+                    ]
+                  },
+                  {
+                    "group": "User Lists",
+                    "icon": "list",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/users/lists",
+                      "POST /v2/access/users/lists",
+                      "GET /v2/access/users/lists/:listId",
+                      "PATCH /v2/access/users/lists/:listId",
+                      "DELETE /v2/access/users/lists/:listId",
+                      "GET /v2/access/users/lists/:listId/users",
+                      "POST /v2/access/users/lists/:listId/users/:userId",
+                      "POST /v2/access/users/:userId/lists",
+                      "DELETE /v2/access/users/lists/:listId/users/:userId"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Posts",
+                "icon": "file-lines",
+                "iconType": "solid",
+                "pages": [
+                  "GET /v2/access/posts",
+                  "GET /v2/access/users/:userId/posts",
+                  "GET /v2/access/posts/:postId",
+                  "POST /v2/access/posts",
+                  "PUT /v2/access/posts/:postId",
+                  "DELETE /v2/access/posts/:postId"
+                ]
+              },
+              {
+                "group": "Media & Vault",
+                "icon": "folder",
+                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/vault/media",
-                  "GET /v2/access/vault/lists",
-                  "POST /v2/access/vault/lists",
-                  "PATCH /v2/access/vault/lists/:listId",
-                  "DELETE /v2/access/vault/lists/:listId",
-                  "GET /v2/access/vault/lists/:listId/media",
-                  "POST /v2/access/vault/lists/:listId/media",
-                  "POST /v2/access/vault/lists/sort"
+                  {
+                    "group": "Vault Lists",
+                    "icon": "folder-open",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/vault/lists",
+                      "POST /v2/access/vault/lists",
+                      "PATCH /v2/access/vault/lists/:listId",
+                      "DELETE /v2/access/vault/lists/:listId",
+                      "POST /v2/access/vault/lists/:listId/media"
+                    ]
+                  },
+                  {
+                    "group": "Uploads",
+                    "icon": "upload",
+                    "iconType": "solid",
+                    "pages": [
+                      "POST /v2/access/uploads/check",
+                      "POST /v2/access/uploads/init",
+                      "PUT /v2/access/uploads/:mediaUploadId/parts/:partNumber",
+                      "PUT /v2/access/uploads/:mediaUploadId",
+                      "POST /v2/access/uploads/complete"
+                    ]
+                  }
                 ]
               },
               {
-                "group": "Media Uploads",
+                "group": "Earnings",
+                "icon": "dollar-sign",
+                "iconType": "solid",
                 "pages": [
-                  "POST /v2/access/uploads/check",
-                  "POST /v2/access/uploads/init",
-                  "PUT /v2/access/uploads/:mediaUploadId/parts/:partNumber",
-                  "PUT /v2/access/uploads/:mediaUploadId",
-                  "POST /v2/access/uploads/complete"
+                  "GET /v2/access/earnings/chart",
+                  "GET /v2/access/earnings/transactions",
+                  "GET /v2/access/earnings/chargebacks"
                 ]
               },
               {
-                "group": "Statistics",
+                "group": "Analytics",
+                "icon": "chart-bar",
+                "iconType": "solid",
                 "pages": [
-                  "GET /v2/access/statistics/earnings/chart",
-                  "GET /v2/access/statistics/transactions",
-                  "GET /v2/access/statistics/chargebacks",
-                  "GET /v2/access/statistics/posts/chart",
-                  "GET /v2/access/statistics/posts/top",
-                  "GET /v2/access/statistics/posts/:postId/stats",
-                  "GET /v2/access/statistics/stories/chart",
-                  "GET /v2/access/statistics/stories/top",
-                  "GET /v2/access/statistics/streams/chart",
-                  "GET /v2/access/statistics/streams/top",
-                  "GET /v2/access/statistics/mass-messages/chart",
-                  "GET /v2/access/statistics/mass-messages/bought",
-                  "GET /v2/access/statistics/messages/queue/:queueMessageId/buyers",
-                  "GET /v2/access/statistics/promotions/chart",
-                  "GET /v2/access/statistics/promotions/top",
-                  "GET /v2/access/statistics/trials/chart",
-                  "GET /v2/access/statistics/trials/top",
-                  "GET /v2/access/statistics/campaigns/chart",
-                  "GET /v2/access/statistics/campaigns/top",
-                  "GET /v2/access/statistics/visitor-countries/chart",
-                  "GET /v2/access/statistics/visitor-countries/top"
+                  {
+                    "group": "Posts",
+                    "icon": "file-lines",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/analytics/posts/chart",
+                      "GET /v2/access/analytics/posts/top",
+                      "GET /v2/access/analytics/posts/:postId"
+                    ]
+                  },
+                  {
+                    "group": "Stories",
+                    "icon": "book-open",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/analytics/stories/chart",
+                      "GET /v2/access/analytics/stories/top"
+                    ]
+                  },
+                  {
+                    "group": "Streams",
+                    "icon": "video",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/analytics/streams/chart",
+                      "GET /v2/access/analytics/streams/top"
+                    ]
+                  },
+                  {
+                    "group": "Mass Messages",
+                    "icon": "comments",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/analytics/mass-messages/chart",
+                      "GET /v2/access/analytics/mass-messages/purchased",
+                      "GET /v2/access/analytics/mass-messages/:massMessageId/buyers"
+                    ]
+                  },
+                  {
+                    "group": "Promotions & Campaigns",
+                    "icon": "bullhorn",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/analytics/promotions/chart",
+                      "GET /v2/access/analytics/promotions/top",
+                      "GET /v2/access/analytics/trials/chart",
+                      "GET /v2/access/analytics/trials/top",
+                      "GET /v2/access/analytics/campaigns/chart",
+                      "GET /v2/access/analytics/campaigns/top"
+                    ]
+                  },
+                  {
+                    "group": "Visitor Analytics",
+                    "icon": "globe",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/analytics/visitor-countries/chart",
+                      "GET /v2/access/analytics/visitor-countries/top"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Promotions",
+                "icon": "gift",
+                "iconType": "solid",
+                "pages": [
+                  {
+                    "group": "Tracking Links",
+                    "icon": "link",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/promotions/tracking-links",
+                      "POST /v2/access/promotions/tracking-links",
+                      "GET /v2/access/promotions/tracking-links/:trackingLinkId",
+                      "PUT /v2/access/promotions/tracking-links/:trackingLinkId",
+                      "DELETE /v2/access/promotions/tracking-links/:trackingLinkId",
+                      {
+                        "group": "Share Access",
+                        "pages": [
+                          "POST /v2/access/promotions/tracking-links/share-access",
+                          "DELETE /v2/access/promotions/tracking-links/share-access"
+                        ]
+                      },
+                      {
+                        "group": "Claimers",
+                        "pages": [
+                          "GET /v2/access/promotions/tracking-links/:trackingLinkId/claimers"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Trial Links",
+                    "icon": "clock",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/promotions/trial-links",
+                      "POST /v2/access/promotions/trial-links",
+                      "GET /v2/access/promotions/trial-links/:trialLinkId",
+                      "PUT /v2/access/promotions/trial-links/:trialLinkId",
+                      "DELETE /v2/access/promotions/trial-links/:trialLinkId",
+                      {
+                        "group": "Share Access",
+                        "pages": [
+                          "POST /v2/access/promotions/trial-links/share-access",
+                          "DELETE /v2/access/promotions/trial-links/share-access"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Promotions",
+                    "icon": "gift",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/promotions",
+                      "GET /v2/access/promotions/:promotionId",
+                      "POST /v2/access/promotions",
+                      "PUT /v2/access/promotions/:promotionId",
+                      "DELETE /v2/access/promotions/:promotionId",
+                      {
+                        "group": "Finish",
+                        "pages": [
+                          "POST /v2/access/promotions/:promotionId/finish"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Bundles",
+                    "icon": "box",
+                    "iconType": "solid",
+                    "pages": [
+                      "GET /v2/access/promotions/bundles",
+                      "GET /v2/access/promotions/bundles/:bundleId",
+                      "POST /v2/access/promotions/bundles",
+                      "PUT /v2/access/promotions/bundles/:bundleId",
+                      "DELETE /v2/access/promotions/bundles/:bundleId"
+                    ]
+                  }
                 ]
               }
             ]
           },
           {
             "group": "Dynamic Rules API",
+            "icon": "https://next.ofauth.com/rules_icon.png",
             "openapi": "https://api-next.ofauth.com/openapi-dynamic-rules.json",
             "pages": [
               "api-reference/dynamic-rules/overview",
@@ -278,9 +511,12 @@
       {
         "dropdown": "SDK",
         "icon": "code",
+        "iconType": "solid",
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "rocket",
+            "iconType": "solid",
             "pages": [
               "sdk/index",
               "sdk/quickstart"
@@ -288,6 +524,8 @@
           },
           {
             "group": "Core Concepts",
+            "icon": "cube",
+            "iconType": "solid",
             "pages": [
               "sdk/core-concepts/architecture",
               "sdk/core-concepts/authentication",
@@ -296,9 +534,13 @@
           },
           {
             "group": "Modules",
+            "icon": "puzzle-piece",
+            "iconType": "solid",
             "pages": [
               {
                 "group": "Authentication",
+                "icon": "key",
+                "iconType": "solid",
                 "pages": [
                   "sdk/modules/authentication/link-authentication",
                   "sdk/modules/authentication/link-connections"
@@ -315,6 +557,8 @@
           },
           {
             "group": "Advanced",
+            "icon": "gears",
+            "iconType": "solid",
             "pages": [
               "sdk/advanced/error-handling"
             ]

@@ -20,8 +20,8 @@ Configure in the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/w
 | Event | Trigger |
 |-------|---------|
 | `connection.created` | New connection established |
-| `connection.updated` | Connection details changed |
-| `connection.expired` | Connection lost/invalidated |
+| `connection.updated` | Connection details changed (e.g., reconnection with new permissions) |
+| `connection.expired` | Connection expired naturally, or [invalidated via API](/reference/connections#invalidate-connection) |
 
 ### System Events
 

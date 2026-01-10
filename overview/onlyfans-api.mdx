@@ -1,0 +1,120 @@
+---
+title: "The OnlyFans API"
+description: "Understanding the realities of building on OnlyFans' unofficial API—and how OFAuth keeps you ahead of changes"
+---
+
+## The Reality
+
+**OnlyFans does not provide official API access for external developers.** Their API is built for their own website—third parties work with internal-first assumptions.
+
+<Info>
+  OnlyFans has no obligation to support external integrations. OFAuth exists to absorb this volatility so you don't have to.
+</Info>
+
+---
+
+## What Changes (And How OFAuth Tracks It)
+
+### Request Signing (Dynamic Rules)
+
+OnlyFans requires cryptographically signed requests. These signing algorithms change frequently—sometimes multiple times per day.
+
+<CardGroup cols={2}>
+  <Card title="The Challenge" icon="triangle-exclamation">
+    Signing parameters, algorithms, and formats evolve constantly as OnlyFans updates anti-bot measures. Miss a change and all requests fail.
+  </Card>
+  <Card title="How OFAuth Handles It" icon="shield-check">
+    We monitor signing changes 24/7 and update Dynamic Rules automatically. The Access API and SDK handle signing transparently—you never see it break.
+  </Card>
+</CardGroup>
+
+### Authentication Flows
+
+Login flows, 2FA requirements, device verification, and session handling change regularly.
+
+<CardGroup cols={2}>
+  <Card title="The Challenge" icon="triangle-exclamation">
+    A single change to CAPTCHA handling or 2FA flow can break all new user connections overnight.
+  </Card>
+  <Card title="How OFAuth Handles It" icon="shield-check">
+    Link adapts to auth changes automatically. We update flows, handle new 2FA methods, and manage device verification—your OAuth-style callback stays stable.
+  </Card>
+</CardGroup>
+
+### API Endpoints & Responses
+
+Paths, parameters, and response payloads shift without notice as OnlyFans iterates on their internal systems.
+
+<CardGroup cols={2}>
+  <Card title="The Challenge" icon="triangle-exclamation">
+    An endpoint rename or response schema change can break your data pipelines with no warning.
+  </Card>
+  <Card title="How OFAuth Handles It" icon="shield-check">
+    Managed endpoints provide stable, typed responses. When OnlyFans changes payloads, we ship backward-compatible shims so your code keeps working.
+  </Card>
+</CardGroup>
+
+---
+
+## What OFAuth Monitors
+
+| Area | What Changes | OFAuth Response |
+|------|--------------|-----------------|
+| **Signing Rules** | Algorithms, parameters, timestamps | Auto-updated Dynamic Rules, SDK patches |
+| **Auth Flows** | Login, 2FA, CAPTCHA, device checks | Link service updates, webhook alerts |
+| **Endpoints** | Paths, params, response schemas | Managed endpoint shims, SDK updates |
+| **Rate Limits** | Thresholds, windows, patterns | Automatic throttling, retry guidance |
+| **Session Handling** | Token formats, expiry behavior | Session refresh, expiry webhooks |
+
+<Tip>
+  **You don't need to monitor OnlyFans yourself.** Subscribe to webhooks for connection status changes, and use the SDK or Access API to stay insulated from upstream shifts.
+</Tip>
+
+---
+
+## Risks Without OFAuth
+
+Building directly on OnlyFans' API means:
+
+| Risk | Impact |
+|------|--------|
+| **Signing Failures** | All requests fail until you reverse-engineer the new algorithm |
+| **Auth Breaks** | New users can't connect until you update login automation |
+| **Schema Changes** | Data pipelines break on unexpected response formats |
+| **No Visibility** | You learn about changes from user complaints, not monitoring |
+
+---
+
+## Building Resilient Integrations
+
+Even with OFAuth handling the volatility, follow these practices:
+
+### Architecture
+
+- Implement circuit breakers so transient failures don't cascade
+- Use the SDK or Access API—don't call OnlyFans directly
+- Design for async: queue operations and handle retries gracefully
+
+### Data Strategy
+
+- Cache responses with stale-while-revalidate patterns
+- Keep local copies of critical data for resilience
+- Handle `SESSION_EXPIRED` errors by prompting re-authentication
+
+### Stay Informed
+
+- Set up webhooks for `connection.expired` and `connection.invalidated` events
+- Monitor OFAuth status for any upstream incidents
+- Keep your SDK version current for the latest compatibility fixes
+
+---
+
+## The Bottom Line
+
+OnlyFans' API will change. That's not a risk—it's a certainty.
+
+**OFAuth's job is to track those changes so you don't have to.** Dynamic Rules update automatically. Link adapts to auth changes. The Access API provides stable contracts over shifting endpoints.
+
+<Info>
+  Focus on your product. Let OFAuth handle OnlyFans.
+</Info>

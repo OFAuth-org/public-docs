@@ -1,181 +1,222 @@
 ---
-title: "Error Handling Standards"
-description:
-  "Error codes, response formats, and debugging strategies for the OFAuth API"
+title: "Error Handling"
+description: "Error codes, response formats, and debugging strategies for the OFAuth API"
 ---
 
 ## Overview
 
-The OFAuth API uses standard HTTP status codes with structured JSON error
-responses to provide clear, actionable feedback when things go wrong. This
-systematic approach helps developers quickly identify and resolve issues.
+The OFAuth API uses standard HTTP status codes with structured JSON error responses to provide clear, actionable feedback when things go wrong.
 
 ## Error Response Format
 
-All API errors return a consistent JSON structure with three core fields:
+All API errors return a consistent JSON structure:
 
-* `error`: a human-readable description of what went wrong
-* `code`: a machine-readable identifier you can branch on in your client
-* `details`: optional contextual information such as the affected field
+```json
+{
+  "error": "Human-readable error message",
+  "type": "ERROR_TYPE",
+  "requestId": "req_abc123",
+  "actionRequired": "refresh_session"
+}
+```
 
 ### Error Response Fields
 
-| Field     | Type   | Description                                           |
-| --------- | ------ | ----------------------------------------------------- |
-| `error`   | string | Human-readable error message for developers           |
-| `code`    | string | Machine-readable error code for programmatic handling |
-| `details` | object | Additional context like field validation errors       |
+| Field | Type | Description |
+|-------|------|-------------|
+| `error` | string | Human-readable error message for developers |
+| `type` | string | Machine-readable error type for programmatic handling |
+| `requestId` | string | Unique request identifier for debugging and support |
+| `actionRequired` | string | Optional hint for how to resolve the error |
+
+---
 
 ## HTTP Status Codes
 
 ### Success Codes
 
-| Code  | Description | When Used                             |
-| ----- | ----------- | ------------------------------------- |
-| `200` | OK          | Request successful, data returned     |
-| `201` | Created     | Resource successfully created         |
-| `204` | No Content  | Request successful, no data to return |
+| Code | Description | When Used |
+|------|-------------|-----------|
+| `200` | OK | Request successful, data returned |
+| `201` | Created | Resource successfully created |
+| `204` | No Content | Request successful, no data to return |
 
 ### Client Error Codes
 
-| Code  | Category     | Description                | Action Required         |
-| ----- | ------------ | -------------------------- | ----------------------- |
-| `400` | Client Error | Invalid request parameters | Fix request format/data |
-| `401` | Client Error | Invalid/missing API key    | Check authentication    |
-| `403` | Client Error | Insufficient permissions   | Contact support         |
-| `404` | Client Error | Resource not found         | Check endpoint URL      |
-| `422` | Client Error | Validation failed          | Fix request data        |
-| `429` | Client Error | Rate limit exceeded        | Wait and retry          |
+| Code | Description | Action Required |
+|------|-------------|-----------------|
+| `400` | Bad request | Fix request format/data |
+| `401` | Session expired or invalid | Re-authenticate user |
+| `404` | Route or resource not found | Check endpoint URL |
+| `429` | Rate limit exceeded | Wait and retry |
 
 ### Server Error Codes
 
-| Code  | Category     | Description            | Action Required           |
-| ----- | ------------ | ---------------------- | ------------------------- |
-| `500` | Server Error | Internal server error  | Retry or contact support  |
-| `502` | Server Error | Upstream service error | Retry or contact support  |
-| `503` | Server Error | Service unavailable    | Check status page         |
-| `504` | Server Error | Gateway timeout        | Retry with longer timeout |
+| Code | Description | Action Required |
+|------|-------------|-----------------|
+| `500` | Unknown error | Retry or contact support |
+| `502` | Proxy error | Retry after delay |
+| `503` | Network error | Retry after delay |
 
-## Error Code Categories
+---
 
-### Authentication Errors (AUTH\_\*)
+## Error Types
 
-| Code                        | HTTP Status | Description                        | Resolution                             |
-| --------------------------- | ----------- | ---------------------------------- | -------------------------------------- |
-| `AUTH_INVALID_KEY`          | 401         | API key is invalid or malformed    | Verify API key format and validity     |
-| `AUTH_KEY_EXPIRED`          | 401         | API key has expired                | Generate new API key                   |
-| `AUTH_INSUFFICIENT_SCOPE`   | 403         | API key lacks required permissions | Contact support for permission upgrade |
-| `AUTH_CONNECTION_NOT_FOUND` | 404         | Connection ID doesn't exist        | Re-authenticate user                   |
-| `AUTH_SESSION_EXPIRED`      | 401         | User session has expired           | Re-authenticate user                   |
+The `type` field in error responses will be one of the following:
 
-### Validation Errors (VALIDATION\_\*)
+| Type | HTTP Status | Description | Action Required |
+|------|-------------|-------------|-----------------|
+| `SESSION_NOT_PROVIDED` | 401 | Connection not found or missing session data | Re-authenticate user via Link |
+| `SESSION_EXPIRED` | 401 | User session has expired | Re-authenticate user via Link |
+| `RULES_OUTDATED` | 401 | Dynamic rules need updating | Retry—OFAuth handles this automatically |
+| `BAD_REQUEST` | 400 | Invalid request parameters | Fix request format/data |
+| `ROUTE_NOT_FOUND` | 404 | Endpoint path not found | Check endpoint URL |
+| `RATE_LIMIT_EXCEEDED` | 429 | Request rate limit exceeded | Wait and retry with backoff |
+| `PROXY_ERROR` | 502 | Upstream proxy error | Retry after delay |
+| `NETWORK_ERROR` | 503 | Network connectivity issue | Retry after delay |
+| `UNKNOWN_ERROR` | 500 | Unexpected error | Retry or contact support |
 
-| Code                        | HTTP Status | Description                  | Resolution                   |
-| --------------------------- | ----------- | ---------------------------- | ---------------------------- |
-| `VALIDATION_REQUIRED_FIELD` | 422         | Required field missing       | Add missing field to request |
-| `VALIDATION_INVALID_FORMAT` | 422         | Field format is incorrect    | Fix field format             |
-| `VALIDATION_INVALID_VALUE`  | 422         | Field value is invalid       | Use valid field value        |
-| `VALIDATION_FIELD_TOO_LONG` | 422         | Field exceeds maximum length | Shorten field value          |
+---
 
-### Rate Limiting Errors (RATE\_LIMIT\_\*)
+## Action Required Hints
 
-| Code                        | HTTP Status | Description                 | Resolution                     |
-| --------------------------- | ----------- | --------------------------- | ------------------------------ |
-| `RATE_LIMIT_EXCEEDED`       | 429         | Request rate limit exceeded | Wait and retry with backoff    |
-| `RATE_LIMIT_QUOTA_EXCEEDED` | 429         | Monthly quota exceeded      | Upgrade plan or wait for reset |
+Some errors include an `actionRequired` field suggesting how to resolve the issue:
 
-### Connection Errors (CONNECTION\_\*)
+| Action | Description |
+|--------|-------------|
+| `refresh_session` | User needs to re-authenticate via Link |
+| `refresh_rules` | Dynamic rules are outdated (retry automatically) |
+| `try_again` | Transient error—retry the request |
 
-| Code                        | HTTP Status | Description                 | Resolution                |
-| --------------------------- | ----------- | --------------------------- | ------------------------- |
-| `CONNECTION_NOT_FOUND`      | 404         | Connection ID not found     | Re-authenticate user      |
-| `CONNECTION_EXPIRED`        | 401         | Connection has expired      | Re-authenticate user      |
-| `CONNECTION_INVALID_STATE`  | 400         | Connection in invalid state | Check connection status   |
-| `CONNECTION_LIMIT_EXCEEDED` | 403         | Too many connections        | Remove unused connections |
+---
 
-### Upstream Errors (UPSTREAM\_\*)
+## Rate Limiting
 
-| Code                        | HTTP Status | Description                  | Resolution                |
-| --------------------------- | ----------- | ---------------------------- | ------------------------- |
-| `UPSTREAM_UNAVAILABLE`      | 502         | OnlyFans API unavailable     | Retry after delay         |
-| `UPSTREAM_TIMEOUT`          | 504         | OnlyFans API timeout         | Retry with longer timeout |
-| `UPSTREAM_RATE_LIMITED`     | 429         | OnlyFans rate limit hit      | Wait and retry            |
-| `UPSTREAM_INVALID_RESPONSE` | 502         | Unexpected upstream response | Report to support         |
+When you hit a rate limit, the response includes:
 
-### Dynamic Rules Errors (RULES\_\*)
+- **HTTP Status**: `429`
+- **`Retry-After` header**: Seconds to wait before retrying
 
-| Code                      | HTTP Status | Description                 | Resolution                            |
-| ------------------------- | ----------- | --------------------------- | ------------------------------------- |
-| `RULES_OUTDATED`          | 503         | Dynamic rules need updating | Wait and retry                        |
-| `RULES_UNAVAILABLE`       | 503         | Rules service unavailable   | Wait and retry                        |
-| `RULES_INVALID_SIGNATURE` | 401         | Request signature invalid   | Update rules and regenerate signature |
+```json
+{
+  "error": "Rate limit exceeded, please wait a few seconds before trying again",
+  "type": "RATE_LIMIT_EXCEEDED",
+  "requestId": "req_abc123"
+}
+```
 
-## Error Handling Examples
+### Handling Rate Limits
 
-### Basic Error Handling
+1. Check for `429` status code
+2. Read the `Retry-After` header (defaults to 60 seconds if missing)
+3. Wait the specified duration before retrying
+4. Implement exponential backoff for repeated failures
 
-Follow these practices when calling the API from client code:
-
-* Check `response.ok` before parsing the body and surface the HTTP status in your logs.
-* Parse the JSON payload and branch on `errorData.code` to determine the recovery path.
-* Redirect users to re-authentication when you receive connection or session errors.
-* Respect the `X-RateLimit-Retry-After` header and pause before retrying rate-limited calls.
-* Bubble up unexpected errors so they can be reported to your monitoring stack.
-
-### Advanced Error Handler Class
-
-Build a reusable error-handling helper so every request is treated consistently. The helper should:
-
-* Centralize logging of HTTP status codes, request identifiers, and the parsed error payload.
-* Categorize errors (retryable, authentication, validation) to route them to the right recovery logic.
-* Apply backoff to retryable errors and honour server-provided retry hints.
-* Trigger re-authentication flows when connection or session errors are detected.
-* Raise typed exceptions (for example `ApiError`, `AuthError`, `ValidationError`) so downstream code can react precisely.
-
-### Validation Error Details
-
-Validation errors include specific field information. Expect `details.field` to identify the problematic input, `details.message` to describe the issue, and `details.value` (when provided) to show what was rejected.
-
-Handle validation errors with user-friendly messages by mapping the fields in `details` to UI controls, highlighting the inputs that need attention, and surfacing the descriptive message inline for the user.
-
-## Debugging Tips
-
-<CardGroup cols={2}>
-  <Card title="Use Error Codes" icon="code">
-    Always check the `code` field for programmatic error handling
-  </Card>
-
-  <Card title="Log Full Responses" icon="file-text">
-    Log complete error responses for debugging and support
-  </Card>
-
-  <Card title="Monitor Error Patterns" icon="chart-line">
-    Track error frequency and types to identify issues
-  </Card>
-
-  <Card title="Test Error Scenarios" icon="flask">
-    Test your error handling with intentional invalid requests
-  </Card>
-</CardGroup>
-
-### Error Monitoring
-
-Implement error tracking for production applications by storing structured error metadata, tracking frequency per error code, sending alerts when thresholds are exceeded, and forwarding enriched events (timestamp, status, stack trace, and request context) to your monitoring platform.
+---
 
 ## Common Error Scenarios
 
-### Authentication Issues
+### Session Expired
 
-When you receive authentication or connection errors:
+When a user's OnlyFans session expires:
 
-* Inspect the response body for `CONNECTION_EXPIRED`, `AUTH_SESSION_EXPIRED`, or related codes.
-* Inform the user that they must reconnect and send them through the hosted re-authentication flow.
-* Clear cached credentials so the next attempt starts with a fresh session.
-* Log the status, code, and affected connection ID for support follow-up.
+```json
+{
+  "error": "Session has expired, please login again",
+  "type": "SESSION_EXPIRED",
+  "actionRequired": "refresh_session",
+  "requestId": "req_abc123"
+}
+```
 
-### Rate Limiting
+**Resolution**: Redirect the user through the Link flow to re-authenticate.
 
-Handle rate limits by adopting exponential backoff. Read the `X-RateLimit-Retry-After` header (it defaults to 60 seconds when missing), pause before the next attempt, and stop retrying once the maximum retry count has been reached. Track cumulative failures so you know when to surface a persistent outage to the user.
+### Connection Not Found
+
+When a connection ID doesn't exist or has no session data:
+
+```json
+{
+  "error": "Connection not found",
+  "type": "SESSION_NOT_PROVIDED",
+  "requestId": "req_abc123"
+}
+```
+
+**Resolution**: The connection may have been deleted or never completed. Create a new Link session for the user.
+
+### Proxy Error
+
+When there's an issue reaching OnlyFans:
+
+```json
+{
+  "error": "Proxy error occurred",
+  "type": "PROXY_ERROR",
+  "actionRequired": "try_again",
+  "requestId": "req_abc123"
+}
+```
+
+**Resolution**: Retry the request after a short delay. OFAuth automatically rotates proxies.
+
+---
+
+## Error Handling Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Check the type field" icon="code">
+    Branch on the `type` field for programmatic handling, not the error message
+  </Card>
+
+  <Card title="Log requestId" icon="file-text">
+    Include `requestId` in logs and support requests for debugging
+  </Card>
+
+  <Card title="Handle session errors" icon="user">
+    Watch for `SESSION_EXPIRED` and `SESSION_NOT_PROVIDED` to trigger re-auth flows
+  </Card>
+
+  <Card title="Implement retries" icon="rotate">
+    Use exponential backoff for `PROXY_ERROR`, `NETWORK_ERROR`, and rate limits
+  </Card>
+</CardGroup>
+
+### Example Error Handler
+
+```typescript
+async function handleOFAuthRequest(response: Response) {
+  if (!response.ok) {
+    const error = await response.json();
+    
+    switch (error.type) {
+      case 'SESSION_EXPIRED':
+      case 'SESSION_NOT_PROVIDED':
+        // Redirect user to re-authenticate
+        return redirectToLink(userId);
+      
+      case 'RATE_LIMIT_EXCEEDED':
+        const retryAfter = response.headers.get('Retry-After') || '60';
+        await sleep(parseInt(retryAfter) * 1000);
+        return retry();
+      
+      case 'PROXY_ERROR':
+      case 'NETWORK_ERROR':
+        // Retry with backoff
+        await sleep(1000);
+        return retry();
+      
+      default:
+        console.error('OFAuth error:', error.type, error.error, error.requestId);
+        throw new Error(error.error);
+    }
+  }
+  
+  return response.json();
+}
+```
+
+---
 
 ## Next Steps
 
@@ -183,10 +224,10 @@ Handle rate limits by adopting exponential backoff. Read the `X-RateLimit-Retry-
   <Card title="Rate Limiting" icon="gauge" href="/reference/rate-limiting">
     Token bucket system and backoff strategies
   </Card>
-  <Card title="Access Guide" icon="key" href="/reference/access">
+  <Card title="Access API" icon="key" href="/reference/access">
     Using the Access API
   </Card>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get started with OFAuth
+  <Card title="Webhooks" icon="bell" href="/reference/webhooks">
+    Get notified of connection status changes
   </Card>
 </CardGroup>

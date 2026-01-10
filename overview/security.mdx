@@ -5,7 +5,7 @@ description: "How OFAuth protects your users' data and credentials"
 
 ## Security Architecture
 
-OFAuth is designed with a **zero-credential architecture**—your servers never see or store OnlyFans credentials.
+OFAuth is designed with a **zero-credential storage architecture**—neither your servers nor OFAuth ever store OnlyFans credentials. Credentials are used once during authentication and immediately discarded.
 
 ```mermaid
 sequenceDiagram
@@ -35,7 +35,7 @@ sequenceDiagram
     **Only store Connection IDs**—simple string tokens like `conn_abc123`. No credentials, no session data.
   </Card>
   <Card title="OFAuth Infrastructure" icon="shield-check">
-    Credentials encrypted at rest with AES-256. Sessions managed in isolated, encrypted storage.
+    **Zero credential storage**. Credentials are used once to establish a session, then immediately discarded. Only active session tokens are stored encrypted.
   </Card>
 </CardGroup>
 
@@ -44,12 +44,12 @@ sequenceDiagram
 | Data | Your Servers | OFAuth |
 |------|--------------|--------|
 | Connection ID | ✅ | ✅ |
-| OnlyFans credentials | ❌ Never | ✅ Encrypted |
-| Session tokens | ❌ Never | ✅ Encrypted |
+| OnlyFans credentials | ❌ Never | ❌ Never stored |
+| Session tokens | ❌ Never | ✅ Encrypted (active sessions only) |
 | User content/data | Your choice | ❌ Not stored |
 
 <Tip>
-  **Compliance benefit**: Since you never handle credentials, you avoid the security audit scope that comes with storing sensitive authentication data.
+  **Compliance benefit**: Neither you nor OFAuth store credentials. OFAuth only maintains encrypted session tokens for active connections, minimizing security exposure.
 </Tip>
 
 ---
@@ -59,7 +59,7 @@ sequenceDiagram
 All data in OFAuth is protected with industry-standard encryption:
 
 - **In transit**: TLS 1.3 for all API communications
-- **At rest**: AES-256 encryption for stored credentials and sessions
+- **At rest**: AES-256 encryption for session tokens
 - **Key management**: Keys rotated regularly, stored in hardware security modules (HSMs)
 
 ---
@@ -102,22 +102,6 @@ OFAuth operates as a **transparent proxy**. We don't store OnlyFans content data
     24/7 monitoring, automated alerting, incident response procedures
   </Card>
 </CardGroup>
-
----
-
-## API Key Security
-
-Your OFAuth API key authenticates requests from your servers:
-
-<Warning>
-  **Never expose your API key in client-side code.** API keys should only be used in server-side code and stored in environment variables.
-</Warning>
-
-Best practices:
-- Store API keys in environment variables, not code
-- Use different API keys for development and production
-- Rotate keys periodically
-- Monitor API key usage in your dashboard
 
 ---
 

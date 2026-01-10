@@ -105,8 +105,66 @@ DELETE /v2/connections/{connectionId}
 ```
 
 <Warning>
-Deleting a connection logs the user out and stops billing.
+Deleting a connection logs the user out and stops billing. The connection record is permanently removed.
 </Warning>
+
+### Invalidate Connection
+
+```http
+POST /v2/connections/{connectionId}/invalidate
+```
+
+Invalidates a connection by marking it as expired and logging out the user. Unlike deletion, the connection record is preserved, making it ideal for:
+
+- **Updating permissions**: When your platform's required permissions change, invalidate the connection so users reconnect with the new permission set
+- **Security rotation**: Force users to re-authenticate without losing their connection history
+- **Graceful session refresh**: Refresh credentials while maintaining connection metadata
+
+<Info>
+When you invalidate a connection, the user's profile data and permissions configuration are preserved. Only the session data is cleared.
+</Info>
+
+## Updating User Data Permissions
+
+When your platform needs to request different permissions from connected accounts, use the invalidate + reconnect flow:
+
+### Step 1: Update Your Platform Permissions
+
+In your [OFAuth Dashboard](https://app.ofauth.com/platform/developer/api), update the **User Data Permissions** to include the new permissions your platform requires.
+
+### Step 2: Invalidate Existing Connections
+
+```bash
+curl -X POST https://api-next.ofauth.com/v2/connections/{connectionId}/invalidate \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+This marks the connection as expired without deleting it.
+
+### Step 3: Prompt User to Reconnect
+
+When users reconnect through Link with the same `connectionId`, they'll be prompted to approve the updated permissions:
+
+```bash
+curl -X POST https://api-next.ofauth.com/v2/link/init \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "connectionId": "conn_abc123xyz",
+    "redirectUrl": "https://yourapp.com/callback"
+  }'
+```
+
+<Tip>
+Set up webhooks to listen for `connection.expired` events, then notify affected users to reconnect with the updated permissions.
+</Tip>
+
+### Invalidate vs Delete
+
+| Action | Session | Record | User Data | Use Case |
+|--------|---------|--------|-----------|----------|
+| **Invalidate** | Cleared | Preserved | Preserved | Permission updates, security rotation |
+| **Delete** | Cleared | Removed | Removed | User requests disconnection, stop billing |
 
 ## Reconnecting Expired Connections
 
