@@ -260,7 +260,7 @@
                     "pages": [
                       "GET /v2/access/users/:userId",
                       "GET /v2/access/users/list",
-                      "GET /v2/access/users/performers-search"
+                      "GET /v2/access/users/search"
                     ]
                   },
                   {
