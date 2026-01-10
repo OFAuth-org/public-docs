@@ -39,10 +39,9 @@ curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
 ```bash Session Headers
 curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
   -H 'apikey: YOUR_API_KEY' \
-  -H 'x-of-cookie: your_session_cookie_string' \
+  -H 'x-of-cookie: your_full_session_cookie_string' \
   -H 'x-of-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...' \
-  -H 'x-of-bc: your_bc_header_value' \
-  -H 'x-of-user-id: 12345'
+  -H 'x-proxy-url: http://user:password@127.0.0.1:10000'
 ```
 
 ```javascript JavaScript
@@ -218,12 +217,8 @@ OnlyFans session cookie string. Must contain `fp`, `auth_id`, and `sess` unless 
 User agent string that matches the OnlyFans session
 </ParamField>
 
-<ParamField header="x-of-bc" type="string">
-OnlyFans `x-bc` authentication value (optional, derived from cookie if omitted)
-</ParamField>
-
-<ParamField header="x-of-user-id" type="string">
-OnlyFans `auth_id` value (optional, derived from cookie if omitted)
+<ParamField header="x-proxy-url" type="string" required>
+Proxy URL that matches the OnlyFans session in the format: `http://user:pass@host:port` or `socks5://user:pass@host:port`.
 </ParamField>
 </Tab>
 </Tabs>
