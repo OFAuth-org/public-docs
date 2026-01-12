@@ -203,14 +203,14 @@ The connection ID obtained from Link API authentication
 </Tab>
 
 <Tab title="Session Headers">
-Provide OnlyFans session data directly if you handle authentication separately. The `x-of-cookie` header must include the OnlyFans `fp`, `auth_id`, and `sess` cookies unless you override `fp` with `x-of-bc` and `auth_id` with `x-of-user-id`.
+Provide OnlyFans session data directly if you handle authentication separately. The `x-of-cookie` header must include the OnlyFans `fp`, `auth_id`, and `sess` cookies.
 
 <ParamField header="apikey" type="string" required>
 Your OFAuth API key
 </ParamField>
 
 <ParamField header="x-of-cookie" type="string" required>
-OnlyFans session cookie string. Must contain `fp`, `auth_id`, and `sess` unless overridden by other headers.
+OnlyFans session cookie string. Must contain `fp`, `auth_id`, and `sess`.
 </ParamField>
 
 <ParamField header="x-of-user-agent" type="string" required>

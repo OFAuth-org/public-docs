@@ -36,10 +36,10 @@ description: "API endpoints, headers, response codes, and key terms at a glance"
 | Header | Value | Required |
 |--------|-------|----------|
 | `apikey` | Your OFAuth API key | Yes |
-| `x-of-cookie` | OnlyFans session cookie | Yes |
+| `x-of-cookie` | OnlyFans session cookie (must include `fp`, `auth_id`, `sess`) | Yes |
 | `x-of-user-agent` | User agent string | Yes |
-| `x-of-bc` | BC header value | No |
-| `x-of-user-id` | OnlyFans user ID | No |
+
+The `x-of-cookie` extracts `fp` for x-bc signing and `auth_id` for user identification. The `auth_uid_*` cookie is optional.
 
 ---
 

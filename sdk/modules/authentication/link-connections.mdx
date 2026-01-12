@@ -292,6 +292,92 @@ if (error) {
   **Permanent Action**: Deleting a connection permanently revokes access to the OnlyFans account. The user would need to re-authenticate through the Link flow to restore access.
 </Warning>
 
+## Invalidate Connection
+
+### `invalidate(connectionId)`
+
+Invalidate a connection, marking it as expired while preserving the connection record. Use this when you need users to reconnect with updated permissions.
+
+<ParamField path="connectionId" type="string" required>
+  The unique connection identifier to invalidate.
+</ParamField>
+
+<ResponseField name="success" type="boolean" required>
+  Whether the invalidation was successful.
+</ResponseField>
+
+<RequestExample>
+```typescript Invalidate Connection
+const { data: result, error } = await sdk.link.connections.invalidate(
+  "conn_123456789"
+)
+
+if (error) {
+  if (error.type === "not_found") {
+    console.log("Connection not found")
+  } else {
+    console.error("Failed to invalidate connection:", error.message)
+  }
+} else {
+  console.log("Connection invalidated successfully")
+  
+  // Notify user to reconnect with updated permissions
+  await notifyUserToReconnect("conn_123456789")
+}
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success Response
+{
+  "data": {
+    "success": true
+  },
+  "error": undefined
+}
+```
+</ResponseExample>
+
+<Info>
+  **Preserves Connection Record**: Unlike `delete()`, invalidating a connection keeps the connection record intact. The user can reconnect using the same connection ID, and their profile data will be preserved.
+</Info>
+
+### When to Use Invalidate vs Delete
+
+| Method | Use Case |
+|--------|----------|
+| `invalidate()` | Update permissions, force re-authentication, security rotation |
+| `delete()` | User requests disconnection, stop billing, remove all data |
+
+### Updating Permissions Flow
+
+When your platform's required permissions change, use invalidate to prompt users to reconnect:
+
+```typescript
+async function updateUserPermissions(connectionId: string) {
+  // 1. Invalidate the existing connection
+  const { error: invalidateError } = await sdk.link.connections.invalidate(
+    connectionId
+  )
+  
+  if (invalidateError) {
+    console.error("Failed to invalidate:", invalidateError.message)
+    return
+  }
+  
+  // 2. Initialize a new Link session with the same connectionId
+  const { data: linkSession, error: linkError } = await sdk.link.init({
+    connectionId: connectionId,
+    redirectUrl: "https://yourapp.com/callback"
+  })
+  
+  if (linkSession) {
+    // 3. Redirect user to reconnect with new permissions
+    console.log("Redirect user to:", linkSession.url)
+  }
+}
+```
+
 ## Connection Status Management
 
 ### Understanding Connection Status
