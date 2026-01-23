@@ -1,0 +1,159 @@
+---
+title: 'Media Storage'
+description: 'How to use Media Proxy and Vault Cache for OnlyFans media'
+---
+
+API responses include `media.ofauth.com` URLs for all media. These URLs automatically route to either edge cache or persistent storage (Vault Cache), and trigger auto-caching based on your configuration.
+
+| | Media Proxy | Vault Cache |
+|---|-------------|-------------|
+| **What it does** | Edge-cached URLs | Persistent storage with access by ID |
+| **Setup** | Automatic | Enable per connection |
+| **Best for** | Displaying content | Media libraries, PPV features |
+
+---
+
+## Displaying Media
+
+Use `media.ofauth.com` URLs directly in your app:
+
+```html
+<img src="https://media.ofauth.com/abc123..." />
+<video src="https://media.ofauth.com/xyz789..." controls />
+```
+
+When requested:
+1. If cached in Vault Cache → serves from persistent storage
+2. Otherwise → fetches from OnlyFans, caches at edge
+
+---
+
+## Setting Up Vault Cache
+
+### Enable for a Connection
+
+```bash
+curl -X PATCH 'https://api.ofauth.com/v2/settings/:connectionId' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{ "vaultCache": { "enabled": true } }'
+```
+
+### Configure Auto-Caching (Organization Defaults)
+
+```bash
+curl -X PATCH 'https://api.ofauth.com/v2/settings' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "vaultCache": {
+      "autoEnableForNewConnections": true,
+      "defaultSettings": {
+        "autoCacheVault": true,
+        "autoCacheMessages": false,
+        "autoCachePosts": false
+      }
+    }
+  }'
+```
+
+When `autoCacheVault` (or similar) is enabled, media is automatically queued for persistent storage when accessed via `media.ofauth.com`.
+
+---
+
+## Triggering Caching
+
+### Via Media Proxy URL
+
+POST to any `media.ofauth.com` URL to immediately queue for persistent storage:
+
+```bash
+curl -X POST 'https://media.ofauth.com/abc123...'
+```
+
+### Cache an Entire Vault List
+
+```bash
+curl -X POST 'https://api.ofauth.com/v2/vault/cache/list/:listId' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-connection-id: conn_xxx'
+```
+
+---
+
+## Accessing Cached Media
+
+### Get by Media ID
+
+```bash
+curl -X GET 'https://api.ofauth.com/v2/vault/:mediaId' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-connection-id: conn_xxx'
+```
+
+Response:
+```json
+{
+  "mediaId": "12345",
+  "presignedUrl": "https://...",
+  "expiresAt": 1234567890,
+  "status": "cached"
+}
+```
+
+### Batch Get URLs (up to 100)
+
+```bash
+curl -X POST 'https://api.ofauth.com/v2/vault/urls' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-connection-id: conn_xxx' \
+  -H 'Content-Type: application/json' \
+  -d '{ "mediaIds": ["12345", "12346", "12347"] }'
+```
+
+### List Cached Media
+
+```bash
+curl -X GET 'https://api.ofauth.com/v2/vault/list?status=cached' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-connection-id: conn_xxx'
+```
+
+---
+
+## Purging Cached Media
+
+### Via Media Proxy URL
+
+```bash
+curl -X DELETE 'https://media.ofauth.com/abc123...'
+```
+
+### Via API
+
+```bash
+curl -X DELETE 'https://api.ofauth.com/v2/vault/:mediaId' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-connection-id: conn_xxx'
+```
+
+### Purge All for a Connection
+
+```bash
+curl -X DELETE 'https://api.ofauth.com/v2/vault/purge' \
+  -H 'apikey: YOUR_API_KEY' \
+  -H 'x-connection-id: conn_xxx'
+```
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Media & Vault" icon="photo-film" href="/use-cases/media">
+    Full media operations guide
+  </Card>
+  <Card title="Vault Cache API" icon="database" href="/api-reference/vault-cache/cache">
+    Complete API reference
+  </Card>
+</CardGroup>

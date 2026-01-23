@@ -202,6 +202,24 @@ console.log("Uploaded media ID:", media.id)
 
 ---
 
+## Media Storage Options
+
+OFAuth provides two complementary solutions for handling OnlyFans media:
+
+| Feature | Media Proxy | Vault Cache |
+|---------|-------------|-------------|
+| **Purpose** | Display current content | Build media libraries |
+| **Access** | Via API response URLs | By media ID directly |
+| **Storage** | Temporary (edge cache) | Persistent storage |
+| **Setup** | Automatic | Requires enabling |
+| **Best for** | Immediate display | PPV features, offline access |
+
+<Card title="Media Storage Guide" icon="database" href="/guides/media-storage">
+  Learn when to use Media Proxy vs Vault Cache with detailed examples
+</Card>
+
+---
+
 ## Media Proxy
 
 OFAuth automatically proxies OnlyFans CDN URLs, making media embeddable on your platform.
@@ -234,6 +252,24 @@ const imgUrl = media.files.full.url
 <!-- Embed in your app -->
 <img src="https://media.ofauth.com/v1/abc123/photo.jpg" alt="Content" />
 <video src="https://media.ofauth.com/v1/xyz789/video.mp4" controls />
+```
+
+### Trigger Persistent Caching
+
+You can trigger persistent caching of a specific media item by sending a `POST` request to its media proxy URL:
+
+```javascript
+await fetch("https://media.ofauth.com/abc123...", { method: "POST" })
+// Response: { "success": true, "mediaId": "123456", "status": "queued" }
+```
+
+### Purge Cached Media
+
+Remove a specific media item from persistent cache with a `DELETE` request:
+
+```javascript
+await fetch("https://media.ofauth.com/abc123...", { method: "DELETE" })
+// Response: { "success": true, "mediaId": "123456", "freedBytes": 1048576 }
 ```
 
 ### Billing
@@ -372,6 +408,12 @@ List types: `custom`, `messages`, `posts`, `stories`, `streams`, `media_stickers
 ## Related Guides
 
 <CardGroup cols={2}>
+  <Card title="Media Storage" icon="database" href="/guides/media-storage">
+    Media Proxy vs Vault Cache - when to use each
+  </Card>
+  <Card title="Vault Cache API" icon="archive" href="/api-reference/vault-cache/cache">
+    Access cached media by ID
+  </Card>
   <Card title="Content & Posts" icon="image" href="/use-cases/content">
     Use media in posts and stories
   </Card>

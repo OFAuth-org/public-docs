@@ -110,7 +110,8 @@
                   "guides/link/hosted",
                   "guides/link/embed"
                 ]
-              }
+              },
+              "guides/media-storage"
             ]
           },
           {
@@ -518,7 +519,7 @@
             ]
           },
           {
-            "group": "Vault+ API",
+            "group": "Vault Cache API",
             "icon": "database",
             "iconType": "solid",
             "openapi": "https://api-next.ofauth.com/openapi.json",
