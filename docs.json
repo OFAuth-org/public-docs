@@ -159,8 +159,8 @@
                 "pages": [
                   "GET /v2/settings",
                   "PATCH /v2/settings",
-                  "GET /v2/settings/{connectionId}",
-                  "PATCH /v2/settings/{connectionId}"
+                  "GET /v2/settings/:connectionId",
+                  "PATCH /v2/settings/:connectionId"
                 ]
               }
             ]
@@ -528,7 +528,7 @@
                 "icon": "box-archive",
                 "iconType": "solid",
                 "pages": [
-                  "POST /v2/vault/cache/list/{listId}",
+                  "POST /v2/vault/cache/list/:listId",
                   "GET /v2/vault/cache/status",
                   "GET /v2/vault/cache/stats"
                 ]
@@ -538,11 +538,11 @@
                 "icon": "photo-film",
                 "iconType": "solid",
                 "pages": [
-                  "GET /v2/vault/media/{mediaId}",
-                  "POST /v2/vault/media/urls",
-                  "GET /v2/vault/media/list",
-                  "DELETE /v2/vault/media/{mediaId}",
-                  "DELETE /v2/vault/media/purge"
+                  "GET /v2/vault/:mediaId",
+                  "POST /v2/vault/urls",
+                  "GET /v2/vault/list",
+                  "DELETE /v2/vault/:mediaId",
+                  "DELETE /v2/vault/purge"
                 ]
               }
             ]
