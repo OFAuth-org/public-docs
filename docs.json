@@ -151,7 +151,18 @@
               "GET /v2/account/whoami",
               "GET /v2/connections",
               "DELETE /v2/connections/{connectionId}",
-              "POST /v2/connections/{connectionId}/invalidate"
+              "POST /v2/connections/{connectionId}/invalidate",
+              {
+                "group": "Settings",
+                "icon": "gear",
+                "iconType": "solid",
+                "pages": [
+                  "GET /v2/settings",
+                  "PATCH /v2/settings",
+                  "GET /v2/settings/{connectionId}",
+                  "PATCH /v2/settings/{connectionId}"
+                ]
+              }
             ]
           },
           {
@@ -504,6 +515,36 @@
               "GET /v2/dynamic-rules",
               "POST /v2/dynamic-rules/sign",
               "GET /v2/dynamic-rules/status"
+            ]
+          },
+          {
+            "group": "Vault+ API",
+            "icon": "database",
+            "iconType": "solid",
+            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "pages": [
+              {
+                "group": "Cache",
+                "icon": "box-archive",
+                "iconType": "solid",
+                "pages": [
+                  "POST /v2/vault/cache/list/{listId}",
+                  "GET /v2/vault/cache/status",
+                  "GET /v2/vault/cache/stats"
+                ]
+              },
+              {
+                "group": "Media",
+                "icon": "photo-film",
+                "iconType": "solid",
+                "pages": [
+                  "GET /v2/vault/media/{mediaId}",
+                  "POST /v2/vault/media/urls",
+                  "GET /v2/vault/media/list",
+                  "DELETE /v2/vault/media/{mediaId}",
+                  "DELETE /v2/vault/media/purge"
+                ]
+              }
             ]
           }
         ]
