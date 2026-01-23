@@ -145,7 +145,7 @@
             "group": "OFAuth Account",
             "icon": "building",
             "iconType": "solid",
-            "openapi": "https://api-next.ofauth.com/openapi-core.json",
+            "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               "api-reference/core/overview",
               "GET /v2/account/whoami",
@@ -157,7 +157,7 @@
           {
             "group": "Link API",
             "icon": "https://next.ofauth.com/link_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi-link.json",
+            "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               "api-reference/link/overview",
               "POST /v2/link/init"
@@ -166,7 +166,7 @@
           {
             "group": "Access API",
             "icon": "https://next.ofauth.com/access_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi-access.json",
+            "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               "api-reference/access/overview",
               "api-reference/access/proxy",
@@ -498,7 +498,7 @@
           {
             "group": "Dynamic Rules API",
             "icon": "https://next.ofauth.com/rules_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi-dynamic-rules.json",
+            "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               "api-reference/dynamic-rules/overview",
               "GET /v2/dynamic-rules",
@@ -578,10 +578,5 @@
       "server": "https://api-next.ofauth.com"
     }
   },
-  "openapi": [
-    "https://api-next.ofauth.com/openapi-core.json",
-    "https://api-next.ofauth.com/openapi-link.json",
-    "https://api-next.ofauth.com/openapi-access.json",
-    "https://api-next.ofauth.com/openapi-dynamic-rules.json"
-  ]
+  "openapi": "https://api-next.ofauth.com/openapi.json"
 }
