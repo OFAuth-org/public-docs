@@ -1,23 +1,26 @@
 ---
-title: "Core API"
+title: "Account API"
 sidebarTitle: "Overview"
 description: "Account and connection management endpoints"
 ---
 **Required Scope:** `ACCOUNT`
 
-The Core API provides endpoints for managing your OFAuth account and connections. Use these endpoints to get platform information and manage authenticated connections.
+The Account API provides endpoints for managing your OFAuth account and connections. Use these endpoints to get platform information and manage authenticated connections.
 
 ## Quick Reference
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/v2/account/whoami` | GET | Get platform overview and account information |
-| `/v2/connections` | GET | List all connections |
-| `/v2/connections/{connectionId}` | DELETE | Disconnect a connection |
+| `/v2/account/settings` | GET/PATCH | Organization-level settings |
+| `/v2/account/connections` | GET | List all connections |
+| `/v2/account/connections/{connectionId}` | DELETE | Disconnect a connection |
+| `/v2/account/connections/{connectionId}/invalidate` | POST | Force session expiration |
+| `/v2/account/connections/{connectionId}/settings` | GET/PATCH | Per-connection settings |
 
 ## Authentication
 
-All Core API endpoints require API key authentication with the `ACCOUNT` scope:
+All Account API endpoints require API key authentication with the `ACCOUNT` scope:
 
 ```http
 apikey: YOUR_API_KEY

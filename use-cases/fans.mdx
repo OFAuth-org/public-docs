@@ -19,7 +19,7 @@ Get a list of all active subscribers:
 <CodeGroup>
 
 ```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/subscriptions/subscribers?type=active", {
+const response = await fetch("https://api.ofauth.com/v2/access/subscribers?type=active", {
   headers: {
     apikey: "YOUR_API_KEY",
     "x-connection-id": "conn_abc123"
@@ -34,7 +34,7 @@ console.log(`You have ${fans.length} active subscribers`)
 import requests
 
 response = requests.get(
-    "https://api.ofauth.com/v2/access/subscriptions/subscribers",
+    "https://api.ofauth.com/v2/access/subscribers",
     params={"type": "active"},
     headers={
         "apikey": "YOUR_API_KEY",
@@ -56,7 +56,7 @@ print(f"You have {len(fans)} active subscribers")
 Get all subscribers regardless of status:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/subscriptions/subscribers?" + new URLSearchParams({
+const response = await fetch("https://api.ofauth.com/v2/access/subscribers?" + new URLSearchParams({
   type: "all",
   limit: "20",
   offset: "0"
@@ -76,19 +76,19 @@ const fans = await response.json()
 ```javascript
 // Active subscribers only
 const active = await fetch(
-  "https://api.ofauth.com/v2/access/subscriptions/subscribers?type=active",
+  "https://api.ofauth.com/v2/access/subscribers?type=active",
   { headers }
 )
 
 // Expired (churned) subscribers
 const expired = await fetch(
-  "https://api.ofauth.com/v2/access/subscriptions/subscribers?type=expired",
+  "https://api.ofauth.com/v2/access/subscribers?type=expired",
   { headers }
 )
 
 // All-time subscribers
 const all = await fetch(
-  "https://api.ofauth.com/v2/access/subscriptions/subscribers?type=all",
+  "https://api.ofauth.com/v2/access/subscribers?type=all",
   { headers }
 )
 ```
@@ -97,7 +97,7 @@ const all = await fetch(
 
 ```javascript
 const response = await fetch(
-  "https://api.ofauth.com/v2/access/subscriptions/subscribers?" + new URLSearchParams({
+  "https://api.ofauth.com/v2/access/subscribers?" + new URLSearchParams({
     query: "john",
     type: "active"
   }),
@@ -175,10 +175,22 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/lists", {
 const newList = await response.json()
 ```
 
-### Add Users to a List
+### Add User to a List
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/users/lists/LIST_ID/users", {
+const response = await fetch("https://api.ofauth.com/v2/access/users/lists/LIST_ID/users/USER_ID", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+```
+
+### Add User to Multiple Lists
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/users/USER_ID/lists", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -186,7 +198,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/lists/LIST_
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    userIds: [123, 456, 789]
+    listIds: [123, 456, 789]
   })
 })
 ```
@@ -202,6 +214,71 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/lists/LIST_
   }
 })
 ```
+
+---
+
+## Subscriber Management
+
+Manage individual subscriber relationships with notes, discounts, and custom names.
+
+### Update Subscriber Note
+
+Add or update a private note for a subscriber:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/subscribers/123456/note", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    notice: "VIP fan - always respond quickly!"
+  })
+})
+```
+
+### Apply Discount to Subscriber
+
+Offer a subscription discount to a specific fan:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/subscribers/123456/discount", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    discount: 50,       // Discount percentage (e.g., 50 for 50% off)
+    duration: 1         // Number of months
+  })
+})
+```
+
+### Set Custom Display Name
+
+Set a custom name to help identify a subscriber:
+
+```javascript
+const response = await fetch("https://api.ofauth.com/v2/access/subscribers/123456/custom-name", {
+  method: "PUT",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    displayName: "John (Friend from Twitter)"
+  })
+})
+```
+
+<Tip>
+  Custom display names are private and only visible to you. They help organize fans when usernames aren't descriptive.
+</Tip>
 
 ---
 
@@ -259,22 +336,40 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/blocked", {
 
 ## API Endpoints
 
+### Subscribers
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/v2/access/subscriptions/subscribers` | GET | List all subscribers |
+| `/v2/access/subscribers` | GET | List all subscribers |
+| `/v2/access/subscribers/{userId}/note` | PUT | Update subscriber note |
+| `/v2/access/subscribers/{userId}/discount` | PUT | Apply discount |
+| `/v2/access/subscribers/{userId}/custom-name` | PUT | Set custom display name |
+
+### Users
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/v2/access/users/{userId}` | GET | Get user details |
+| `/v2/access/users/search` | GET | Search users |
+| `/v2/access/users/list` | GET | Get users by IDs |
 | `/v2/access/users/{userId}/restrict` | POST | Restrict a user |
 | `/v2/access/users/{userId}/restrict` | DELETE | Unrestrict a user |
 | `/v2/access/users/restrict` | GET | List restricted users |
 | `/v2/access/users/blocked` | GET | List blocked users |
+
+### User Lists
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/v2/access/users/lists` | GET | Get all user lists |
 | `/v2/access/users/lists` | POST | Create a user list |
 | `/v2/access/users/lists/{listId}` | GET | Get a user list |
 | `/v2/access/users/lists/{listId}` | PATCH | Update a user list |
 | `/v2/access/users/lists/{listId}` | DELETE | Delete a user list |
 | `/v2/access/users/lists/{listId}/users` | GET | Get users in a list |
-| `/v2/access/users/lists/{listId}/users` | POST | Add users to a list |
+| `/v2/access/users/lists/{listId}/users/{userId}` | POST | Add user to a list |
 | `/v2/access/users/lists/{listId}/users/{userId}` | DELETE | Remove user from list |
+| `/v2/access/users/{userId}/lists` | POST | Add user to multiple lists |
 
 <Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
   See complete endpoint documentation

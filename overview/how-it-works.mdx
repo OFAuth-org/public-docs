@@ -1,11 +1,11 @@
 ---
 title: "How OFAuth Works"
-description: "Understanding the core concepts: Link, Access, and Connections"
+description: "Core concepts, architecture, and why OFAuth exists"
 ---
 
 ## The Big Picture
 
-OFAuth is like **Plaid for OnlyFans**. Just as Plaid lets apps connect to bank accounts without handling banking credentials, OFAuth lets your platform connect to OnlyFans accounts without managing authentication complexity.
+OFAuth is **infrastructure for OnlyFans integrations**—like Plaid for banking, but for OnlyFans. We handle authentication, session management, and API complexity so you can focus on building your product.
 
 ```mermaid
 graph LR
@@ -16,6 +16,30 @@ graph LR
 ```
 
 **You focus on your product. OFAuth handles OnlyFans.**
+
+---
+
+## Why OFAuth Exists
+
+OnlyFans has **no public API**. Building integrations requires:
+
+- **Reverse engineering** authentication flows, request signing, and session management
+- **Constant maintenance** as OnlyFans changes their API (sometimes multiple times per day)
+- **Security liability** from handling user credentials
+
+OFAuth solves this:
+
+| Challenge | OFAuth Solution |
+|-----------|-----------------|
+| No public API | Managed Access API with stable endpoints |
+| Authentication complexity | Link handles login, 2FA, captcha |
+| Credential security | Zero credential storage—you only store Connection IDs |
+| API changes | Dynamic Rules engine adapts automatically |
+| Signing requirements | Request signing handled transparently |
+
+<Info>
+  Teams report spending 3-6 months building OnlyFans integrations in-house. With OFAuth, you're live in days.
+</Info>
 
 ---
 

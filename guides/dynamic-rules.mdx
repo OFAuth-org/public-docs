@@ -1,10 +1,11 @@
 ---
-title: "Dynamic Rules for Request Signing"
+title: "Dynamic Rules"
+sidebarTitle: "Dynamic Rules"
 description: "Current signing parameters required for OnlyFans API authentication"
 ---
 
 <Warning>
-	**Most integrations don't need Dynamic Rules.** If you're using the [Access API](/reference/access) or [TypeScript SDK](/sdk), request signing is handled automatically. Only read this guide if you're making direct requests to OnlyFans APIs.
+	**Most integrations don't need Dynamic Rules.** If you're using the [Access API](/api-reference/access/overview) or [TypeScript SDK](/sdk), request signing is handled automatically. Only read this guide if you're making direct requests to OnlyFans APIs.
 </Warning>
 
 ## Overview
@@ -12,7 +13,7 @@ description: "Current signing parameters required for OnlyFans API authenticatio
 The Dynamic Rules API (`/v2/dynamic-rules`) provides the current signing parameters required to generate valid signatures for OnlyFans API requests. OnlyFans requires cryptographically signed requests and **changes their signing requirements very frequently** - sometimes multiple times per day.
 
 <CardGroup cols={2}>
-	<Card title="Use the Access API Instead" icon="rocket" href="/reference/access">
+	<Card title="Use the Access API Instead" icon="rocket" href="/api-reference/access/overview">
 		Automatic signing, no maintenance required. **Recommended for most use cases.**
 	</Card>
 	<Card title="Use the TypeScript SDK" icon="code" href="/sdk">

@@ -181,36 +181,23 @@ node test-sdk.js
 
 ## Confirm Platform Configuration
 
-Use the Account API to verify that your API key and platform metadata are set up correctly. The `whoami` endpoint returns only general information about your organization.
+Use the Account API to verify that your API key is set up correctly. The `whoami` endpoint returns basic information about your organization.
 
 ```bash
 curl -s https://api.ofauth.com/v2/account/whoami \
-  -H "apikey: $OFAUTH_API_KEY" \
+  -H "apikey: $OFAUTH_API_KEY"
 ```
 
 ```json response
 {
-  "platform": {
-    "id": "plat_123",
-    "name": "Acme Analytics",
-    "benefits": {
-      "access": true,
-      "link": true
-    },
-    "permissions": ["profile:read"],
-    "allowedOrigins": ["https://app.example.com"],
-    "maxRateLimits": {
-      "access": {
-        "capacity": 120,
-        "refillRate": 1
-      }
-    }
-  }
+  "id": "org_abc123",
+  "name": "Acme Analytics",
+  "permissions": ["link", "access", "rules"]
 }
 ```
 
 <Tip>
-  The account response is safe to expose in internal dashboards. It never returns secrets—only plan-level metadata for the authenticated platform.
+  The whoami response is safe to expose in internal dashboards. It never returns secrets—only basic organization information.
 </Tip>
 
 ## Next Steps

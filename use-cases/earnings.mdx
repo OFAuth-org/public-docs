@@ -289,7 +289,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/statistics/campai
 See who purchased from a specific mass message:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/statistics/messages/queue/QUEUE_ID/buyers?" + new URLSearchParams({
+const response = await fetch("https://api.ofauth.com/v2/access/statistics/messages/queue/QUEUE_MESSAGE_ID/buyers?" + new URLSearchParams({
   limit: "20",
   offset: "0"
 }), {
@@ -335,7 +335,7 @@ const buyers = await response.json()
 | `/v2/access/statistics/campaigns/top` | GET | Campaigns stats |
 | `/v2/access/statistics/mass-messages/chart` | GET | Mass messages chart |
 | `/v2/access/statistics/mass-messages/bought` | GET | Mass messages bought |
-| `/v2/access/statistics/messages/queue/{id}/buyers` | GET | Queue message buyers |
+| `/v2/access/statistics/messages/queue/{queueMessageId}/buyers` | GET | Queue message buyers |
 
 ### Other
 

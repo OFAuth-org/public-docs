@@ -25,7 +25,7 @@ Retrieve a list of connections with optional filtering and pagination.
   Optional filtering and pagination parameters.
 </ParamField>
 
-<ParamField path="options.status" type="'active' | 'expired' | 'error'">
+<ParamField path="options.status" type="'active' | 'expired' | 'awaiting_2fa'">
   Filter connections by their current status.
 </ParamField>
 
@@ -53,7 +53,7 @@ Retrieve a list of connections with optional filtering and pagination.
       The OnlyFans user ID associated with this connection.
     </ResponseField>
     
-    <ResponseField name="status" type="'active' | 'expired' | 'error'" required>
+    <ResponseField name="status" type="'active' | 'expired' | 'awaiting_2fa'" required>
       Current status of the connection.
     </ResponseField>
     
@@ -414,15 +414,16 @@ Connections can have different statuses that affect their usability:
     ```
   </Tab>
   
-  <Tab title="Error">
-    **Status**: `error`
+  <Tab title="Awaiting 2FA">
+    **Status**: `awaiting_2fa`
     
-    Connection encountered an error and is temporarily unusable.
+    Connection is waiting for two-factor authentication to complete.
     
     ```typescript
-    if (connection.status === "error") {
-      console.log("Connection error, may recover automatically")
-      // Check again later or prompt user to re-authenticate
+    if (connection.status === "awaiting_2fa") {
+      console.log("Connection awaiting 2FA, user needs to complete verification")
+      // Prompt user to complete 2FA verification
+      await promptUser2FA(connection.id)
     }
     ```
   </Tab>
@@ -459,8 +460,8 @@ async function checkConnectionHealth(connectionId: string): Promise<boolean> {
       console.log("Connection expired")
       return false
       
-    case "error":
-      console.log("Connection in error state")
+    case "awaiting_2fa":
+      console.log("Connection awaiting 2FA")
       return false
       
     default:

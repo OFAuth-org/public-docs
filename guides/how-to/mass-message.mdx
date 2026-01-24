@@ -3,19 +3,19 @@ title: "Send Mass Messages"
 description: "Step-by-step guide to send messages to multiple fans at once"
 ---
 
-Learn how to send messages to multiple fans simultaneously using the OFAuth message queue.
+Learn how to send messages to multiple fans simultaneously using the OFAuth mass messaging API.
 
 ## Prerequisites
 
 <Check>
-  You have a [connected OnlyFans account](/guides/how-to/connect-account) with a valid `connectionId`
+  You have a [connected OnlyFans account](/guides/link) with a valid `connectionId`
 </Check>
 
 ---
 
 ## Why Use Mass Messaging?
 
-Instead of sending individual messages one-by-one (which hits rate limits), use the message queue to:
+Instead of sending individual messages one-by-one (which hits rate limits), use mass messaging to:
 
 - Send to multiple fans in a single API call
 - Schedule messages for later delivery
@@ -32,7 +32,7 @@ Send a message to a list of user IDs:
 <CodeGroup>
 
 ```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -46,14 +46,14 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
 })
 
 const result = await response.json()
-console.log("Queued message ID:", result.id)
+console.log("Mass message ID:", result.id)
 ```
 
 ```python Python
 import requests
 
 response = requests.post(
-    "https://api.ofauth.com/v2/access/messages/queue",
+    "https://api.ofauth.com/v2/access/mass-messages",
     headers={
         "apikey": "YOUR_API_KEY",
         "x-connection-id": "conn_abc123",
@@ -66,7 +66,7 @@ response = requests.post(
 )
 
 result = response.json()
-print("Queued message ID:", result["id"])
+print("Mass message ID:", result["id"])
 ```
 
 </CodeGroup>
@@ -78,7 +78,7 @@ print("Queued message ID:", result["id"])
 Target OnlyFans user lists instead of individual IDs:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -117,7 +117,7 @@ lists.forEach(list => {
 Send to lists but exclude specific groups:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -139,7 +139,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
 Send only to users who subscribed after a certain date:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -161,7 +161,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
 Include pay-per-view content:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -182,10 +182,10 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
 
 ## Schedule for Later
 
-Queue a message to send at a specific time:
+Schedule a message to send at a specific time:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -199,36 +199,27 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
   })
 })
 
+const result = await response.json()
 console.log("Message scheduled for:", result.scheduledDate)
 ```
 
 ---
 
-## View Queue Stats
+## List Mass Messages
 
 Check the status of your mass messages:
 
 ```javascript
-// Get sent messages
-const sent = await fetch(
-  "https://api.ofauth.com/v2/access/messages/queue/stats?type=sent&limit=10",
+// Get all mass messages
+const response = await fetch(
+  "https://api.ofauth.com/v2/access/mass-messages?limit=10",
   { headers }
 )
 
-// Get scheduled (pending) messages
-const scheduled = await fetch(
-  "https://api.ofauth.com/v2/access/messages/queue/stats?type=scheduled&limit=10",
-  { headers }
-)
-
-// Get unsent (failed) messages
-const unsent = await fetch(
-  "https://api.ofauth.com/v2/access/messages/queue/stats?type=unsent&limit=10",
-  { headers }
-)
+const massMessages = await response.json()
 ```
 
-### Queue Stats Response
+### Response
 
 ```json
 {
@@ -254,7 +245,7 @@ See who purchased a PPV mass message:
 
 ```javascript
 const response = await fetch(
-  "https://api.ofauth.com/v2/access/statistics/messages/queue/QUEUE_MESSAGE_ID/buyers?limit=20",
+  "https://api.ofauth.com/v2/access/analytics/mass-messages/MASS_MESSAGE_ID/buyers?limit=20",
   {
     headers: {
       apikey: "YOUR_API_KEY",
@@ -277,7 +268,7 @@ Modify a message before it sends:
 
 ```javascript
 const response = await fetch(
-  "https://api.ofauth.com/v2/access/messages/queue/QUEUE_MESSAGE_ID",
+  "https://api.ofauth.com/v2/access/mass-messages/MASS_MESSAGE_ID",
   {
     method: "PUT",
     headers: {
@@ -297,11 +288,11 @@ const response = await fetch(
 
 ## Cancel Scheduled Message
 
-Delete a queued message before it sends:
+Delete a mass message before it sends:
 
 ```javascript
 const response = await fetch(
-  "https://api.ofauth.com/v2/access/messages/queue/QUEUE_MESSAGE_ID",
+  "https://api.ofauth.com/v2/access/mass-messages/MASS_MESSAGE_ID",
   {
     method: "DELETE",
     headers: {
@@ -312,7 +303,7 @@ const response = await fetch(
 )
 
 if (response.ok) {
-  console.log("Scheduled message cancelled")
+  console.log("Mass message cancelled")
 }
 ```
 
@@ -349,7 +340,7 @@ async function sendPromoToActiveSubscribers() {
   
   // Step 2: Create the mass message
   const messageResponse = await fetch(
-    "https://api.ofauth.com/v2/access/messages/queue",
+    "https://api.ofauth.com/v2/access/mass-messages",
     {
       method: "POST",
       headers,
@@ -362,7 +353,7 @@ async function sendPromoToActiveSubscribers() {
   )
   
   const result = await messageResponse.json()
-  console.log("✅ Mass message queued!")
+  console.log("✅ Mass message created!")
   console.log("   ID:", result.id)
   
   return result

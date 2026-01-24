@@ -1,28 +1,24 @@
 # OFAuth Documentation
 
-Welcome to the official documentation repository for OFAuth - a comprehensive authentication and API access solution for OnlyFans integrations.
+Welcome to the official documentation for OFAuth - the OnlyFans integration platform for developers.
 
 ## About OFAuth
 
-OFAuth provides developers with the tools and infrastructure needed to build robust OnlyFans integrations through:
+OFAuth provides everything you need to integrate OnlyFans into your platform:
 
-- **Authentication Management**: Secure user authentication and session handling
-- **API Access**: Streamlined access to OnlyFans' unofficial API with automatic request signing
-- **Dynamic Rules**: Real-time updates to OnlyFans' changing request signing requirements
-- **Connection Management**: Monitor and manage user account connections
-- **Webhook System**: Real-time notifications for connection and system events
-- **Media Proxy**: Secure media access and bandwidth management
+- **Link**: Secure account authentication without handling credentials
+- **Access API**: Simple REST API to interact with OnlyFans data
+- **Connection Management**: Monitor and manage connected accounts
+- **Webhooks**: Real-time notifications for connection events
 
 ## Documentation Overview
 
-This repository contains comprehensive guides covering:
+This repository contains guides covering:
 
-- **Quick Start**: Get up and running quickly
-- **Core Concepts**: Understanding authentication, rate limiting, and request signing
+- **Quickstart**: Get up and running in minutes
 - **API Reference**: Complete endpoint documentation
 - **Integration Guides**: Step-by-step implementation examples
-- **Production Considerations**: Important factors for production deployments
-- **Architecture**: Technical deep-dives into system design
+- **SDK Documentation**: TypeScript SDK usage and examples
 
 ## Contributing to Documentation
 

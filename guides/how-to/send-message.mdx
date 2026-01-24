@@ -8,7 +8,7 @@ Learn how to send direct messages to fans using the OFAuth API.
 ## Prerequisites
 
 <Check>
-  You have a [connected OnlyFans account](/guides/how-to/connect-account) with a valid `connectionId`
+  You have a [connected OnlyFans account](/guides/link) with a valid `connectionId`
 </Check>
 
 ---
@@ -236,21 +236,17 @@ messages.forEach(msg => {
 
 ---
 
-## Unsend a Message
+## Delete a Message
 
 Made a mistake? Delete a sent message:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/MESSAGE_ID", {
+const response = await fetch("https://api.ofauth.com/v2/access/chats/USER_ID/messages/MESSAGE_ID", {
   method: "DELETE",
   headers: {
     apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    withUserId: USER_ID  // The user you were chatting with
-  })
+    "x-connection-id": "conn_abc123"
+  }
 })
 ```
 

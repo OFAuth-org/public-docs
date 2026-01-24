@@ -8,7 +8,7 @@ Learn how to upload media to the OnlyFans vault so you can use it in posts and m
 ## Prerequisites
 
 <Check>
-  You have a [connected OnlyFans account](/guides/how-to/connect-account) with a valid `connectionId`
+  You have a [connected OnlyFans account](/guides/link) with a valid `connectionId`
 </Check>
 
 ---
@@ -152,9 +152,9 @@ for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
 
 ---
 
-## Step 3: Complete Upload
+## Step 3: Complete Upload (Multi-Part Only)
 
-After all parts are uploaded, finalize:
+For multi-part uploads, call `/complete` after all chunks are uploaded:
 
 ```javascript
 const response = await fetch("https://api.ofauth.com/v2/access/uploads/complete", {
@@ -174,7 +174,7 @@ console.log("Media ready! ID:", result.media.id)
 ```
 
 <Info>
-  For single-part uploads using `PUT /uploads/{mediaUploadId}`, the upload is automatically completed. You don't need to call `/complete` separately.
+  **Single-part uploads auto-complete.** When `x-ofauth-upload-total-parts` is `1`, the PUT response returns the media directly—no `/complete` call needed.
 </Info>
 
 ---

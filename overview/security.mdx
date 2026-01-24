@@ -1,5 +1,6 @@
 ---
-title: "Security & Compliance"
+title: "Security"
+sidebarTitle: "Security"
 description: "How OFAuth protects your users' data and credentials"
 ---
 
@@ -59,8 +60,7 @@ sequenceDiagram
 All data in OFAuth is protected with industry-standard encryption:
 
 - **In transit**: TLS 1.3 for all API communications
-- **At rest**: AES-256 encryption for session tokens
-- **Key management**: Keys rotated regularly, stored in hardware security modules (HSMs)
+- **At rest**: AES-256 encryption for session data
 
 ---
 
@@ -136,6 +136,22 @@ Using OFAuth simplifies your compliance posture:
     Contact us for information about data residency options for enterprise deployments.
   </Accordion>
 </AccordionGroup>
+
+---
+
+## Data Retention
+
+| Data Type | Retention | Notes |
+|-----------|-----------|-------|
+| Connection metadata | Until deleted | Status, timestamps, permissions |
+| Session tokens | Active connections only | Encrypted, auto-expire |
+| API request logs | 30 days | For debugging, no content stored |
+| OnlyFans content | Never stored | Pass-through only |
+| Webhook delivery logs | 7 days | For retry and debugging |
+
+<Info>
+  When you delete a connection via the API, all associated data is permanently removed.
+</Info>
 
 ---
 

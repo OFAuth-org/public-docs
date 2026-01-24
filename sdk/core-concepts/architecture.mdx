@@ -265,32 +265,17 @@ The SDK is organized into **10 focused modules**:
   </Card>
 </CardGroup>
 
-## Request Flow Architecture
+## How It Works
 
-### Unified Request Pipeline
+The SDK handles complexity so you can focus on building:
 
-All SDK operations follow the **same request flow**:
-
-```mermaid
-graph LR
-    A[SDK Method Call] --> B[Parameter Validation]
-    B --> C[Authentication Check]
-    C --> D[Request Signing]
-    D --> E[API Request]
-    E --> F[Response Validation]
-    F --> G[Type-Safe Response]
-    
-    B -->|❌ Invalid| H[Compile Error]
-    C -->|❌ Missing Auth| I[Runtime Error]
-    E -->|❌ HTTP Error| J[Structured Error]
-```
-
-### Automatic Request Enhancement
-
-The SDK **automatically enhances** every request:
+- **Parameter validation**: TypeScript catches errors at compile time
+- **Authentication**: Automatically included with each request
+- **Error handling**: Structured errors with actionable information
+- **Type safety**: Full IntelliSense for all responses
 
 ```typescript
-// What you write
+// Simple, type-safe API calls
 const result = await sdk.posts.createPost({
   authentication: { connectionId: "conn_123" },
   params: {
@@ -299,14 +284,13 @@ const result = await sdk.posts.createPost({
   }
 })
 
-// What the SDK does internally:
-// 1. ✅ Validates all parameters (TypeScript + runtime)
-// 2. ✅ Adds required headers (user-agent, content-type, etc.)
-// 3. ✅ Signs request with dynamic rules (if needed)
-// 4. ✅ Handles authentication context
-// 5. ✅ Manages rate limiting
-// 6. ✅ Processes response and provides typed data
-// 7. ✅ Converts errors to structured format
+if (result.error) {
+  // Handle error with typed error information
+  console.error(result.error.message)
+} else {
+  // Use typed response data
+  console.log(result.data)
+}
 ```
 
 ## Development Experience

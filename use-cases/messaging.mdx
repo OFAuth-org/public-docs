@@ -1,5 +1,6 @@
 ---
 title: "Messaging & Chats"
+sidebarTitle: "Overview"
 description: "Send messages, manage conversations, and mass message at scale"
 ---
 
@@ -118,6 +119,36 @@ const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/mess
 const messages = await response.json()
 ```
 
+### Get Chat Media
+
+Retrieve media shared in a specific conversation:
+
+```javascript
+// Get all media from a chat
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/media", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+// Or filter by type: photos, videos, or audios
+const photos = await fetch("https://api.ofauth.com/v2/access/chats/123456/media?type=photos", {
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "x-connection-id": "conn_abc123"
+  }
+})
+
+const media = await response.json()
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `type` | string | Filter by media type: `photos`, `videos`, or `audios`. Omit for all media. |
+| `limit` | number | Results per page |
+| `skip_users` | string | Skip user data in response |
+
 ### Send Message with Media
 
 Include images or videos in your message:
@@ -158,34 +189,30 @@ const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/mess
 })
 ```
 
-### Unsend a Message
+### Delete a Message
 
 Delete a sent message:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/MESSAGE_ID", {
+const response = await fetch("https://api.ofauth.com/v2/access/chats/123456/messages/MESSAGE_ID", {
   method: "DELETE",
   headers: {
     apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    withUserId: 123456  // The user ID from the chat
-  })
+    "x-connection-id": "conn_abc123"
+  }
 })
 ```
 
 ---
 
-## Mass Messaging (Queue)
+## Mass Messaging
 
-Send to multiple fans at once using the message queue:
+Send to multiple fans at once using the mass messaging endpoints:
 
-### Create Queued Message
+### Create Mass Message
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -205,7 +232,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
 ### Schedule Mass Message
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
   method: "POST",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -220,13 +247,12 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue", 
 })
 ```
 
-### Get Queue Stats
+### List Mass Messages
 
 View mass message history:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/stats?" + new URLSearchParams({
-  type: "sent",  // "sent" | "unsent" | "scheduled"
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages?" + new URLSearchParams({
   limit: "20",
   offset: "0"
 }), {
@@ -236,13 +262,13 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/st
   }
 })
 
-const queueStats = await response.json()
+const massMessages = await response.json()
 ```
 
-### Update Queued Message
+### Update Mass Message
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/QUEUE_MESSAGE_ID", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages/MASS_MESSAGE_ID", {
   method: "PUT",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -256,10 +282,10 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/QU
 })
 ```
 
-### Delete Queued Message
+### Delete Mass Message
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/QUEUE_MESSAGE_ID", {
+const response = await fetch("https://api.ofauth.com/v2/access/mass-messages/MASS_MESSAGE_ID", {
   method: "DELETE",
   headers: {
     apikey: "YOUR_API_KEY",
@@ -277,12 +303,13 @@ const response = await fetch("https://api.ofauth.com/v2/access/messages/queue/QU
 | `/v2/access/chats` | GET | List all chats |
 | `/v2/access/chats/{userId}/messages` | GET | Get messages in a chat |
 | `/v2/access/chats/{userId}/messages` | POST | Send a message |
-| `/v2/access/messages/{messageId}` | DELETE | Unsend a message |
-| `/v2/access/messages/queue` | POST | Create queued/mass message |
-| `/v2/access/messages/queue/stats` | GET | Get queue stats |
-| `/v2/access/messages/queue/{queueMessageId}` | GET | Get queued message |
-| `/v2/access/messages/queue/{queueMessageId}` | PUT | Update queued message |
-| `/v2/access/messages/queue/{queueMessageId}` | DELETE | Delete queued message |
+| `/v2/access/chats/{userId}/messages/{messageId}` | DELETE | Unsend a message |
+| `/v2/access/chats/{userId}/media` | GET | Get media from a chat |
+| `/v2/access/mass-messages` | GET | List mass messages |
+| `/v2/access/mass-messages` | POST | Create mass message |
+| `/v2/access/mass-messages/{massMessageId}` | GET | Get mass message details |
+| `/v2/access/mass-messages/{massMessageId}` | PUT | Update mass message |
+| `/v2/access/mass-messages/{massMessageId}` | DELETE | Delete mass message |
 
 <Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
   See complete endpoint documentation
@@ -370,6 +397,108 @@ The `mediaItems` array accepts:
 <Info>
   **Media First**: When sending messages with media, upload the media to the vault first using `/uploads/init` to get media IDs, then reference those IDs in `mediaItems`.
 </Info>
+
+---
+
+## Common Workflows
+
+### Welcome New Subscriber
+
+Automatically greet new fans when they subscribe:
+
+```javascript
+// 1. Get recently subscribed fans
+const response = await fetch(
+  "https://api.ofauth.com/v2/access/subscribers?type=latest&latestType=new&limit=10",
+  { headers }
+)
+const newFans = await response.json()
+
+// 2. Send welcome message to each
+for (const fan of newFans.list) {
+  await fetch(`https://api.ofauth.com/v2/access/chats/${fan.id}/messages`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      text: `Hey ${fan.name}! Thanks so much for subscribing! Let me know if there's anything you'd like to see.`
+    })
+  })
+  
+  // Space out messages to avoid rate limits
+  await new Promise(r => setTimeout(r, 2000))
+}
+```
+
+### Send PPV to High-Value Fans
+
+Target your best customers with exclusive content:
+
+```javascript
+// 1. Upload exclusive content first
+const uploadInit = await fetch("https://api.ofauth.com/v2/access/uploads/init", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({
+    filename: "exclusive.mp4",
+    mimeType: "video/mp4",
+    size: fileSize
+  })
+})
+const { mediaUploadId, uploadUrl } = await uploadInit.json()
+
+// 2. Upload the file
+await fetch(uploadUrl, {
+  method: "PUT",
+  body: fileBuffer,
+  headers: { "Content-Type": "video/mp4" }
+})
+
+// 3. Complete the upload
+await fetch("https://api.ofauth.com/v2/access/uploads/complete", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({ mediaUploadId })
+})
+
+// 4. Send as PPV to a specific user list
+await fetch("https://api.ofauth.com/v2/access/mass-messages", {
+  method: "POST",
+  headers,
+  body: JSON.stringify({
+    text: "Exclusive content just for my VIPs!",
+    mediaItems: [mediaUploadId],
+    price: 15.00,
+    previewMediaCount: 1,
+    userLists: [VIP_LIST_ID]
+  })
+})
+```
+
+### Respond to Unread Messages
+
+Build a simple auto-responder or notification system:
+
+```javascript
+// Get unread chats
+const response = await fetch(
+  "https://api.ofauth.com/v2/access/chats?filter=unread&limit=20",
+  { headers }
+)
+const unreadChats = await response.json()
+
+for (const chat of unreadChats.list) {
+  // Get the latest message
+  const messagesResp = await fetch(
+    `https://api.ofauth.com/v2/access/chats/${chat.withUser.id}/messages?limit=1`,
+    { headers }
+  )
+  const messages = await messagesResp.json()
+  const lastMessage = messages.list[0]
+  
+  // Process the message (e.g., send to your AI, notify staff, etc.)
+  console.log(`New message from ${chat.withUser.name}: ${lastMessage.text}`)
+}
+```
 
 ---
 

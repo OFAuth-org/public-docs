@@ -8,6 +8,10 @@ description: "Get your first OFAuth API call working in under 2 minutes"
   **Prerequisites**: You need an OFAuth account. [Sign up here](https://app.ofauth.com) if you don't have one.
 </Info>
 
+<Warning>
+  **Use Sandbox for testing!** Before testing with real OnlyFans accounts, use the [Sandbox environment](/getting-started/sandbox) with test credentials. Too many login attempts on production accounts can trigger OnlyFans "suspicious activity" detection, which may cause account resets.
+</Warning>
+
 ## Step 1: Get Your API Key
 
 <Steps>
@@ -15,7 +19,7 @@ description: "Get your first OFAuth API call working in under 2 minutes"
     Open [app.ofauth.com/platform/developers/keys](https://app.ofauth.com/platform/developers/keys)
   </Step>
   <Step title="Copy your API key">
-    Your API key looks like `ofauth_...`. Keep it secure—don't commit it to version control.
+    Your API key looks like `sk_live_...` (production) or `sk_sandbox_...` (testing). Keep it secure—don't commit it to version control.
   </Step>
 </Steps>
 
@@ -63,11 +67,7 @@ curl -X POST https://api.ofauth.com/v2/link/init \
   -H "apikey: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "mode": "hosted",
-    "hosted": {
-      "successUrl": "https://yourapp.com/success?connection={CONNECTION_ID}",
-      "returnUrl": "https://yourapp.com/cancel"
-    }
+    "redirectUrl": "https://yourapp.com/callback"
   }'
 ```
 
@@ -79,11 +79,7 @@ const response = await fetch("https://api.ofauth.com/v2/link/init", {
     "Content-Type": "application/json"
   },
   body: JSON.stringify({
-    mode: "hosted",
-    hosted: {
-      successUrl: "https://yourapp.com/success?connection={CONNECTION_ID}",
-      returnUrl: "https://yourapp.com/cancel"
-    }
+    redirectUrl: "https://yourapp.com/callback"
   })
 })
 
@@ -100,11 +96,7 @@ response = requests.post(
         "Content-Type": "application/json"
     },
     json={
-        "mode": "hosted",
-        "hosted": {
-            "successUrl": "https://yourapp.com/success?connection={CONNECTION_ID}",
-            "returnUrl": "https://yourapp.com/cancel"
-        }
+        "redirectUrl": "https://yourapp.com/callback"
     }
 )
 print("Redirect user to:", response.json()["url"])
@@ -113,13 +105,13 @@ print("Redirect user to:", response.json()["url"])
 </CodeGroup>
 
 **What happens:**
-1. You get an `url` in the response
+1. You get a `url` in the response
 2. Redirect the user to that URL
 3. They authenticate on OFAuth's secure page
-4. On success, they're redirected to your `successUrl` with the `{CONNECTION_ID}` replaced
+4. On success, they're redirected to your `redirectUrl` with `connection_id` as a query parameter
 
 <Tip>
-  For testing, use the [Sandbox environment](/getting-started/environments/sandbox) with test credentials.
+  For testing, use a Sandbox API key (`sk_sandbox_...`) with [test credentials](/getting-started/sandbox).
 </Tip>
 
 ---
@@ -131,13 +123,13 @@ Once you have a Connection ID, use it to access OnlyFans data:
 <CodeGroup>
 
 ```bash cURL
-curl https://api.ofauth.com/v2/access/self/me \
+curl https://api.ofauth.com/v2/access/self \
   -H "apikey: YOUR_API_KEY" \
   -H "x-connection-id: conn_YOUR_CONNECTION_ID"
 ```
 
 ```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/self/me", {
+const response = await fetch("https://api.ofauth.com/v2/access/self", {
   headers: {
     apikey: "YOUR_API_KEY",
     "x-connection-id": "conn_YOUR_CONNECTION_ID"
@@ -151,7 +143,7 @@ console.log("Connected as:", profile.name)
 ```python Python
 import requests
 response = requests.get(
-    "https://api.ofauth.com/v2/access/self/me",
+    "https://api.ofauth.com/v2/access/self",
     headers={
         "apikey": "YOUR_API_KEY",
         "x-connection-id": "conn_YOUR_CONNECTION_ID"
@@ -201,7 +193,7 @@ print("Connected as:", response.json()["name"])
   </Accordion>
 </AccordionGroup>
 
-<Card title="Need Help?" icon="discord" href="https://discord.gg/ofauth">
-  Join our Discord community for support
+<Card title="Need Help?" icon="envelope" href="mailto:support@ofauth.com">
+  Contact our support team for assistance
 </Card>
 

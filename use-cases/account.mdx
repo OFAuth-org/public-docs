@@ -5,10 +5,9 @@ description: "Profile settings, notifications, and account configuration"
 
 ## What You Can Build
 
-- **Profile Management**: Update bio, avatar, banner, and display settings
-- **Notification Systems**: Monitor and respond to OnlyFans notifications
-- **Settings Dashboards**: Configure account preferences programmatically
-- **Multi-Account Tools**: Manage settings across multiple creator accounts
+- **Profile Management**: Update bio, name, and display settings
+- **Notification Systems**: Monitor OnlyFans notifications
+- **Multi-Account Tools**: Manage profiles across multiple creator accounts
 
 ---
 
@@ -19,7 +18,7 @@ Get account profile information:
 <CodeGroup>
 
 ```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/self/me", {
+const response = await fetch("https://api.ofauth.com/v2/access/self", {
   headers: {
     apikey: "YOUR_API_KEY",
     "x-connection-id": "conn_abc123"
@@ -35,7 +34,7 @@ console.log("Username:", profile.username)
 import requests
 
 response = requests.get(
-    "https://api.ofauth.com/v2/access/self/me",
+    "https://api.ofauth.com/v2/access/self",
     headers={
         "apikey": "YOUR_API_KEY",
         "x-connection-id": "conn_abc123"
@@ -53,7 +52,7 @@ const sdk = new OFSDK({
   ofauthApiKey: process.env.OFAUTH_API_KEY
 })
 
-const { data: profile } = await sdk.account.getProfile({
+const { data: profile } = await sdk.self.getSelf({
   authentication: { connectionId: "conn_abc123" }
 })
 ```
@@ -69,7 +68,7 @@ const { data: profile } = await sdk.account.getProfile({
 Fetch the authenticated user's profile:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/self/me", {
+const response = await fetch("https://api.ofauth.com/v2/access/self", {
   headers: {
     apikey: "YOUR_API_KEY",
     "x-connection-id": "conn_abc123"
@@ -85,8 +84,8 @@ const profile = await response.json()
 Modify profile information:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/self/profile", {
-  method: "PUT",
+const response = await fetch("https://api.ofauth.com/v2/access/self", {
+  method: "PATCH",
   headers: {
     apikey: "YOUR_API_KEY",
     "x-connection-id": "conn_abc123",
@@ -104,7 +103,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/self/profile", {
 List recent notifications:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/notifications", {
+const response = await fetch("https://api.ofauth.com/v2/access/self/notifications", {
   headers: {
     apikey: "YOUR_API_KEY",
     "x-connection-id": "conn_abc123"
@@ -114,82 +113,16 @@ const response = await fetch("https://api.ofauth.com/v2/access/notifications", {
 const notifications = await response.json()
 ```
 
-### Mark Notifications as Read
-
-```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/notifications/read", {
-  method: "POST",
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    notificationIds: [123, 456, 789]
-  })
-})
-```
-
-### Get Account Settings
-
-Retrieve current settings:
-
-```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/settings", {
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123"
-  }
-})
-
-const settings = await response.json()
-```
-
-### Update Subscription Price
-
-Change the subscription price:
-
-```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/settings/subscription", {
-  method: "PUT",
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    price: 9.99
-  })
-})
-```
-
-### Get Social Links
-
-List configured social media buttons:
-
-```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/social-links", {
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123"
-  }
-})
-
-const links = await response.json()
-```
-
 ---
 
 ## API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/v2/access/self/me` | GET | Get current user profile |
-| `/v2/access/self/profile` | PUT | Update profile |
-| `/v2/access/notifications` | GET | List notifications |
-| `/v2/access/notifications/read` | POST | Mark notifications read |
-| `/v2/access/settings` | GET | Get account settings |
-| `/v2/access/social-links` | GET | List social links |
+| `/v2/access/self` | GET | Get current user profile |
+| `/v2/access/self` | PATCH | Update profile |
+| `/v2/access/self/notifications` | GET | List notifications |
+| `/v2/access/self/release-forms` | GET | List release forms |
 
 <Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
   See complete endpoint documentation
@@ -203,12 +136,12 @@ If you're using the TypeScript SDK:
 
 ```typescript
 // Get profile
-const { data: profile } = await sdk.account.getProfile({
+const { data: profile } = await sdk.self.getSelf({
   authentication: { connectionId: "conn_abc123" }
 })
 
 // Update profile
-const { data: updated } = await sdk.account.updateProfile({
+const { data: updated } = await sdk.self.updateSelf({
   authentication: { connectionId: "conn_abc123" },
   params: {
     name: "New Name",
@@ -217,12 +150,12 @@ const { data: updated } = await sdk.account.updateProfile({
 })
 
 // Get notifications
-const { data: notifications } = await sdk.account.getNotifications({
+const { data: notifications } = await sdk.self.getNotifications({
   authentication: { connectionId: "conn_abc123" }
 })
 ```
 
-<Card title="SDK Account Module" icon="code" href="/sdk/modules/account">
+<Card title="SDK Self Module" icon="code" href="/sdk/modules/account">
   Full SDK documentation for account management
 </Card>
 
@@ -237,18 +170,13 @@ The profile object includes:
   "id": 123456,
   "username": "creatorname",
   "name": "Display Name",
-  "about": "Bio text here...",
+  "isAuth": true,
+  "isVerified": true,
   "avatar": "https://media.ofauth.com/...",
-  "header": "https://media.ofauth.com/...",
-  "location": "Los Angeles, CA",
-  "website": "https://example.com",
   "subscribersCount": 1500,
   "postsCount": 250,
   "photosCount": 200,
-  "videosCount": 50,
-  "isVerified": true,
-  "subscriptionPrice": 9.99,
-  "joinedAt": "2022-01-15T10:30:00Z"
+  "videosCount": 50
 }
 ```
 

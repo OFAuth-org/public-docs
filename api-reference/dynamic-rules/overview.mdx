@@ -1,19 +1,18 @@
 ---
 title: "Overview"
-description: "Fetch current OnlyFans signing parameters or generate signatures via /v2/dynamic-rules"
+description: "Generate request signatures for direct OnlyFans API access"
 ---
 
 ## Overview
 
-Dynamic rules expose the signing configuration OnlyFans requires for direct API
-requests. Most applications rely on the Access API, which signs calls for you.
-Reach for dynamic rules only when you operate your own proxy or make raw
-OnlyFans requests.
+The Dynamic Rules API provides request signing for direct OnlyFans API calls. **Most applications should use the [Access API](/api-reference/access/overview) instead**, which handles signing automatically.
+
+Use Dynamic Rules only when you need to:
+- Make direct OnlyFans API calls outside of OFAuth
+- Implement custom request handling
 
 <Warning>
-  OnlyFans rotates signing requirements frequently. Always pull the latest rules
-  before generating signatures. Build retry and cache invalidation logic into your
-  infrastructure.
+  OnlyFans changes signing requirements frequently. If you use Dynamic Rules directly, implement retry logic and handle `503` responses gracefully.
 </Warning>
 
 ## Base URL
@@ -22,49 +21,21 @@ OnlyFans requests.
 
 ## Endpoints
 
-### Get Rules
-
-Fetch the current signing rules bundle.
-
-```http
-GET /v2/dynamic-rules
-```
-
-**Response**
-
-```json
-{
-  "rules": {
-    "static_param": "...",
-    "format": "...",
-    "start": "...",
-    "end": "...",
-    "checksum_indexes": [1, 2, 3],
-    "checksum_constant": 123,
-    "app_token": "...",
-    "revision": "rev_..."
-  },
-  "is_current": true,
-  "is_public": false,
-  "is_early_access": false
-}
-```
-
 ### Sign Request
 
-Generate a signature for a specific request without implementing the signing logic yourself.
+Generate a signature for a specific OnlyFans API request.
 
 ```http
 POST /v2/dynamic-rules/sign
 ```
 
-**Body**
+**Request Body**
 
 | Field | Type | Required | Description |
 | ----- | ---- | -------- | ----------- |
 | `endpoint` | `string` | Yes | The OnlyFans API path (e.g., `/api2/v2/users/me`) |
-| `time` | `number` | No | specific timestamp to sign with |
-| `user-id` | `string` | No | OnlyFans user ID |
+| `time` | `number` | No | Unix timestamp to sign with (defaults to current time) |
+| `user-id` | `string` | No | OnlyFans user ID for authenticated requests |
 
 **Response**
 
@@ -74,17 +45,14 @@ POST /v2/dynamic-rules/sign
     "sign": "generated_signature_string",
     "time": "1698400000000",
     "user-id": "12345",
-    "app-token": "33d5...",
-    "x-of-rev": "rev_..."
-  },
-  "is_public": false,
-  "is_early_access": false
+    "app-token": "..."
+  }
 }
 ```
 
 ### Get Status
 
-Check the status and revision of the current rules.
+Check if the signing service is operational.
 
 ```http
 GET /v2/dynamic-rules/status
@@ -94,7 +62,6 @@ GET /v2/dynamic-rules/status
 
 ```json
 {
-  "revision": "rev_abc...",
   "is_current": true,
   "access_granted": true
 }
@@ -106,24 +73,14 @@ GET /v2/dynamic-rules/status
 apikey: YOUR_API_KEY
 ```
 
-**Required Scope:** `RULES`
-
-## Access Tiers
-
-| Tier | Description |
-| ---- | ----------- |
-| Public | Stable but potentially stale rules, available to all plans |
-| Current | Latest production rules, default for standard plans |
-| Early Access | Preview feed for enterprise plans (requires `preview_rules` permission) |
-
 <Tip>
-  Subscribe to the `rules.updated` webhook via the [Dashboard](https://app.ofauth.com/platform/developers/webhooks) to be notified when OnlyFans changes the signing requirements.
+  Subscribe to the `rules.updated` webhook in your [Dashboard](https://app.ofauth.com/platform/developers/webhooks) to be notified when signing requirements change.
 </Tip>
 
-## Best Practices
+## When to Use
 
-- Cache rules locally but refresh when `is_current` becomes `false`
-- Monitor for OnlyFans 400/401 responses containing “Please refresh the page” and refetch rules
-- Implement exponential backoff when rules are unavailable (`503`)
-- If you call `/sign` at scale, consider replicating the signing algorithm in your
-  environment using the rule payload to avoid per-request latency
+| Use Case | Recommendation |
+| -------- | -------------- |
+| Standard API access | Use the [Access API](/api-reference/access/overview) - signing is automatic |
+| Custom proxy setup | Use Dynamic Rules `/sign` endpoint |
+| Checking service status | Use `/status` endpoint |

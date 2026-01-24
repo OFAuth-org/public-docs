@@ -22,6 +22,9 @@ Content-Type: application/json
 | `redirectUrl` | `string` | No | URL to redirect to after completion. If omitted, uses the first Allowed Redirect URI from your dashboard. |
 | `clientReferenceId` | `string` | No | Your own internal ID for this user. Returned in webhooks and query params. |
 | `connectionId` | `string` | No | Provide an existing connection ID to reconnect/re-authenticate that specific connection. |
+| `geolocation` | `object` | No | Override the proxy location for this session. |
+| `geolocation.country` | `string` | Yes* | Country code (e.g., `"US"`). *Required if `geolocation` is provided. |
+| `geolocation.state` | `string` | No | State/region code (e.g., `"CA"` for California). |
 
 <Info>
 The `redirectUrl` must be pre-registered in your [OFAuth dashboard](https://app.ofauth.com) under Developers → API → Allowed Redirect URIs.
@@ -32,8 +35,7 @@ The `redirectUrl` must be pre-registered in your [OFAuth dashboard](https://app.
 ```json
 {
   "url": "https://link.ofauth.com/cs_abcdef123456...",
-  "expiresAt": "2023-10-27T10:00:00.000Z",
-  "mode": "hosted"
+  "expiresAt": "2023-10-27T10:00:00.000Z"
 }
 ```
 
@@ -41,7 +43,6 @@ The `redirectUrl` must be pre-registered in your [OFAuth dashboard](https://app.
 | ----- | ---- | ----------- |
 | `url` | `string` | The URL to redirect the user to. |
 | `expiresAt` | `string` | ISO timestamp when this session expires (usually 30-60 minutes). |
-| `mode` | `string` | The mode the session was initialized in. |
 
 ## Redirect Query Parameters
 

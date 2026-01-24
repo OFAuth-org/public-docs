@@ -5,6 +5,63 @@ description: "Typed, stable endpoints for common OnlyFans resources"
 
 Managed endpoints provide a stable, typed interface for interacting with OnlyFans data. Unlike proxy endpoints, these routes validate input parameters, normalize responses, and handle common logic like pagination.
 
+## Authentication
+
+All managed endpoints require:
+
+```http
+apikey: YOUR_API_KEY
+x-connection-id: conn_abc123
+```
+
+---
+
+## Self Endpoints
+
+Get and update the authenticated user's profile.
+
+### Get Current User
+
+```http
+GET /v2/access/self
+```
+
+**Required Permission:** `profile:read`
+
+**Response**
+
+```json
+{
+  "id": 123456789,
+  "username": "janedoe",
+  "name": "Jane Doe",
+  "isAuth": true,
+  "isVerified": true,
+  "avatar": "https://media.ofauth.com/...",
+  "subscribersCount": 1500,
+  "postsCount": 245,
+  "photosCount": 180,
+  "videosCount": 65
+}
+```
+
+### Update Profile
+
+```http
+PATCH /v2/access/self
+```
+
+**Required Permission:** `profile:write`
+
+**Request Body**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Display name |
+| `about` | string | Bio/about text |
+
+---
+
 ## User Endpoints
 
 Interact with user profiles and lists.
@@ -21,11 +78,21 @@ GET /v2/access/users/{userId}
 
 | Name | In | Type | Description |
 | ---- | -- | ---- | ----------- |
-| `userId` | path | `string` | The OnlyFans user ID or username (e.g., `u12345` or `janedoe`) |
+| `userId` | path | `string` | The OnlyFans user ID or username |
 
 **Response**
 
-Returns a user profile object containing fields like `name`, `username`, `avatar`, `about`, `subscribersCount`, etc.
+```json
+{
+  "id": 123456789,
+  "username": "fanname",
+  "name": "Fan Name",
+  "avatar": "https://media.ofauth.com/...",
+  "about": "Profile bio...",
+  "subscribersCount": 0,
+  "isVerified": false
+}
+```
 
 ### List User Posts
 
@@ -37,68 +104,340 @@ GET /v2/access/users/{userId}/posts
 
 **Query Parameters**
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| `limit` | `number` | Number of posts to return (default 10) |
-| `offset` | `number` | Offset for pagination |
-| `sortBy` | `string` | Sort by `publish_date`, `tips`, or `favorites_count` |
-| `sortDirection` | `string` | `asc` or `desc` |
+| Name | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `limit` | number | 10 | Number of posts to return |
+| `sortBy` | string | `publish_date` | Sort by `publish_date`, `tips`, or `favorites_count` |
+| `sortDirection` | string | `desc` | `asc` or `desc` |
+| `beforePublishTime` | string | - | ISO date for pagination cursor |
+
+---
 
 ## Post Endpoints
 
 Create and manage content.
 
-### Create Post
+### List Own Posts
 
-Create a new post. Supports text and media attachments.
+```http
+GET /v2/access/posts
+```
+
+**Required Permission:** `posts:read`
+
+**Query Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `limit` | number | 10 | Results per page |
+| `sortBy` | string | `publish_date` | Sort field |
+| `sortDirection` | string | `desc` | Sort direction |
+| `pinned` | boolean | false | Filter pinned posts only |
+| `includePostCounts` | boolean | false | Include engagement counts |
+
+### Create Post
 
 ```http
 POST /v2/access/posts
 ```
 
-**Body Parameters**
+**Required Permission:** `posts:write`
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| `text` | `string` | The text content of the post |
-| `price` | `number` | Price for the post (if paid) |
-| `mediaItems` | `array` | List of media IDs to attach (uploaded via Upload endpoints) |
-| `isPinned` | `boolean` | Whether to pin the post |
+**Request Body**
 
-### Edit Post
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `text` | string | No | Post content (supports [markdown](/guides/how-to/text-formatting)) |
+| `price` | number | No | PPV price ($3-$200) |
+| `mediaItems` | array | No | Media IDs or upload references |
+| `isPinned` | boolean | No | Pin to profile |
+| `scheduledDate` | string | No | ISO date for scheduled posting |
+| `isMarkdown` | boolean | No | Parse text as markdown (default: true) |
 
-Update an existing post.
+**Response**
 
-```http
-PUT /v2/access/posts/{postId}
-```
-
-### Delete Post
-
-Remove a post.
-
-```http
-DELETE /v2/access/posts/{postId}
+```json
+{
+  "id": 987654321,
+  "text": "Post content here...",
+  "price": 0,
+  "isPinned": false,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "media": []
+}
 ```
 
 ### Get Post
-
-Retrieve details for a single post.
 
 ```http
 GET /v2/access/posts/{postId}
 ```
 
-## Other Categories
+**Required Permission:** `posts:read`
 
-The following resource categories are also available as managed endpoints:
+### Edit Post
 
-- **Messages**: `/chats`, `/chats/{chatId}/messages` - List conversations and send messages.
-- **Statistics**: `/statistics/earnings`, `/statistics/messages` - Retrieve aggregated performance data.
-- **Subscriptions**: `/subscriptions/subscribers` - Manage your subscriber list.
-- **Vault**: `/vault/lists` - Access vault media collections.
-- **Upload**: `/upload` - Generate signed URLs for media uploads.
+```http
+PUT /v2/access/posts/{postId}
+```
+
+**Required Permission:** `posts:write`
+
+### Delete Post
+
+```http
+DELETE /v2/access/posts/{postId}
+```
+
+**Required Permission:** `posts:write`
+
+---
+
+## Message Endpoints
+
+Send and receive direct messages.
+
+### List Chats
+
+```http
+GET /v2/access/chats
+```
+
+**Required Permission:** `messages:read`
+
+**Query Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `limit` | number | 10 | Results per page |
+| `offset` | number | 0 | Pagination offset |
+| `order` | string | `recent` | `recent` or `old` |
+| `filter` | string | - | `priority`, `unread`, `who_tipped` |
+| `query` | string | - | Search term |
+
+### Get Chat Messages
+
+```http
+GET /v2/access/chats/{userId}/messages
+```
+
+**Required Permission:** `messages:read`
+
+### Send Message
+
+```http
+POST /v2/access/chats/{userId}/messages
+```
+
+**Required Permission:** `messages:write`
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `text` | string | No | Message content |
+| `mediaItems` | array | No | Media IDs or upload references |
+| `price` | number | No | PPV price ($3-$200) |
+| `previewMediaCount` | number | No | Preview items before paywall |
+| `isMarkdown` | boolean | No | Parse as markdown (default: true) |
+
+### Get Chat Media
+
+```http
+GET /v2/access/chats/{userId}/media
+```
+
+**Required Permission:** `messages:read`
+
+**Query Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `type` | string | Filter: `photos`, `videos`, `audios` (omit for all) |
+| `limit` | number | Results per page |
+
+---
+
+## Subscriber Endpoints
+
+Manage your subscribers.
+
+### List Subscribers
+
+```http
+GET /v2/access/subscribers
+```
+
+**Required Permission:** `subscribers:read`
+
+**Query Parameters**
+
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `type` | string | `all` | `all`, `active`, `expired`, `latest` |
+| `limit` | number | 10 | Results per page |
+| `offset` | number | 0 | Pagination offset |
+| `latestType` | string | - | For `type=latest`: `new` or `renewals` |
+| `startDate` | string | - | Filter by date (with `type=latest`) |
+| `endDate` | string | - | Filter by date (with `type=latest`) |
+
+**Response**
+
+```json
+{
+  "list": [
+    {
+      "id": 123456,
+      "username": "fanname",
+      "name": "Fan Name",
+      "avatar": "https://media.ofauth.com/...",
+      "subscribedAt": "2024-01-15T10:30:00Z",
+      "expiredAt": "2024-02-15T10:30:00Z",
+      "renewedAt": null,
+      "isActive": true,
+      "totalSpent": 49.99
+    }
+  ],
+  "hasMore": true
+}
+```
+
+### Update Subscriber Note
+
+```http
+PUT /v2/access/subscribers/{userId}/note
+```
+
+**Required Permission:** `subscribers:write`
+
+**Request Body**
+
+```json
+{
+  "notice": "VIP customer - priority support"
+}
+```
+
+### Apply Discount
+
+```http
+PUT /v2/access/subscribers/{userId}/discount
+```
+
+**Required Permission:** `subscribers:write`
+
+### Set Custom Name
+
+```http
+PUT /v2/access/subscribers/{userId}/custom-name
+```
+
+**Required Permission:** `subscribers:write`
+
+**Request Body**
+
+```json
+{
+  "displayName": "John (Twitter friend)"
+}
+```
+
+---
+
+## Mass Message Endpoints
+
+Send messages to multiple fans at once.
+
+### List Mass Messages
+
+```http
+GET /v2/access/mass-messages
+```
+
+**Required Permission:** `messages:read`
+
+**Query Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `type` | string | `sent`, `unsent`, `scheduled` |
+| `limit` | number | Results per page |
+| `offset` | number | Pagination offset |
+
+### Create Mass Message
+
+```http
+POST /v2/access/mass-messages
+```
+
+**Required Permission:** `messages:write`
+
+**Request Body**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | Message content |
+| `mediaItems` | array | Media IDs |
+| `price` | number | PPV price |
+| `userIds` | array | Target user IDs |
+| `userLists` | array | Target list IDs |
+| `excludeUserLists` | array | Exclude list IDs |
+| `scheduledDate` | string | ISO date for scheduling |
+
+### Get/Update/Delete Mass Message
+
+```http
+GET /v2/access/mass-messages/{massMessageId}
+PUT /v2/access/mass-messages/{massMessageId}
+DELETE /v2/access/mass-messages/{massMessageId}
+```
+
+---
+
+## Vault & Upload Endpoints
+
+Manage media storage.
+
+### List Vault Media
+
+```http
+GET /v2/access/vault/media
+```
+
+**Required Permission:** `vault:read`
+
+**Query Parameters**
+
+| Name | Type | Description |
+|------|------|-------------|
+| `listId` | number | Filter by vault list |
+| `mediaType` | string | `photo`, `video`, `audio` |
+| `sortBy` | string | Sort field |
+| `sortDirection` | string | `asc` or `desc` |
+
+### Upload Media
+
+See the [Upload Media Guide](/guides/how-to/upload-media) for the complete upload flow.
+
+---
+
+## Permission Reference
+
+| Permission | Grants Access To |
+|------------|------------------|
+| `profile:read` | Get current user profile |
+| `profile:write` | Update profile |
+| `posts:read` | List and get posts |
+| `posts:write` | Create, edit, delete posts |
+| `messages:read` | List chats and messages |
+| `messages:write` | Send messages |
+| `subscribers:read` | List subscribers |
+| `subscribers:write` | Update notes, apply discounts |
+| `vault:read` | Access vault media |
+| `analytics:read` | Access statistics and charts |
+| `earnings:read` | Access earnings data |
+| `notifications:read` | Access notifications |
 
 <Tip>
-  For a complete interactive reference of all managed endpoints, schemas, and parameters, please consult the OpenAPI specification available in your dashboard or the API explorer.
+  For the complete interactive API reference with all endpoints, see the [API Reference](/api-reference/access/overview) section or the OpenAPI specification in your dashboard.
 </Tip>

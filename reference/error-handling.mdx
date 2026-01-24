@@ -158,7 +158,7 @@ When there's an issue reaching OnlyFans:
 }
 ```
 
-**Resolution**: Retry the request after a short delay. OFAuth automatically rotates proxies.
+**Resolution**: Retry the request after a short delay. These errors are typically transient.
 
 ---
 
@@ -224,7 +224,7 @@ async function handleOFAuthRequest(response: Response) {
   <Card title="Rate Limiting" icon="gauge" href="/reference/rate-limiting">
     Token bucket system and backoff strategies
   </Card>
-  <Card title="Access API" icon="key" href="/reference/access">
+  <Card title="Access API" icon="key" href="/api-reference/access/overview">
     Using the Access API
   </Card>
   <Card title="Webhooks" icon="bell" href="/reference/webhooks">

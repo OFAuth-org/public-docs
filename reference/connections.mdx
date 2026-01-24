@@ -3,7 +3,7 @@ title: "Connections"
 description: "Manage connected OnlyFans accounts"
 ---
 
-The Connections API manages your connected OnlyFans accounts. Connections are created through [Link](/guides/how-to/connect-account) and used with the [Access API](/reference/access).
+The Connections API manages your connected OnlyFans accounts. Connections are created through [Link](/guides/link) and used with the [Access API](/api-reference/access/overview).
 
 ## Obtaining Connection IDs
 
@@ -12,8 +12,8 @@ After a user completes authentication through Link, you receive the connection I
 | Method | When to Use |
 |--------|-------------|
 | [`connection.created` webhook](/reference/webhooks) | **Recommended.** Server-side, reliable, includes full details |
-| [Embed `onSuccess` callback](/guides/link/embed#event-data-types) | Client-side, immediate feedback for embedded flows |
-| [Redirect query params](/guides/link/hosted#redirect-query-parameters) | Hosted redirect flow, `connection_id` in URL |
+| [Embed `onSuccess` callback](/guides/link#success-metadata) | Client-side, immediate feedback for embedded flows |
+| [Redirect query params](/guides/link#callback-parameters) | Hosted redirect flow, `connection_id` in URL |
 
 ### Using Client Reference ID
 
@@ -56,11 +56,9 @@ Always pass a `clientReferenceId` when initializing Link sessions. This is the r
 
 | State | Description |
 |-------|-------------|
-| `pending` | Authentication in progress |
 | `active` | Ready for API access |
 | `awaiting_2fa` | Waiting for 2FA verification |
 | `expired` | Session ended, re-authentication needed |
-| `failed` | Authentication failed |
 
 ## Connection Lifecycle
 
@@ -135,8 +133,8 @@ In your [OFAuth Dashboard](https://app.ofauth.com/platform/developer/api), updat
 ### Step 2: Invalidate Existing Connections
 
 ```bash
-curl -X POST https://api-next.ofauth.com/v2/connections/{connectionId}/invalidate \
-  -H "Authorization: Bearer YOUR_API_KEY"
+curl -X POST https://api.ofauth.com/v2/connections/{connectionId}/invalidate \
+  -H "apikey: YOUR_API_KEY"
 ```
 
 This marks the connection as expired without deleting it.
@@ -146,8 +144,8 @@ This marks the connection as expired without deleting it.
 When users reconnect through Link with the same `connectionId`, they'll be prompted to approve the updated permissions:
 
 ```bash
-curl -X POST https://api-next.ofauth.com/v2/link/init \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl -X POST https://api.ofauth.com/v2/link/init \
+  -H "apikey: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "connectionId": "conn_abc123xyz",
@@ -172,7 +170,7 @@ When a connection expires, you can reconnect the same OnlyFans account without c
 
 ```bash
 curl -X POST https://api.ofauth.com/v2/link/init \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "apikey: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "connectionId": "conn_abc123xyz",
@@ -207,7 +205,7 @@ Use reconnection for expired connections to maintain consistent connection IDs i
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Access API" icon="key" href="/reference/access">
+  <Card title="Access API" icon="key" href="/api-reference/access/overview">
     Use connections to access data
   </Card>
   <Card title="Webhooks" icon="bell" href="/reference/webhooks">
