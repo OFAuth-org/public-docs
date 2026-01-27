@@ -9,57 +9,63 @@ description: "The easiest way to integrate OnlyFans into your JavaScript/TypeScr
 Production-ready TypeScript SDK that eliminates 90% of OnlyFans integration complexity. Full type safety, automatic error handling, and built-in retry logic.
 
 <Info>
-	**Using Python, Go, PHP, or another language?** Use our [REST APIs](/api-reference/access/overview) directly - they work with any language that can make HTTP requests. This SDK documentation covers TypeScript/JavaScript only.
+  **Using Python, Go, PHP, or another language?** Use our [REST APIs](/api-reference/access/overview) directly - they work with any language that can make HTTP requests. This SDK documentation covers TypeScript/JavaScript only.
 </Info>
 
 ### Development ROI
-- **$50K-120K saved** in first-year development costs
-- **17+ weeks** of integration work eliminated  
-- **10x faster** feature development ongoing
-- **Same-day deployment** capability from install
+
+* **\$50K-120K saved** in first-year development costs
+* **17+ weeks** of integration work eliminated
+* **10x faster** feature development ongoing
+* **Same-day deployment** capability from install
 
 <CardGroup cols={2}>
   <Card title="10x Faster Development" icon="rocket">
     Pre-built methods, TypeScript definitions, and automatic error handling eliminate boilerplate code
   </Card>
+
   <Card title="Production Ready" icon="shield">
     Built-in retry logic, rate limiting, session management, and error recovery patterns
   </Card>
+
   <Card title="Type Safe" icon="code">
     Full TypeScript support with IntelliSense, autocomplete, and compile-time error checking
   </Card>
+
   <Card title="Self-Documenting" icon="book">
     Inline documentation, examples, and guided development experience
   </Card>
 </CardGroup>
 
----
+***
 
 ## SDK vs REST API
 
 Choose the SDK if you're using TypeScript/JavaScript. Use the REST API directly for other languages.
 
-| | TypeScript SDK | REST API |
-|---|---|---|
-| **Languages** | TypeScript, JavaScript | Any |
-| **Type Safety** | Full IntelliSense | None |
-| **Error Handling** | Automatic with retry | Manual |
-| **Learning Curve** | Lower | Higher |
+|                    | TypeScript SDK         | REST API |
+| ------------------ | ---------------------- | -------- |
+| **Languages**      | TypeScript, JavaScript | Any      |
+| **Type Safety**    | Full IntelliSense      | None     |
+| **Error Handling** | Automatic with retry   | Manual   |
+| **Learning Curve** | Lower                  | Higher   |
 
 <CardGroup cols={2}>
   <Card title="SDK Quickstart" icon="code" href="/sdk/quickstart">
     Get started with the TypeScript SDK
   </Card>
+
   <Card title="REST API Guide" icon="globe" href="/api-reference/access/overview">
     Use the API directly from any language
   </Card>
 </CardGroup>
 
----
+***
 
 ## Why Choose the SDK Over Direct API?
 
 ### Before: Raw API Calls
+
 ```javascript
 // Manual HTTP requests with lots of boilerplate
 const response = await fetch("https://api.ofauth.com/v2/access/proxy/chats/rooms/123/messages", {
@@ -91,6 +97,7 @@ const result = await response.json()
 ```
 
 ### After: SDK
+
 ```typescript
 // One line with built-in error handling and retries
 const { data, error } = await sdk.messages.sendChatMessage({
@@ -111,7 +118,7 @@ if (error) {
 }
 ```
 
----
+***
 
 ## What You Can Build
 
@@ -121,31 +128,37 @@ The SDK unlocks powerful OnlyFans integration possibilities:
   <Card title="Creator Analytics" icon="chart-bar">
     **Performance Dashboards** - Track earnings, post performance, and subscriber growth
   </Card>
+
   <Card title="Content Management" icon="file-text">
     **Automated Publishing** - Upload media, create posts, and schedule content
   </Card>
+
   <Card title="Fan Engagement" icon="comments">
     **Messaging Automation** - Send personalized messages and manage campaigns
   </Card>
+
   <Card title="Subscriber Tools" icon="users">
     **List Management** - Organize subscribers and segment audiences
   </Card>
+
   <Card title="Revenue Optimization" icon="dollar-sign">
     **Business Intelligence** - Analyze content performance and optimize pricing
   </Card>
+
   <Card title="Integration Tools" icon="link">
     **Custom Workflows** - Build integrations with other platforms
   </Card>
 </CardGroup>
 
----
+***
 
 ## Key Features
 
 ### Complete Type Safety
-- **Full TypeScript definitions** with IntelliSense autocomplete
-- **Compile-time validation** prevents invalid parameter combinations
-- **Context-aware suggestions** guide correct API usage
+
+* **Full TypeScript definitions** with IntelliSense autocomplete
+* **Compile-time validation** prevents invalid parameter combinations
+* **Context-aware suggestions** guide correct API usage
 
 ```typescript
 // Full IntelliSense support and validation
@@ -159,18 +172,20 @@ const { data, error } = await sdk.statistics.getStats({
 ```
 
 ### Complete OnlyFans Coverage
-- **User Management**: Profiles, subscribers, connections
-- **Content Creation**: Posts, media uploads, pricing
-- **Messaging**: Direct messages, mass messaging, rich content
-- **Analytics**: Earnings, subscriber metrics, performance insights
-- **Business Tools**: Promotions, subscriber management, automation
+
+* **User Management**: Profiles, subscribers, connections
+* **Content Creation**: Posts, media uploads, pricing
+* **Messaging**: Direct messages, mass messaging, rich content
+* **Analytics**: Earnings, subscriber metrics, performance insights
+* **Business Tools**: Promotions, subscriber management, automation
 
 ### Production Features
-- **Error Handling**: Structured error types with retry recommendations
-- **Request Signing**: Automatic OnlyFans API signature generation
-- **Monitoring**: Built-in logging and debugging capabilities
 
----
+* **Error Handling**: Structured error types with retry recommendations
+* **Request Signing**: Automatic OnlyFans API signature generation
+* **Monitoring**: Built-in logging and debugging capabilities
+
+***
 
 ## SDK Architecture
 
@@ -179,22 +194,24 @@ The SDK is organized into logical modules that mirror OnlyFans functionality:
 <CardGroup cols={3}>
   <Card title="Authentication" icon="key">
     **Link & Account Modules**
-    
+
     Handle login flows, session management, and connection lifecycle
   </Card>
+
   <Card title="Content & Users" icon="users">
     **Messages, Posts, User Modules**
-    
+
     Manage content creation, user interactions, and profile operations
   </Card>
+
   <Card title="Business & Analytics" icon="chart-line">
     **Statistics, Subscriptions, Vault**
-    
+
     Access earnings data, subscriber metrics, and media management
   </Card>
 </CardGroup>
 
----
+***
 
 ## Get Started
 
@@ -204,16 +221,18 @@ The SDK is organized into logical modules that mirror OnlyFans functionality:
     npm install @ofauth/onlyfans-sdk
     ```
   </Step>
+
   <Step title="Initialize with your API key">
     ```typescript
     import OFSDK from "@ofauth/onlyfans-sdk"
-    
+
     const sdk = new OFSDK({
       mode: "access",
       ofauthApiKey: process.env.OFAUTH_API_KEY
     })
     ```
   </Step>
+
   <Step title="Start building">
     Use any SDK module to interact with OnlyFans data.
   </Step>
@@ -223,19 +242,22 @@ The SDK is organized into logical modules that mirror OnlyFans functionality:
   <Card title="Full Installation Guide" icon="download" href="/sdk/quickstart">
     Complete setup with all configuration options
   </Card>
+
   <Card title="SDK Architecture" icon="boxes" href="/sdk/core-concepts/architecture">
     Understand the modular structure
   </Card>
+
   <Card title="Authentication Setup" icon="key" href="/sdk/core-concepts/authentication">
     Configure connection flows
   </Card>
+
   <Card title="Module Reference" icon="book" href="/sdk/modules/authentication/link-authentication">
     Explore all available methods
   </Card>
 </CardGroup>
 
----
+***
 
 <Warning>
-  **Ready for Production?** Review our [Integration Checklist](/getting-started/integration-checklist) for important deployment and security information. 
+  **Ready for Production?** Review our [Integration Checklist](/setup/integration-checklist) for important deployment and security information.
 </Warning>

@@ -11,67 +11,65 @@ Learn how to send messages to multiple fans simultaneously using the OFAuth mass
   You have a [connected OnlyFans account](/guides/link) with a valid `connectionId`
 </Check>
 
----
+***
 
 ## Why Use Mass Messaging?
 
 Instead of sending individual messages one-by-one (which hits rate limits), use mass messaging to:
 
-- Send to multiple fans in a single API call
-- Schedule messages for later delivery
-- Target specific user lists
-- Exclude certain user groups
-- Track delivery and purchase stats
+* Send to multiple fans in a single API call
+* Schedule messages for later delivery
+* Target specific user lists
+* Exclude certain user groups
+* Track delivery and purchase stats
 
----
+***
 
 ## Send to Specific Users
 
 Send a message to a list of user IDs:
 
 <CodeGroup>
-
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
-  method: "POST",
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    text: "Hey everyone! New content dropping soon 🔥",
-    userIds: [123, 456, 789, 1011, 1213]
-  })
-})
-
-const result = await response.json()
-console.log("Mass message ID:", result.id)
-```
-
-```python Python
-import requests
-
-response = requests.post(
-    "https://api.ofauth.com/v2/access/mass-messages",
-    headers={
-        "apikey": "YOUR_API_KEY",
-        "x-connection-id": "conn_abc123",
-        "Content-Type": "application/json"
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
+    method: "POST",
+    headers: {
+      apikey: "YOUR_API_KEY",
+      "x-connection-id": "conn_abc123",
+      "Content-Type": "application/json"
     },
-    json={
-        "text": "Hey everyone! New content dropping soon 🔥",
-        "userIds": [123, 456, 789, 1011, 1213]
-    }
-)
+    body: JSON.stringify({
+      text: "Hey everyone! New content dropping soon 🔥",
+      userIds: [123, 456, 789, 1011, 1213]
+    })
+  })
 
-result = response.json()
-print("Mass message ID:", result["id"])
-```
+  const result = await response.json()
+  console.log("Mass message ID:", result.id)
+  ```
 
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.ofauth.com/v2/access/mass-messages",
+      headers={
+          "apikey": "YOUR_API_KEY",
+          "x-connection-id": "conn_abc123",
+          "Content-Type": "application/json"
+      },
+      json={
+          "text": "Hey everyone! New content dropping soon 🔥",
+          "userIds": [123, 456, 789, 1011, 1213]
+      }
+  )
+
+  result = response.json()
+  print("Mass message ID:", result["id"])
+  ```
 </CodeGroup>
 
----
+***
 
 ## Send to User Lists
 
@@ -110,7 +108,7 @@ lists.forEach(list => {
 })
 ```
 
----
+***
 
 ## Exclude Certain Users
 
@@ -132,7 +130,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
 })
 ```
 
----
+***
 
 ## Target New Subscribers
 
@@ -154,7 +152,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
 })
 ```
 
----
+***
 
 ## Send PPV Mass Message
 
@@ -178,7 +176,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
 })
 ```
 
----
+***
 
 ## Schedule for Later
 
@@ -203,7 +201,7 @@ const result = await response.json()
 console.log("Message scheduled for:", result.scheduledDate)
 ```
 
----
+***
 
 ## List Mass Messages
 
@@ -237,7 +235,7 @@ const massMessages = await response.json()
 }
 ```
 
----
+***
 
 ## Get Message Buyers
 
@@ -260,7 +258,7 @@ buyers.list.forEach(buyer => {
 })
 ```
 
----
+***
 
 ## Update Scheduled Message
 
@@ -284,7 +282,7 @@ const response = await fetch(
 )
 ```
 
----
+***
 
 ## Cancel Scheduled Message
 
@@ -307,7 +305,7 @@ if (response.ok) {
 }
 ```
 
----
+***
 
 ## Complete Example
 
@@ -362,25 +360,25 @@ async function sendPromoToActiveSubscribers() {
 sendPromoToActiveSubscribers()
 ```
 
----
+***
 
 ## All Queue Options
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `text` | string | Message content (supports markdown) |
-| `mediaItems` | number[] | Media IDs from vault |
-| `price` | number | PPV price ($3-$200) |
-| `previewMediaCount` | number | Preview items before paywall |
-| `isLockedText` | boolean | Lock text behind paywall |
-| `userIds` | number[] | Specific user IDs to target |
-| `userLists` | number[] | User list IDs to target |
-| `excludeUserLists` | number[] | User list IDs to exclude |
-| `scheduledDate` | string | ISO date for scheduled sending |
-| `subscribedAfterDate` | string | Only target users subscribed after date |
-| `isMarkdown` | boolean | Parse text as markdown (default: true) |
+| Option                | Type      | Description                             |
+| --------------------- | --------- | --------------------------------------- |
+| `text`                | string    | Message content (supports markdown)     |
+| `mediaItems`          | number\[] | Media IDs from vault                    |
+| `price`               | number    | PPV price ($3-$200)                     |
+| `previewMediaCount`   | number    | Preview items before paywall            |
+| `isLockedText`        | boolean   | Lock text behind paywall                |
+| `userIds`             | number\[] | Specific user IDs to target             |
+| `userLists`           | number\[] | User list IDs to target                 |
+| `excludeUserLists`    | number\[] | User list IDs to exclude                |
+| `scheduledDate`       | string    | ISO date for scheduled sending          |
+| `subscribedAfterDate` | string    | Only target users subscribed after date |
+| `isMarkdown`          | boolean   | Parse text as markdown (default: true)  |
 
----
+***
 
 ## Tips & Best Practices
 
@@ -400,7 +398,7 @@ sendPromoToActiveSubscribers()
   **A/B test**: Send different messages to different lists to see what performs better.
 </Tip>
 
----
+***
 
 ## Next Steps
 
@@ -408,8 +406,8 @@ sendPromoToActiveSubscribers()
   <Card title="Upload Media" icon="cloud-arrow-up" href="/guides/how-to/upload-media">
     Upload content for PPV messages
   </Card>
-  <Card title="Track Earnings" icon="chart-line" href="/use-cases/earnings">
+
+  <Card title="Track Earnings" icon="chart-line" href="/guides/earnings">
     Monitor PPV revenue
   </Card>
 </CardGroup>
-

@@ -6,48 +6,46 @@ description: "Upload media, access vault, and embed content"
 
 ## What You Can Build
 
-- **Media Management**: Upload, organize, and manage content libraries
-- **Content Embedding**: Display OnlyFans media on your platform
-- **Backup Tools**: Download and archive creator content
-- **Cross-Platform Sync**: Manage media across multiple accounts
+* **Media Management**: Upload, organize, and manage content libraries
+* **Content Embedding**: Display OnlyFans media on your platform
+* **Backup Tools**: Download and archive creator content
+* **Cross-Platform Sync**: Manage media across multiple accounts
 
----
+***
 
 ## Quick Example
 
 List media from the vault:
 
 <CodeGroup>
-
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/vault/media", {
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123"
-  }
-})
-
-const { list, hasMore } = await response.json()
-console.log(`Found ${list.length} media items`)
-```
-
-```python Python
-import requests
-
-response = requests.get(
-    "https://api.ofauth.com/v2/access/vault/media",
-    headers={
-        "apikey": "YOUR_API_KEY",
-        "x-connection-id": "conn_abc123"
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/access/vault/media", {
+    headers: {
+      apikey: "YOUR_API_KEY",
+      "x-connection-id": "conn_abc123"
     }
-)
-data = response.json()
-print(f"Found {len(data['list'])} media items")
-```
+  })
 
+  const { list, hasMore } = await response.json()
+  console.log(`Found ${list.length} media items`)
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.get(
+      "https://api.ofauth.com/v2/access/vault/media",
+      headers={
+          "apikey": "YOUR_API_KEY",
+          "x-connection-id": "conn_abc123"
+      }
+  )
+  data = response.json()
+  print(f"Found {len(data['list'])} media items")
+  ```
 </CodeGroup>
 
----
+***
 
 ## Common Operations
 
@@ -136,15 +134,15 @@ const response = await fetch("https://api.ofauth.com/v2/access/vault/lists/LIST_
 })
 ```
 
----
+***
 
 ## Uploading Media
 
 The `/uploads/init` response determines whether you need single-part or multi-part upload:
 
-| Header | Meaning |
-|--------|---------|
-| `x-ofauth-upload-total-parts: 1` | Single-part upload (auto-completes) |
+| Header                           | Meaning                                  |
+| -------------------------------- | ---------------------------------------- |
+| `x-ofauth-upload-total-parts: 1` | Single-part upload (auto-completes)      |
 | `x-ofauth-upload-total-parts: N` | Multi-part upload (requires `/complete`) |
 
 ### Single-Part Upload (Small Files)
@@ -253,26 +251,26 @@ console.log("Uploaded media ID:", media.id)
   **Multi-part**: Must call `/complete` after all chunks are uploaded.
 </Info>
 
----
+***
 
 ## Media Storage Options
 
 OFAuth provides two complementary solutions for handling OnlyFans media:
 
-| Feature | Media Proxy | Vault Cache |
-|---------|-------------|-------------|
-| **Purpose** | Display current content | Build media libraries |
-| **Access** | Via API response URLs | By media ID directly |
-| **Storage** | Temporary (edge cache) | Persistent storage |
-| **Setup** | Automatic | Requires enabling |
-| **Billing** | Per KB bandwidth | Per GB/month storage |
-| **Best for** | Immediate display | PPV features, offline access |
+| Feature      | Media Proxy             | Vault Cache                  |
+| ------------ | ----------------------- | ---------------------------- |
+| **Purpose**  | Display current content | Build media libraries        |
+| **Access**   | Via API response URLs   | By media ID directly         |
+| **Storage**  | Temporary (edge cache)  | Persistent storage           |
+| **Setup**    | Automatic               | Requires enabling            |
+| **Billing**  | Per KB bandwidth        | Per GB/month storage         |
+| **Best for** | Immediate display       | PPV features, offline access |
 
 <Card title="Media Storage Guide" icon="database" href="/guides/media-storage">
   Learn when to use Media Proxy vs Vault Cache with detailed examples
 </Card>
 
----
+***
 
 ## Media Proxy
 
@@ -284,12 +282,12 @@ OFAuth automatically proxies OnlyFans CDN URLs, making media embeddable on your 
 
 ### Why Media Proxy?
 
-| OnlyFans CDN | OFAuth Media Proxy |
-|--------------|-------------------|
-| URLs expire quickly | Extended validity |
-| CORS blocked | CORS enabled |
-| No caching control | Edge-cached globally |
-| Cannot embed | Embeddable in `<img>` / `<video>` |
+| OnlyFans CDN        | OFAuth Media Proxy                |
+| ------------------- | --------------------------------- |
+| URLs expire quickly | Extended validity                 |
+| CORS blocked        | CORS enabled                      |
+| No caching control  | Edge-cached globally              |
+| Cannot embed        | Embeddable in `<img>` / `<video>` |
 
 ### Using Proxied URLs
 
@@ -332,6 +330,7 @@ await fetch("https://media.ofauth.com/abc123...", { method: "DELETE" })
   <Card title="Media Proxy" icon="globe">
     Billed per KB of bandwidth transferred. Cache hits (within 7 days) are free.
   </Card>
+
   <Card title="Vault Cache" icon="database">
     Billed per GB/month of storage. Persistent storage for media you need long-term access to.
   </Card>
@@ -341,44 +340,44 @@ await fetch("https://media.ofauth.com/abc123...", { method: "DELETE" })
   Monitor usage in your [dashboard](https://app.ofauth.com). Media Proxy is best for temporary display; Vault Cache is best for building permanent media libraries.
 </Info>
 
----
+***
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/vault/media` | GET | List all vault media |
-| `/v2/access/vault/lists` | GET | Get vault lists/folders |
-| `/v2/access/vault/lists` | POST | Create a vault list |
-| `/v2/access/vault/lists/{listId}` | PATCH | Update a vault list |
-| `/v2/access/vault/lists/{listId}` | DELETE | Delete a vault list |
-| `/v2/access/vault/lists/{listId}/media` | GET | Get media in a list |
-| `/v2/access/vault/lists/{listId}/media` | POST | Add media to a list |
-| `/v2/access/uploads/init` | POST | Initialize media upload |
-| `/v2/access/uploads/{mediaUploadId}` | PUT | Upload single-part file |
-| `/v2/access/uploads/{mediaUploadId}/parts/{partNumber}` | PUT | Upload chunk |
-| `/v2/access/uploads/complete` | POST | Complete upload |
+| Endpoint                                                | Method | Description             |
+| ------------------------------------------------------- | ------ | ----------------------- |
+| `/v2/access/vault/media`                                | GET    | List all vault media    |
+| `/v2/access/vault/lists`                                | GET    | Get vault lists/folders |
+| `/v2/access/vault/lists`                                | POST   | Create a vault list     |
+| `/v2/access/vault/lists/{listId}`                       | PATCH  | Update a vault list     |
+| `/v2/access/vault/lists/{listId}`                       | DELETE | Delete a vault list     |
+| `/v2/access/vault/lists/{listId}/media`                 | GET    | Get media in a list     |
+| `/v2/access/vault/lists/{listId}/media`                 | POST   | Add media to a list     |
+| `/v2/access/uploads/init`                               | POST   | Initialize media upload |
+| `/v2/access/uploads/{mediaUploadId}`                    | PUT    | Upload single-part file |
+| `/v2/access/uploads/{mediaUploadId}/parts/{partNumber}` | PUT    | Upload chunk            |
+| `/v2/access/uploads/complete`                           | POST   | Complete upload         |
 
 <Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
   See complete endpoint documentation
 </Card>
 
----
+***
 
 ## Query Parameters
 
 ### Vault Media Query
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `limit` | number | 24 | Results per page (1-40) |
-| `offset` | number | 0 | Pagination offset |
-| `sortBy` | string | "recent" | Sort by: `recent`, `most-liked`, `highest-tips` |
-| `sortDirection` | string | "desc" | Sort direction: `asc`, `desc` |
-| `mediaType` | string | - | Filter by type: `photo`, `video`, `audio`, `gif` |
-| `query` | string | - | Search query |
+| Parameter       | Type   | Default  | Description                                      |
+| --------------- | ------ | -------- | ------------------------------------------------ |
+| `limit`         | number | 24       | Results per page (1-40)                          |
+| `offset`        | number | 0        | Pagination offset                                |
+| `sortBy`        | string | "recent" | Sort by: `recent`, `most-liked`, `highest-tips`  |
+| `sortDirection` | string | "desc"   | Sort direction: `asc`, `desc`                    |
+| `mediaType`     | string | -        | Filter by type: `photo`, `video`, `audio`, `gif` |
+| `query`         | string | -        | Search query                                     |
 
----
+***
 
 ## Media Data Structure
 
@@ -430,7 +429,7 @@ For videos, additional fields:
 }
 ```
 
----
+***
 
 ## Vault List Structure
 
@@ -450,7 +449,7 @@ For videos, additional fields:
 
 List types: `custom`, `messages`, `posts`, `stories`, `streams`, `media_stickers`
 
----
+***
 
 ## Tips & Best Practices
 
@@ -466,7 +465,7 @@ List types: `custom`, `messages`, `posts`, `stories`, `streams`, `media_stickers
   **Bandwidth Costs**: Frequently accessed media (profile pictures, popular posts) may generate significant bandwidth charges. Monitor usage in your dashboard.
 </Warning>
 
----
+***
 
 ## Related Guides
 
@@ -474,13 +473,16 @@ List types: `custom`, `messages`, `posts`, `stories`, `streams`, `media_stickers
   <Card title="Media Storage" icon="database" href="/guides/media-storage">
     Media Proxy vs Vault Cache - when to use each
   </Card>
+
   <Card title="Access API" icon="key" href="/api-reference/access/overview">
     Complete API reference
   </Card>
-  <Card title="Content & Posts" icon="image" href="/use-cases/content">
+
+  <Card title="Content & Posts" icon="image" href="/guides/content">
     Use media in posts and stories
   </Card>
-  <Card title="Messaging & Chats" icon="messages" href="/use-cases/messaging">
+
+  <Card title="Messaging & Chats" icon="messages" href="/guides/messaging">
     Send media in direct messages
   </Card>
 </CardGroup>

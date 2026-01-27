@@ -9,7 +9,7 @@ description: "Get your first OFAuth API call working in under 2 minutes"
 </Info>
 
 <Warning>
-  **Use Sandbox for testing!** Before testing with real OnlyFans accounts, use the [Sandbox environment](/getting-started/sandbox) with test credentials. Too many login attempts on production accounts can trigger OnlyFans "suspicious activity" detection, which may cause account resets.
+  **Use Sandbox for testing!** Before testing with real OnlyFans accounts, use the [Sandbox environment](/setup/sandbox) with test credentials. Too many login attempts on production accounts can trigger OnlyFans "suspicious activity" detection, which may cause account resets.
 </Warning>
 
 ## Step 1: Get Your API Key
@@ -18,6 +18,7 @@ description: "Get your first OFAuth API call working in under 2 minutes"
   <Step title="Go to your dashboard">
     Open [app.ofauth.com/platform/developers/keys](https://app.ofauth.com/platform/developers/keys)
   </Step>
+
   <Step title="Copy your API key">
     Your API key looks like `sk_live_...` (production) or `sk_sandbox_...` (testing). Keep it secure—don't commit it to version control.
   </Step>
@@ -26,158 +27,156 @@ description: "Get your first OFAuth API call working in under 2 minutes"
 **Verify it works:**
 
 <CodeGroup>
+  ```bash cURL
+  curl https://api.ofauth.com/v2/account/whoami \
+    -H "apikey: YOUR_API_KEY"
+  ```
 
-```bash cURL
-curl https://api.ofauth.com/v2/account/whoami \
-  -H "apikey: YOUR_API_KEY"
-```
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/account/whoami", {
+    headers: { apikey: "YOUR_API_KEY" }
+  })
+  console.log(await response.json())
+  ```
 
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/account/whoami", {
-  headers: { apikey: "YOUR_API_KEY" }
-})
-console.log(await response.json())
-```
-
-```python Python
-import requests
-response = requests.get(
-    "https://api.ofauth.com/v2/account/whoami",
-    headers={"apikey": "YOUR_API_KEY"}
-)
-print(response.json())
-```
-
+  ```python Python
+  import requests
+  response = requests.get(
+      "https://api.ofauth.com/v2/account/whoami",
+      headers={"apikey": "YOUR_API_KEY"}
+  )
+  print(response.json())
+  ```
 </CodeGroup>
 
 <Check>
   You should see your organization details. If you get an error, double-check your API key.
 </Check>
 
----
+***
 
 ## Step 2: Connect an OnlyFans Account
 
 Create a Link session to authenticate a user:
 
 <CodeGroup>
+  ```bash cURL
+  curl -X POST https://api.ofauth.com/v2/link/init \
+    -H "apikey: YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "redirectUrl": "https://yourapp.com/callback"
+    }'
+  ```
 
-```bash cURL
-curl -X POST https://api.ofauth.com/v2/link/init \
-  -H "apikey: YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "redirectUrl": "https://yourapp.com/callback"
-  }'
-```
-
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/link/init", {
-  method: "POST",
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    redirectUrl: "https://yourapp.com/callback"
-  })
-})
-
-const { url } = await response.json()
-console.log("Redirect user to:", url)
-```
-
-```python Python
-import requests
-response = requests.post(
-    "https://api.ofauth.com/v2/link/init",
-    headers={
-        "apikey": "YOUR_API_KEY",
-        "Content-Type": "application/json"
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/link/init", {
+    method: "POST",
+    headers: {
+      apikey: "YOUR_API_KEY",
+      "Content-Type": "application/json"
     },
-    json={
-        "redirectUrl": "https://yourapp.com/callback"
-    }
-)
-print("Redirect user to:", response.json()["url"])
-```
+    body: JSON.stringify({
+      redirectUrl: "https://yourapp.com/callback"
+    })
+  })
 
+  const { url } = await response.json()
+  console.log("Redirect user to:", url)
+  ```
+
+  ```python Python
+  import requests
+  response = requests.post(
+      "https://api.ofauth.com/v2/link/init",
+      headers={
+          "apikey": "YOUR_API_KEY",
+          "Content-Type": "application/json"
+      },
+      json={
+          "redirectUrl": "https://yourapp.com/callback"
+      }
+  )
+  print("Redirect user to:", response.json()["url"])
+  ```
 </CodeGroup>
 
 **What happens:**
+
 1. You get a `url` in the response
 2. Redirect the user to that URL
 3. They authenticate on OFAuth's secure page
 4. On success, they're redirected to your `redirectUrl` with `connection_id` as a query parameter
 
 <Tip>
-  For testing, use a Sandbox API key (`sk_sandbox_...`) with [test credentials](/getting-started/sandbox).
+  For testing, use a Sandbox API key (`sk_sandbox_...`) with [test credentials](/setup/sandbox).
 </Tip>
 
----
+***
 
 ## Step 3: Fetch Data
 
 Once you have a Connection ID, use it to access OnlyFans data:
 
 <CodeGroup>
+  ```bash cURL
+  curl https://api.ofauth.com/v2/access/self \
+    -H "apikey: YOUR_API_KEY" \
+    -H "x-connection-id: conn_YOUR_CONNECTION_ID"
+  ```
 
-```bash cURL
-curl https://api.ofauth.com/v2/access/self \
-  -H "apikey: YOUR_API_KEY" \
-  -H "x-connection-id: conn_YOUR_CONNECTION_ID"
-```
-
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/self", {
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_YOUR_CONNECTION_ID"
-  }
-})
-
-const profile = await response.json()
-console.log("Connected as:", profile.name)
-```
-
-```python Python
-import requests
-response = requests.get(
-    "https://api.ofauth.com/v2/access/self",
-    headers={
-        "apikey": "YOUR_API_KEY",
-        "x-connection-id": "conn_YOUR_CONNECTION_ID"
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/access/self", {
+    headers: {
+      apikey: "YOUR_API_KEY",
+      "x-connection-id": "conn_YOUR_CONNECTION_ID"
     }
-)
-print("Connected as:", response.json()["name"])
-```
+  })
 
+  const profile = await response.json()
+  console.log("Connected as:", profile.name)
+  ```
+
+  ```python Python
+  import requests
+  response = requests.get(
+      "https://api.ofauth.com/v2/access/self",
+      headers={
+          "apikey": "YOUR_API_KEY",
+          "x-connection-id": "conn_YOUR_CONNECTION_ID"
+      }
+  )
+  print("Connected as:", response.json()["name"])
+  ```
 </CodeGroup>
 
 <Check>
   **That's it!** You've connected an OnlyFans account and fetched data through OFAuth.
 </Check>
 
----
+***
 
 ## What's Next?
 
 <CardGroup cols={2}>
-  <Card title="Send Messages" icon="messages" href="/use-cases/messaging">
+  <Card title="Send Messages" icon="messages" href="/guides/messaging">
     Learn to send messages and manage chats
   </Card>
-  <Card title="List Fans" icon="users" href="/use-cases/fans">
+
+  <Card title="List Fans" icon="users" href="/guides/fans">
     Get subscriber lists and fan data
   </Card>
+
   <Card title="TypeScript SDK" icon="npm" href="/sdk/quickstart">
     Use our SDK for type-safe development
   </Card>
+
   <Card title="Set Up Webhooks" icon="webhook" href="/reference/webhooks">
     Get notified when connections change
   </Card>
 </CardGroup>
 
----
+***
 
 ## Common Issues
 
@@ -185,9 +184,11 @@ print("Connected as:", response.json()["name"])
   <Accordion title="401 Unauthorized">
     Check that your API key is correct and included in the `apikey` header.
   </Accordion>
+
   <Accordion title="Connection not found">
     The Connection ID may have expired or be invalid. Create a new Link session.
   </Accordion>
+
   <Accordion title="Session expired">
     OnlyFans sessions expire periodically. The user needs to re-authenticate via Link.
   </Accordion>
@@ -196,4 +197,3 @@ print("Connected as:", response.json()["name"])
 <Card title="Need Help?" icon="envelope" href="mailto:support@ofauth.com">
   Contact our support team for assistance
 </Card>
-

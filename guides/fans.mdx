@@ -5,49 +5,47 @@ description: "List fans, track subscriptions, and manage user lists"
 
 ## What You Can Build
 
-- **Fan Dashboards**: View all subscribers, filter by status, track engagement
-- **CRM Tools**: Organize fans into lists, add notes, track interactions
-- **Subscription Analytics**: Monitor churn, renewal rates, lifetime value
-- **Targeted Campaigns**: Segment fans for personalized messaging
+* **Fan Dashboards**: View all subscribers, filter by status, track engagement
+* **CRM Tools**: Organize fans into lists, add notes, track interactions
+* **Subscription Analytics**: Monitor churn, renewal rates, lifetime value
+* **Targeted Campaigns**: Segment fans for personalized messaging
 
----
+***
 
 ## Quick Example
 
 Get a list of all active subscribers:
 
 <CodeGroup>
-
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/subscribers?type=active", {
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123"
-  }
-})
-
-const fans = await response.json()
-console.log(`You have ${fans.length} active subscribers`)
-```
-
-```python Python
-import requests
-
-response = requests.get(
-    "https://api.ofauth.com/v2/access/subscribers",
-    params={"type": "active"},
-    headers={
-        "apikey": "YOUR_API_KEY",
-        "x-connection-id": "conn_abc123"
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/access/subscribers?type=active", {
+    headers: {
+      apikey: "YOUR_API_KEY",
+      "x-connection-id": "conn_abc123"
     }
-)
-fans = response.json()
-print(f"You have {len(fans)} active subscribers")
-```
+  })
 
+  const fans = await response.json()
+  console.log(`You have ${fans.length} active subscribers`)
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.get(
+      "https://api.ofauth.com/v2/access/subscribers",
+      params={"type": "active"},
+      headers={
+          "apikey": "YOUR_API_KEY",
+          "x-connection-id": "conn_abc123"
+      }
+  )
+  fans = response.json()
+  print(f"You have {len(fans)} active subscribers")
+  ```
 </CodeGroup>
 
----
+***
 
 ## Common Operations
 
@@ -121,7 +119,7 @@ const fan = await response.json()
 // Returns full user profile
 ```
 
----
+***
 
 ## User Lists
 
@@ -215,7 +213,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/lists/LIST_
 })
 ```
 
----
+***
 
 ## Subscriber Management
 
@@ -280,7 +278,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/subscribers/12345
   Custom display names are private and only visible to you. They help organize fans when usernames aren't descriptive.
 </Tip>
 
----
+***
 
 ## User Management
 
@@ -332,76 +330,76 @@ const response = await fetch("https://api.ofauth.com/v2/access/users/blocked", {
 })
 ```
 
----
+***
 
 ## API Endpoints
 
 ### Subscribers
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/subscribers` | GET | List all subscribers |
-| `/v2/access/subscribers/{userId}/note` | PUT | Update subscriber note |
-| `/v2/access/subscribers/{userId}/discount` | PUT | Apply discount |
-| `/v2/access/subscribers/{userId}/custom-name` | PUT | Set custom display name |
+| Endpoint                                      | Method | Description             |
+| --------------------------------------------- | ------ | ----------------------- |
+| `/v2/access/subscribers`                      | GET    | List all subscribers    |
+| `/v2/access/subscribers/{userId}/note`        | PUT    | Update subscriber note  |
+| `/v2/access/subscribers/{userId}/discount`    | PUT    | Apply discount          |
+| `/v2/access/subscribers/{userId}/custom-name` | PUT    | Set custom display name |
 
 ### Users
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/users/{userId}` | GET | Get user details |
-| `/v2/access/users/search` | GET | Search users |
-| `/v2/access/users/list` | GET | Get users by IDs |
-| `/v2/access/users/{userId}/restrict` | POST | Restrict a user |
-| `/v2/access/users/{userId}/restrict` | DELETE | Unrestrict a user |
-| `/v2/access/users/restrict` | GET | List restricted users |
-| `/v2/access/users/blocked` | GET | List blocked users |
+| Endpoint                             | Method | Description           |
+| ------------------------------------ | ------ | --------------------- |
+| `/v2/access/users/{userId}`          | GET    | Get user details      |
+| `/v2/access/users/search`            | GET    | Search users          |
+| `/v2/access/users/list`              | GET    | Get users by IDs      |
+| `/v2/access/users/{userId}/restrict` | POST   | Restrict a user       |
+| `/v2/access/users/{userId}/restrict` | DELETE | Unrestrict a user     |
+| `/v2/access/users/restrict`          | GET    | List restricted users |
+| `/v2/access/users/blocked`           | GET    | List blocked users    |
 
 ### User Lists
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/users/lists` | GET | Get all user lists |
-| `/v2/access/users/lists` | POST | Create a user list |
-| `/v2/access/users/lists/{listId}` | GET | Get a user list |
-| `/v2/access/users/lists/{listId}` | PATCH | Update a user list |
-| `/v2/access/users/lists/{listId}` | DELETE | Delete a user list |
-| `/v2/access/users/lists/{listId}/users` | GET | Get users in a list |
-| `/v2/access/users/lists/{listId}/users/{userId}` | POST | Add user to a list |
-| `/v2/access/users/lists/{listId}/users/{userId}` | DELETE | Remove user from list |
-| `/v2/access/users/{userId}/lists` | POST | Add user to multiple lists |
+| Endpoint                                         | Method | Description                |
+| ------------------------------------------------ | ------ | -------------------------- |
+| `/v2/access/users/lists`                         | GET    | Get all user lists         |
+| `/v2/access/users/lists`                         | POST   | Create a user list         |
+| `/v2/access/users/lists/{listId}`                | GET    | Get a user list            |
+| `/v2/access/users/lists/{listId}`                | PATCH  | Update a user list         |
+| `/v2/access/users/lists/{listId}`                | DELETE | Delete a user list         |
+| `/v2/access/users/lists/{listId}/users`          | GET    | Get users in a list        |
+| `/v2/access/users/lists/{listId}/users/{userId}` | POST   | Add user to a list         |
+| `/v2/access/users/lists/{listId}/users/{userId}` | DELETE | Remove user from list      |
+| `/v2/access/users/{userId}/lists`                | POST   | Add user to multiple lists |
 
 <Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
   See complete endpoint documentation
 </Card>
 
----
+***
 
 ## Query Parameters
 
 ### Subscribers Query
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `limit` | number | 10 | Results per page (1-20) |
-| `offset` | number | 0 | Pagination offset |
-| `type` | string | "active" | Filter: `all`, `active`, `expired` |
-| `query` | string | "" | Search by name/username |
+| Parameter | Type   | Default  | Description                        |
+| --------- | ------ | -------- | ---------------------------------- |
+| `limit`   | number | 10       | Results per page (1-20)            |
+| `offset`  | number | 0        | Pagination offset                  |
+| `type`    | string | "active" | Filter: `all`, `active`, `expired` |
+| `query`   | string | ""       | Search by name/username            |
 
 ### Advanced Filters
 
 The `filter` object supports additional filtering:
 
-| Filter | Type | Description |
-|--------|------|-------------|
-| `promoId` | string | Filter by promotion ID |
-| `trial_id` | string | Filter by trial ID |
-| `duration` | string | Filter by subscription duration |
-| `tips` | string | Filter by tip amount |
-| `total_spent` | string | Filter by total spent |
-| `online` | string | Filter by online status |
+| Filter        | Type   | Description                     |
+| ------------- | ------ | ------------------------------- |
+| `promoId`     | string | Filter by promotion ID          |
+| `trial_id`    | string | Filter by trial ID              |
+| `duration`    | string | Filter by subscription duration |
+| `tips`        | string | Filter by tip amount            |
+| `total_spent` | string | Filter by total spent           |
+| `online`      | string | Filter by online status         |
 
----
+***
 
 ## Subscriber Data Structure
 
@@ -424,7 +422,7 @@ Each subscriber object includes:
 }
 ```
 
----
+***
 
 ## Tips & Best Practices
 
@@ -440,15 +438,16 @@ Each subscriber object includes:
   **Privacy**: Handle fan data responsibly. Don't expose personal information and follow applicable data protection regulations.
 </Warning>
 
----
+***
 
 ## Related Guides
 
 <CardGroup cols={2}>
-  <Card title="Messaging & Chats" icon="messages" href="/use-cases/messaging">
+  <Card title="Messaging & Chats" icon="messages" href="/guides/messaging">
     Send targeted messages to fan segments
   </Card>
-  <Card title="Earnings & Analytics" icon="chart-line" href="/use-cases/earnings">
+
+  <Card title="Earnings & Analytics" icon="chart-line" href="/guides/earnings">
     Track revenue by fan
   </Card>
 </CardGroup>

@@ -8,40 +8,46 @@ description: "OnlyFans integration infrastructure for platforms. Connect account
 OFAuth is infrastructure that lets you integrate OnlyFans into your platform—without reverse engineering, credential handling, or maintenance headaches. Think **Plaid, but for OnlyFans**.
 
 <CardGroup cols={2}>
-  <Card title="I'm evaluating OFAuth" icon="magnifying-glass" href="/overview/services">
+  <Card title="I'm evaluating OFAuth" icon="magnifying-glass" href="/introduction/services">
     Understand how OFAuth works, security model, and why platforms choose us
   </Card>
+
   <Card title="I'm ready to build" icon="rocket" href="/quickstart">
     Get your first API call working in under 2 minutes
   </Card>
 </CardGroup>
 
----
+***
 
 ## What You Can Build
 
 <CardGroup cols={3}>
-  <Card title="Messaging & Chats" icon="messages" href="/use-cases/messaging">
+  <Card title="Messaging & Chats" icon="messages" href="/guides/messaging">
     Send messages, manage conversations, mass messaging at scale
   </Card>
-  <Card title="Fans & Subscribers" icon="users" href="/use-cases/fans">
+
+  <Card title="Fans & Subscribers" icon="users" href="/guides/fans">
     List fans, track subscriptions, manage user lists
   </Card>
-  <Card title="Content & Posts" icon="image" href="/use-cases/content">
+
+  <Card title="Content & Posts" icon="image" href="/guides/content">
     Create posts, schedule content, manage stories
   </Card>
-  <Card title="Media & Vault" icon="photo-film" href="/use-cases/media">
+
+  <Card title="Media & Vault" icon="photo-film" href="/guides/media">
     Upload media, access vault, embed content
   </Card>
-  <Card title="Earnings & Analytics" icon="chart-line" href="/use-cases/earnings">
+
+  <Card title="Earnings & Analytics" icon="chart-line" href="/guides/earnings">
     Track revenue, view transactions, request payouts
   </Card>
-  <Card title="Account Management" icon="user-gear" href="/use-cases/account">
+
+  <Card title="Account Management" icon="user-gear" href="/guides/account">
     Profile settings, notifications, account configuration
   </Card>
 </CardGroup>
 
----
+***
 
 ## How It Works
 
@@ -49,9 +55,11 @@ OFAuth is infrastructure that lets you integrate OnlyFans into your platform—w
   <Step title="Connect accounts via Link">
     Users authenticate on OFAuth's secure hosted page. You never touch credentials.
   </Step>
+
   <Step title="Receive a Connection ID">
     After auth, you get a simple token representing that OnlyFans account.
   </Step>
+
   <Step title="Access data via API">
     Use the Connection ID to fetch data, send messages, or take any action.
   </Step>
@@ -69,7 +77,7 @@ graph LR
   **No credentials on your servers.** OFAuth handles authentication, session management, and request signing. You just use simple REST APIs.
 </Tip>
 
----
+***
 
 ## Why Teams Choose OFAuth
 
@@ -77,18 +85,21 @@ graph LR
   <Card title="Built for Platforms" icon="building">
     Multi-tenant architecture designed for SaaS products managing multiple OnlyFans accounts
   </Card>
+
   <Card title="Enterprise Security" icon="shield-check">
     Bank-grade encryption, no credential storage on your servers, SOC 2 compliant infrastructure
   </Card>
+
   <Card title="Always Current" icon="rotate">
     Our dynamic rules engine adapts to OnlyFans API changes automatically—zero maintenance for you
   </Card>
+
   <Card title="Full TypeScript SDK" icon="code">
     Type-safe SDK with IntelliSense, automatic retries, and structured error handling
   </Card>
 </CardGroup>
 
----
+***
 
 ## Quick Links
 
@@ -96,18 +107,21 @@ graph LR
   <Card title="2-Minute Quickstart" icon="bolt" href="/quickstart">
     From zero to working API call
   </Card>
+
   <Card title="API Reference" icon="square-terminal" href="/api-reference/access/overview">
     Complete endpoint documentation
   </Card>
+
   <Card title="TypeScript SDK" icon="npm" href="/sdk">
     Install and configure the SDK
   </Card>
-  <Card title="Use Case Guides" icon="book" href="/use-cases/messaging">
+
+  <Card title="Use Case Guides" icon="book" href="/guides/messaging">
     Step-by-step integration guides
   </Card>
 </CardGroup>
 
----
+***
 
 ## Get Help
 
@@ -115,6 +129,7 @@ graph LR
   <Card title="Email Support" icon="envelope" href="mailto:support@ofauth.com">
     Direct support from our engineering team
   </Card>
+
   <Card title="API Reference" icon="book" href="/api-reference/access/overview">
     Browse our complete API documentation
   </Card>

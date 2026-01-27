@@ -5,57 +5,55 @@ description: "Track revenue, view transactions, and analyze performance"
 
 ## What You Can Build
 
-- **Revenue Dashboards**: Real-time earnings tracking and visualization
-- **Financial Reports**: Transaction history, chargebacks, tax preparation
-- **Performance Analytics**: Track revenue by content type, time period, or category
-- **Content Insights**: See which posts, stories, and streams perform best
+* **Revenue Dashboards**: Real-time earnings tracking and visualization
+* **Financial Reports**: Transaction history, chargebacks, tax preparation
+* **Performance Analytics**: Track revenue by content type, time period, or category
+* **Content Insights**: See which posts, stories, and streams perform best
 
----
+***
 
 ## Quick Example
 
 Get earnings chart data:
 
 <CodeGroup>
-
-```javascript Node.js
-const response = await fetch("https://api.ofauth.com/v2/access/statistics/earnings/chart?" + new URLSearchParams({
-  startDate: "2024-01-01",
-  endDate: "2024-01-31",
-  by: "total"
-}), {
-  headers: {
-    apikey: "YOUR_API_KEY",
-    "x-connection-id": "conn_abc123"
-  }
-})
-
-const chart = await response.json()
-console.log("Earnings data:", chart)
-```
-
-```python Python
-import requests
-
-response = requests.get(
-    "https://api.ofauth.com/v2/access/statistics/earnings/chart",
-    params={
-        "startDate": "2024-01-01",
-        "endDate": "2024-01-31",
-        "by": "total"
-    },
-    headers={
-        "apikey": "YOUR_API_KEY",
-        "x-connection-id": "conn_abc123"
+  ```javascript Node.js
+  const response = await fetch("https://api.ofauth.com/v2/access/statistics/earnings/chart?" + new URLSearchParams({
+    startDate: "2024-01-01",
+    endDate: "2024-01-31",
+    by: "total"
+  }), {
+    headers: {
+      apikey: "YOUR_API_KEY",
+      "x-connection-id": "conn_abc123"
     }
-)
-chart = response.json()
-print("Earnings data:", chart)
-```
+  })
 
+  const chart = await response.json()
+  console.log("Earnings data:", chart)
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.get(
+      "https://api.ofauth.com/v2/access/statistics/earnings/chart",
+      params={
+          "startDate": "2024-01-01",
+          "endDate": "2024-01-31",
+          "by": "total"
+      },
+      headers={
+          "apikey": "YOUR_API_KEY",
+          "x-connection-id": "conn_abc123"
+      }
+  )
+  chart = response.json()
+  print("Earnings data:", chart)
+  ```
 </CodeGroup>
 
----
+***
 
 ## Common Operations
 
@@ -166,7 +164,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/statistics/charge
 const chargebacks = await response.json()
 ```
 
----
+***
 
 ## Content Performance
 
@@ -247,7 +245,7 @@ const postStats = await response.json()
 // Returns stats with chart data
 ```
 
----
+***
 
 ## Marketing Performance
 
@@ -299,76 +297,76 @@ const response = await fetch("https://api.ofauth.com/v2/access/statistics/messag
 const buyers = await response.json()
 ```
 
----
+***
 
 ## API Endpoints
 
 ### Earnings & Transactions
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/statistics/earnings/chart` | GET | Earnings time-series data |
-| `/v2/access/statistics/transactions` | GET | Transaction history |
-| `/v2/access/statistics/chargebacks` | GET | Chargebacks list |
+| Endpoint                               | Method | Description               |
+| -------------------------------------- | ------ | ------------------------- |
+| `/v2/access/statistics/earnings/chart` | GET    | Earnings time-series data |
+| `/v2/access/statistics/transactions`   | GET    | Transaction history       |
+| `/v2/access/statistics/chargebacks`    | GET    | Chargebacks list          |
 
 ### Content Performance
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/statistics/posts/chart` | GET | Posts chart data |
-| `/v2/access/statistics/posts/top` | GET | Top performing posts |
-| `/v2/access/statistics/posts/{postId}/stats` | GET | Single post stats |
-| `/v2/access/statistics/stories/chart` | GET | Stories chart data |
-| `/v2/access/statistics/stories/top` | GET | Top stories |
-| `/v2/access/statistics/streams/chart` | GET | Streams chart data |
-| `/v2/access/statistics/streams/top` | GET | Top streams |
+| Endpoint                                     | Method | Description          |
+| -------------------------------------------- | ------ | -------------------- |
+| `/v2/access/statistics/posts/chart`          | GET    | Posts chart data     |
+| `/v2/access/statistics/posts/top`            | GET    | Top performing posts |
+| `/v2/access/statistics/posts/{postId}/stats` | GET    | Single post stats    |
+| `/v2/access/statistics/stories/chart`        | GET    | Stories chart data   |
+| `/v2/access/statistics/stories/top`          | GET    | Top stories          |
+| `/v2/access/statistics/streams/chart`        | GET    | Streams chart data   |
+| `/v2/access/statistics/streams/top`          | GET    | Top streams          |
 
 ### Marketing
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/statistics/promotions/chart` | GET | Promotions chart |
-| `/v2/access/statistics/promotions/top` | GET | Top promotions |
-| `/v2/access/statistics/trials/chart` | GET | Trials chart |
-| `/v2/access/statistics/trials/top` | GET | Trials stats |
-| `/v2/access/statistics/campaigns/chart` | GET | Campaigns chart |
-| `/v2/access/statistics/campaigns/top` | GET | Campaigns stats |
-| `/v2/access/statistics/mass-messages/chart` | GET | Mass messages chart |
-| `/v2/access/statistics/mass-messages/bought` | GET | Mass messages bought |
-| `/v2/access/statistics/messages/queue/{queueMessageId}/buyers` | GET | Queue message buyers |
+| Endpoint                                                       | Method | Description          |
+| -------------------------------------------------------------- | ------ | -------------------- |
+| `/v2/access/statistics/promotions/chart`                       | GET    | Promotions chart     |
+| `/v2/access/statistics/promotions/top`                         | GET    | Top promotions       |
+| `/v2/access/statistics/trials/chart`                           | GET    | Trials chart         |
+| `/v2/access/statistics/trials/top`                             | GET    | Trials stats         |
+| `/v2/access/statistics/campaigns/chart`                        | GET    | Campaigns chart      |
+| `/v2/access/statistics/campaigns/top`                          | GET    | Campaigns stats      |
+| `/v2/access/statistics/mass-messages/chart`                    | GET    | Mass messages chart  |
+| `/v2/access/statistics/mass-messages/bought`                   | GET    | Mass messages bought |
+| `/v2/access/statistics/messages/queue/{queueMessageId}/buyers` | GET    | Queue message buyers |
 
 ### Other
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/v2/access/statistics/visitor-countries/chart` | GET | Visitor countries chart |
-| `/v2/access/statistics/visitor-countries/top` | GET | Top visitor countries |
+| Endpoint                                        | Method | Description             |
+| ----------------------------------------------- | ------ | ----------------------- |
+| `/v2/access/statistics/visitor-countries/chart` | GET    | Visitor countries chart |
+| `/v2/access/statistics/visitor-countries/top`   | GET    | Top visitor countries   |
 
 <Card title="Full API Reference" icon="book" href="/api-reference/access/overview">
   See complete endpoint documentation
 </Card>
 
----
+***
 
 ## Query Parameters
 
 ### Date Range
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `startDate` | string | Start date (ISO format or `YYYY-MM-DD`) |
-| `endDate` | string | End date (ISO format or `YYYY-MM-DD`) |
-| `withTotal` | boolean | Include totals in response |
+| Parameter   | Type    | Description                             |
+| ----------- | ------- | --------------------------------------- |
+| `startDate` | string  | Start date (ISO format or `YYYY-MM-DD`) |
+| `endDate`   | string  | End date (ISO format or `YYYY-MM-DD`)   |
+| `withTotal` | boolean | Include totals in response              |
 
 ### Pagination
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `limit` | number | 20 | Results per page (1-20 for stats, 1-100 for some endpoints) |
-| `offset` | number | 0 | Pagination offset |
-| `marker` | number | - | Transaction pagination cursor |
+| Parameter | Type   | Default | Description                                                 |
+| --------- | ------ | ------- | ----------------------------------------------------------- |
+| `limit`   | number | 20      | Results per page (1-20 for stats, 1-100 for some endpoints) |
+| `offset`  | number | 0       | Pagination offset                                           |
+| `marker`  | number | -       | Transaction pagination cursor                               |
 
----
+***
 
 ## Tips & Best Practices
 
@@ -388,15 +386,16 @@ const buyers = await response.json()
   **Chart Data**: Chart endpoints return time-series data useful for visualizations. Use `withTotal: true` to include summary totals.
 </Info>
 
----
+***
 
 ## Related Guides
 
 <CardGroup cols={2}>
-  <Card title="Fans & Subscribers" icon="users" href="/use-cases/fans">
+  <Card title="Fans & Subscribers" icon="users" href="/guides/fans">
     See revenue by subscriber
   </Card>
-  <Card title="Content & Posts" icon="image" href="/use-cases/content">
+
+  <Card title="Content & Posts" icon="image" href="/guides/content">
     Track earnings by content
   </Card>
 </CardGroup>

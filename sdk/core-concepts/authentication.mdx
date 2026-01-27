@@ -11,9 +11,11 @@ The OnlyFans SDK provides **three authentication modes** to suit different integ
   <Card title="Access Mode" icon="cloud">
     **Recommended** - OFAuth handles all complexity automatically
   </Card>
+
   <Card title="Direct Mode" icon="bolt">
     **Advanced** - Direct OnlyFans API with full control
   </Card>
+
   <Card title="Custom Mode" icon="cog">
     **Enterprise** - Custom proxy infrastructure (available for enterprise needs)
   </Card>
@@ -55,10 +57,10 @@ const { data, error } = await sdk.user.getById({
 **For enterprise partners** with approved whitelabel integrations who need full control over the authentication flow.
 
 <Warning>
-  **Approval Required**: Direct mode is part of [Enterprise Whitelabel](/enterprise/whitelabel) and requires approval. Contact [support@ofauth.com](mailto:support@ofauth.com) with your use case before implementing.
+  **Approval Required**: Direct mode is part of [Enterprise Whitelabel](/advanced/whitelabel) and requires approval. Contact [support@ofauth.com](mailto:support@ofauth.com) with your use case before implementing.
 </Warning>
 
-<Card title="Enterprise Whitelabel" icon="building" href="/enterprise/whitelabel">
+<Card title="Enterprise Whitelabel" icon="building" href="/advanced/whitelabel">
   Learn about enterprise whitelabel capabilities and how to request access
 </Card>
 
@@ -72,9 +74,11 @@ const { data, error } = await sdk.user.getById({
   <Card title="SDK Architecture" icon="boxes" href="/sdk/core-concepts/architecture">
     **Understand the design** - Learn about the SDK's modular structure and type safety
   </Card>
+
   <Card title="Core Modules" icon="book" href="/sdk/modules/authentication/link-authentication">
     **Start building** - Explore the available modules and operations
   </Card>
+
   <Card title="Link Setup" icon="link" href="/guides/link">
     **Authentication flows** - Set up OFAuth Link for user connections
   </Card>
@@ -82,4 +86,4 @@ const { data, error } = await sdk.user.getById({
 
 <Info>
   **Recommended Path**: Start with Access mode for the simplest setup, then explore the Core Modules to understand what's possible with the SDK.
-</Info> 
+</Info>

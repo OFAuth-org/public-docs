@@ -5,13 +5,13 @@ description: 'How to use Media Proxy and Vault Cache for OnlyFans media'
 
 API responses include `media.ofauth.com` URLs for all media. These URLs automatically route to either edge cache or persistent storage (Vault Cache), and trigger auto-caching based on your configuration.
 
-| | Media Proxy | Vault Cache |
-|---|-------------|-------------|
-| **What it does** | Edge-cached URLs | Persistent storage with access by ID |
-| **Setup** | Automatic | Enable per connection |
-| **Best for** | Displaying content | Media libraries, PPV features |
+|                  | Media Proxy        | Vault Cache                          |
+| ---------------- | ------------------ | ------------------------------------ |
+| **What it does** | Edge-cached URLs   | Persistent storage with access by ID |
+| **Setup**        | Automatic          | Enable per connection                |
+| **Best for**     | Displaying content | Media libraries, PPV features        |
 
----
+***
 
 ## Displaying Media
 
@@ -23,10 +23,11 @@ Use `media.ofauth.com` URLs directly in your app:
 ```
 
 When requested:
+
 1. If cached in Vault Cache → serves from persistent storage
 2. Otherwise → fetches from OnlyFans, caches at edge
 
----
+***
 
 ## Setting Up Vault Cache
 
@@ -59,7 +60,7 @@ curl -X PATCH 'https://api.ofauth.com/v2/settings' \
 
 When `autoCacheVault` (or similar) is enabled, media is automatically queued for persistent storage when accessed via `media.ofauth.com`.
 
----
+***
 
 ## Triggering Caching
 
@@ -79,7 +80,7 @@ curl -X POST 'https://api.ofauth.com/v2/vault/cache/list/:listId' \
   -H 'x-connection-id: conn_xxx'
 ```
 
----
+***
 
 ## Accessing Cached Media
 
@@ -92,6 +93,7 @@ curl -X GET 'https://api.ofauth.com/v2/vault/:mediaId' \
 ```
 
 Response:
+
 ```json
 {
   "mediaId": "12345",
@@ -119,7 +121,7 @@ curl -X GET 'https://api.ofauth.com/v2/vault/list?status=cached' \
   -H 'x-connection-id: conn_xxx'
 ```
 
----
+***
 
 ## Purging Cached Media
 
@@ -145,14 +147,15 @@ curl -X DELETE 'https://api.ofauth.com/v2/vault/purge' \
   -H 'x-connection-id: conn_xxx'
 ```
 
----
+***
 
 ## Related
 
 <CardGroup cols={2}>
-  <Card title="Media & Vault" icon="photo-film" href="/use-cases/media">
+  <Card title="Media & Vault" icon="photo-film" href="/guides/media">
     Full media operations guide
   </Card>
+
   <Card title="Access API" icon="key" href="/api-reference/access/overview">
     Complete API reference
   </Card>

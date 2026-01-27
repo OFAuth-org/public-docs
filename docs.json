@@ -54,9 +54,9 @@
             "iconType": "solid",
             "pages": [
               "index",
-              "overview/services",
-              "overview/how-it-works",
-              "overview/onlyfans-api"
+              "introduction/services",
+              "introduction/how-it-works",
+              "introduction/onlyfans-api"
             ]
           },
           {
@@ -65,8 +65,8 @@
             "iconType": "solid",
             "pages": [
               "quickstart",
-              "getting-started/sandbox",
-              "getting-started/integration-checklist"
+              "setup/sandbox",
+              "setup/integration-checklist"
             ]
           },
           {
@@ -74,11 +74,10 @@
             "icon": "file-lines",
             "iconType": "solid",
             "pages": [
-              "reference/connections",
               "reference/webhooks",
               "reference/rate-limiting",
               "reference/error-handling",
-              "overview/security"
+              "reference/security"
             ]
           },
           {
@@ -86,8 +85,8 @@
             "icon": "wand-magic-sparkles",
             "iconType": "solid",
             "pages": [
-              "guides/dynamic-rules",
-              "enterprise/whitelabel"
+              "advanced/dynamic-rules",
+              "advanced/whitelabel"
             ]
           }
         ]
@@ -102,6 +101,7 @@
             "icon": "key",
             "iconType": "solid",
             "pages": [
+              "guides/connections",
               "guides/link"
             ]
           },
@@ -110,7 +110,7 @@
             "icon": "comments",
             "iconType": "solid",
             "pages": [
-              "use-cases/messaging",
+              "guides/messaging",
               "guides/how-to/send-message",
               "guides/how-to/mass-message"
             ]
@@ -120,7 +120,7 @@
             "icon": "file-lines",
             "iconType": "solid",
             "pages": [
-              "use-cases/content",
+              "guides/content",
               "guides/how-to/create-post",
               "guides/how-to/text-formatting"
             ]
@@ -130,7 +130,7 @@
             "icon": "photo-film",
             "iconType": "solid",
             "pages": [
-              "use-cases/media",
+              "guides/media",
               "guides/how-to/upload-media",
               "guides/media-storage"
             ]
@@ -140,9 +140,9 @@
             "icon": "chart-line",
             "iconType": "solid",
             "pages": [
-              "use-cases/fans",
-              "use-cases/earnings",
-              "use-cases/account"
+              "guides/fans",
+              "guides/earnings",
+              "guides/account"
             ]
           }
         ]
@@ -175,6 +175,7 @@
                 "iconType": "solid",
                 "pages": [
                   "GET /v2/account/connections",
+                  "POST /v2/account/connections/import",
                   "DELETE /v2/account/connections/{connectionId}",
                   "POST /v2/account/connections/{connectionId}/invalidate",
                   "GET /v2/account/connections/{connectionId}/settings",
@@ -200,7 +201,6 @@
             "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               "api-reference/access/overview",
-              "api-reference/access/managed",
               "api-reference/access/proxy",
               {
                 "group": "Account (Self)",
