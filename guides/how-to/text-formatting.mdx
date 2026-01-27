@@ -118,7 +118,7 @@ Patterns must be surrounded by whitespace or at start/end of text to be recogniz
 await fetch('https://api.ofauth.com/v2/access/chats/123456/messages', {
   method: 'POST',
   headers: {
-    'x-of-auth-api-key': 'YOUR_API_KEY',
+    'apikey': 'YOUR_API_KEY',
     'x-connection-id': 'conn_abc123',
     'Content-Type': 'application/json'
   },
@@ -132,7 +132,7 @@ await fetch('https://api.ofauth.com/v2/access/chats/123456/messages', {
 await fetch('https://api.ofauth.com/v2/access/posts', {
   method: 'POST',
   headers: {
-    'x-of-auth-api-key': 'YOUR_API_KEY',
+    'apikey': 'YOUR_API_KEY',
     'x-connection-id': 'conn_abc123',
     'Content-Type': 'application/json'
   },

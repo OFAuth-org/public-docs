@@ -30,17 +30,10 @@ DELETE /v2/access/proxy/{path}
 </CodeGroup>
 
 <RequestExample>
-```bash Connection ID
+```bash cURL
 curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_abc123'
-```
-
-```bash Session Headers
-curl -X GET 'https://api.ofauth.com/v2/access/proxy/users/me' \
-  -H 'apikey: YOUR_API_KEY' \
-  -H 'x-of-cookie: your_full_session_cookie_string' \
-  -H 'x-of-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...'
 ```
 
 ```javascript JavaScript
@@ -188,35 +181,15 @@ curl -H 'apikey: YOUR_API_KEY' \
 ```
 </CodeGroup>
 
-<Tabs>
-<Tab title="Connection ID (Recommended)">
-Use OFAuth's Link API connection ID for automatic session management.
+All Access API requests require a [connection](/guides/connections). Pass the connection ID in the `x-connection-id` header alongside your API key.
 
 <ParamField header="apikey" type="string" required>
 Your OFAuth API key
 </ParamField>
 
 <ParamField header="x-connection-id" type="string" required>
-The connection ID obtained from Link API authentication
+The connection ID from [Link authentication](/guides/link) or [import](/guides/connections#importing-connections)
 </ParamField>
-</Tab>
-
-<Tab title="Session Headers">
-Provide OnlyFans session data directly if you handle authentication separately. The `x-of-cookie` header must include the OnlyFans `fp`, `auth_id`, and `sess` cookies. A geo-appropriate datacenter proxy is automatically assigned based on your request location.
-
-<ParamField header="apikey" type="string" required>
-Your OFAuth API key
-</ParamField>
-
-<ParamField header="x-of-cookie" type="string" required>
-OnlyFans session cookie string. Must contain `fp`, `auth_id`, and `sess`.
-</ParamField>
-
-<ParamField header="x-of-user-agent" type="string" required>
-User agent string that matches the OnlyFans session
-</ParamField>
-</Tab>
-</Tabs>
 
 ## Status Codes
 

@@ -3,9 +3,16 @@ title: "Connections"
 description: "Manage connected OnlyFans accounts"
 ---
 
-The Connections API manages your connected OnlyFans accounts. Connections are created through [Link](/guides/link) and used with the [Access API](/api-reference/access/overview).
+Connections represent authenticated OnlyFans accounts linked to your organization. There are two ways to create connections:
 
-## Obtaining Connection IDs
+- **Link authentication** — Users authenticate through OFAuth's secure [Link](/guides/link) flow. OFAuth handles credentials, 2FA, and session management.
+- **Import** — You provide existing OnlyFans session data directly via the API. Useful if you manage authentication yourself or are migrating from another system.
+
+Both types produce a Connection ID that you use with the [Access API](/api-reference/access/overview) to interact with OnlyFans data.
+
+## Creating Connections via Link
+
+### Obtaining Connection IDs
 
 After a user completes authentication through Link, you receive the connection ID through one of these methods:
 
@@ -52,6 +59,166 @@ app.post("/webhooks/ofauth", async (req, res) => {
 Always pass a `clientReferenceId` when initializing Link sessions. This is the recommended way to correlate connections back to your users, especially when using webhooks.
 </Tip>
 
+## Importing Connections
+
+If you manage OnlyFans authentication yourself, you can import sessions directly. Imported connections are **not billed monthly** and are **not health-checked** by the connection monitor. They can be used through the Access API immediately.
+
+### Import a Connection
+
+```http
+POST /v2/account/connections/import
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `cookie` | string | Yes | OnlyFans session cookie. Must contain `auth_id`, `sess`, and `fp` values. |
+| `userAgent` | string | Yes | The user agent string used to create the session. |
+| `permissions` | string[] | No | Permissions to grant. Defaults to organization permissions. |
+| `clientReferenceId` | string | No | Your internal reference ID for tracking. |
+
+OFAuth validates the session by making a request to OnlyFans and automatically fetches the user's profile data. If the session is invalid or expired, the import will fail.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.ofauth.com/v2/account/connections/import \
+  -H "apikey: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cookie": "auth_id=123456; sess=your_session_token; fp=your_fingerprint",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ...",
+    "clientReferenceId": "user_abc123"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/account/connections/import", {
+  method: "POST",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    cookie: "auth_id=123456; sess=your_session_token; fp=your_fingerprint",
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ...",
+    clientReferenceId: "user_abc123"
+  })
+})
+
+const connection = await response.json()
+console.log("Imported:", connection.id, connection.userData.username)
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.ofauth.com/v2/account/connections/import",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "Content-Type": "application/json"
+    },
+    json={
+        "cookie": "auth_id=123456; sess=your_session_token; fp=your_fingerprint",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ...",
+        "clientReferenceId": "user_abc123"
+    }
+)
+
+connection = response.json()
+print("Imported:", connection["id"], connection["userData"]["username"])
+```
+
+</CodeGroup>
+
+The response includes the full connection object with `imported: true` and the user's profile data fetched from OnlyFans.
+
+<Warning>
+If an active connection with the same OnlyFans user already exists, the import returns a `409` error with the existing connection ID. You can update the session on the existing connection using the [update endpoint](#updating-an-imported-session) instead.
+</Warning>
+
+### Updating an Imported Session
+
+If an imported connection's session expires or needs to be rotated, you can update it in place without deleting and re-importing. This preserves the connection ID.
+
+```http
+PATCH /v2/account/connections/import/{connectionId}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `cookie` | string | Yes | New OnlyFans session cookie. Must contain `auth_id`, `sess`, and `fp` values. |
+| `userAgent` | string | Yes | The user agent string used to create the new session. |
+
+The new session is validated against OnlyFans and **must belong to the same OnlyFans user** as the existing connection. If the user ID from the new cookie doesn't match, the request returns a `409` error.
+
+<CodeGroup>
+
+```bash cURL
+curl -X PATCH https://api.ofauth.com/v2/account/connections/import/conn_abc123xyz \
+  -H "apikey: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cookie": "auth_id=123456; sess=new_session_token; fp=new_fingerprint",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ..."
+  }'
+```
+
+```javascript Node.js
+const response = await fetch("https://api.ofauth.com/v2/account/connections/import/conn_abc123xyz", {
+  method: "PATCH",
+  headers: {
+    apikey: "YOUR_API_KEY",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    cookie: "auth_id=123456; sess=new_session_token; fp=new_fingerprint",
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ..."
+  })
+})
+
+const connection = await response.json()
+console.log("Updated:", connection.id, connection.status)
+```
+
+```python Python
+import requests
+
+response = requests.patch(
+    "https://api.ofauth.com/v2/account/connections/import/conn_abc123xyz",
+    headers={
+        "apikey": "YOUR_API_KEY",
+        "Content-Type": "application/json"
+    },
+    json={
+        "cookie": "auth_id=123456; sess=new_session_token; fp=new_fingerprint",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ..."
+    }
+)
+
+connection = response.json()
+print("Updated:", connection["id"], connection["status"])
+```
+
+</CodeGroup>
+
+On success, the connection status is set back to `active` and the response includes updated user profile data from OnlyFans.
+
+<Info>
+This endpoint only works for imported connections (`imported: true`). Link-managed connections cannot be updated through this endpoint.
+</Info>
+
+### Filtering by Type
+
+List only imported or Link-created connections:
+
+```http
+GET /v2/connections?imported=true
+GET /v2/connections?imported=false
+```
+
+---
+
 ## Connection States
 
 | State | Description |
@@ -65,6 +232,7 @@ Always pass a `clientReferenceId` when initializing Link sessions. This is the r
 ```mermaid
 graph LR
     A[Link Auth] --> B[Connection Created]
+    G[Import API] --> B
     B --> C[Active]
     C --> D{Still Valid?}
     D -->|Yes| E[API Requests]
@@ -95,6 +263,7 @@ GET /v2/connections
 | `limit` | integer | Max results (default: 10) |
 | `offset` | integer | Skip count (default: 0) |
 | `status` | string | Filter: `active`, `expired`, `awaiting_2fa` |
+| `imported` | string | Filter: `true` (imported only), `false` (Link-created only) |
 
 ### Delete Connection
 

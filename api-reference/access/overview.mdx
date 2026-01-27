@@ -19,18 +19,35 @@ The Access API provides managed endpoints for common operations and proxy endpoi
 
 ## Authentication
 
+All Access API requests require a [connection](/guides/connections) and an API key with the `ACCESS` scope.
+
 ```http
 apikey: YOUR_API_KEY
 x-connection-id: conn_abc123
 ```
 
-**Required Scope:** `ACCESS`
-
 <CardGroup cols={2}>
   <Card title="Proxy Endpoints" icon="shuffle" href="/api-reference/access/proxy">
     Passthrough to any OnlyFans path
   </Card>
-  <Card title="Link API" icon="link" href="/guides/link">
-    Get connection IDs for authentication
+  <Card title="Connections" icon="plug" href="/guides/connections">
+    Create, import, and manage connections
   </Card>
 </CardGroup>
+
+## Permission Reference
+
+| Permission | Grants Access To |
+|------------|------------------|
+| `profile:read` | Get current user profile |
+| `profile:write` | Update profile |
+| `posts:read` | List and get posts |
+| `posts:write` | Create, edit, delete posts |
+| `messages:read` | List chats and messages |
+| `messages:write` | Send messages |
+| `subscribers:read` | List subscribers |
+| `subscribers:write` | Update notes, apply discounts |
+| `vault:read` | Access vault media |
+| `analytics:read` | Access statistics and charts |
+| `earnings:read` | Access earnings data |
+| `notifications:read` | Access notifications |
