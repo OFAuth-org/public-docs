@@ -31,11 +31,11 @@ OFAuth solves this:
 
 | Challenge                 | OFAuth Solution                                       |
 | ------------------------- | ----------------------------------------------------- |
-| No public API             | Managed Access API with stable endpoints              |
+| No public API             | Managed Access API with typed endpoints                |
 | Authentication complexity | Link handles login, 2FA, captcha                      |
 | Credential security       | Zero credential storage—you only store Connection IDs |
-| API changes               | Dynamic Rules engine adapts automatically             |
-| Signing requirements      | Request signing handled transparently                 |
+| Signing infrastructure    | Request signing managed by Dynamic Rules engine       |
+| Proxy infrastructure      | Proxy management and request routing handled for you  |
 
 <Info>
   Teams report spending 3-6 months building OnlyFans integrations in-house. With OFAuth, you're live in days.
@@ -91,24 +91,24 @@ The **Link API** handles user authentication. It's how OnlyFans users connect th
 
 ### Access API
 
-The **Access API** lets you fetch OnlyFans data using a Connection ID. It's a proxy that handles request signing, session management, and API complexity.
+The **Access API** lets you make OnlyFans API requests using a Connection ID. It handles request signing, proxy routing, and session management so you don't have to build that infrastructure.
 
 ```
 Your App → Access API → OnlyFans → Access API → Your App
               ↑
-     Handles signing, retries,
-     rate limits, and errors
+     Handles signing, proxies,
+     and session management
 ```
 
 **Two ways to use it:**
 
 | Method                | Best For                                                                          |
 | --------------------- | --------------------------------------------------------------------------------- |
-| **Managed Endpoints** | Common operations like fetching profiles, posts, messages—stable, typed responses |
-| **Proxy Endpoints**   | Any OnlyFans API path—raw responses for advanced use cases                        |
+| **Managed Endpoints** | Common operations like fetching profiles, posts, messages—typed responses          |
+| **Proxy Endpoints**   | Any OnlyFans API path—pass-through for anything we haven't wrapped yet             |
 
 <Tip>
-  Most integrations only use Managed Endpoints. The Proxy is there when you need something specific that isn't covered.
+  Most integrations use Managed Endpoints. The Proxy gives you access to any OnlyFans API path with signing and session management handled.
 </Tip>
 
 ***

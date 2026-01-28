@@ -75,12 +75,12 @@ Secure, hosted authentication for OnlyFans accounts. Users enter credentials on 
 
 ## Access API
 
-Read and write OnlyFans data using Connection IDs. Handles request signing, rate limiting, and error recovery automatically.
+Make OnlyFans API requests using Connection IDs. Handles request signing, proxy routing, and session management so you don't need to build that infrastructure.
 
 | Method | Use When |
 |---|---|
-| **Managed Endpoints** (`/v2/access/*`) | Common operations — stable, typed responses |
-| **Proxy Endpoints** (`/v2/access/proxy/*`) | OnlyFans endpoints we haven't wrapped yet |
+| **Managed Endpoints** (`/v2/access/*`) | Common operations — typed responses |
+| **Proxy Endpoints** (`/v2/access/proxy/*`) | Any OnlyFans API path we haven't wrapped yet |
 
 <CardGroup cols={2}>
   <Card title="Access Overview" icon="list" href="/api-reference/access/overview">

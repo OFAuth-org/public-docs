@@ -1,6 +1,6 @@
 ---
 title: "The OnlyFans API"
-description: "Understanding the realities of building on OnlyFans' unofficial API—and how OFAuth keeps you ahead of changes"
+description: "Understanding the realities of building on OnlyFans' unofficial API—and how OFAuth handles the infrastructure complexity"
 ---
 
 ## The Reality
@@ -8,12 +8,12 @@ description: "Understanding the realities of building on OnlyFans' unofficial AP
 **OnlyFans does not provide official API access for external developers.** Their API is built for their own website—third parties work with internal-first assumptions.
 
 <Info>
-  OnlyFans has no obligation to support external integrations. OFAuth exists to absorb this volatility so you don't have to.
+  OnlyFans has no obligation to support external integrations. OFAuth exists to handle the infrastructure complexity of making API requests—signing, proxies, and session management.
 </Info>
 
 ---
 
-## What Changes (And How OFAuth Tracks It)
+## What Changes (And What OFAuth Handles)
 
 ### Request Signing (Dynamic Rules)
 
@@ -24,7 +24,7 @@ OnlyFans requires cryptographically signed requests. These signing algorithms ch
     Signing parameters, algorithms, and formats evolve constantly as OnlyFans updates anti-bot measures. Miss a change and all requests fail.
   </Card>
   <Card title="How OFAuth Handles It" icon="shield-check">
-    We monitor signing changes 24/7 and update Dynamic Rules automatically. The Access API and SDK handle signing transparently—you never see it break.
+    We monitor signing changes and update Dynamic Rules. The Access API and SDK handle signing for you—no reverse engineering required.
   </Card>
 </CardGroup>
 
@@ -37,7 +37,7 @@ Login flows, 2FA requirements, device verification, and session handling change 
     A single change to CAPTCHA handling or 2FA flow can break all new user connections overnight.
   </Card>
   <Card title="How OFAuth Handles It" icon="shield-check">
-    Link adapts to auth changes automatically. We update flows, handle new 2FA methods, and manage device verification—your OAuth-style callback stays stable.
+    Link manages the authentication flow complexity. We handle 2FA methods, device verification, and session lifecycle—you receive a connection ID via callback.
   </Card>
 </CardGroup>
 
@@ -50,24 +50,24 @@ Paths, parameters, and response payloads shift without notice as OnlyFans iterat
     An endpoint rename or response schema change can break your data pipelines with no warning.
   </Card>
   <Card title="How OFAuth Handles It" icon="shield-check">
-    Managed endpoints provide stable, typed responses. When OnlyFans changes payloads, we ship backward-compatible shims so your code keeps working.
+    Managed endpoints provide typed responses for common operations. The proxy endpoint gives you access to any OnlyFans API path with signing and session management handled.
   </Card>
 </CardGroup>
 
 ---
 
-## What OFAuth Monitors
+## What OFAuth Handles
 
-| Area | What Changes | OFAuth Response |
+| Area | What Changes | What OFAuth Does |
 |------|--------------|-----------------|
-| **Signing Rules** | Algorithms, parameters, timestamps | Auto-updated Dynamic Rules, SDK patches |
-| **Auth Flows** | Login, 2FA, CAPTCHA, device checks | Link service updates, webhook alerts |
-| **Endpoints** | Paths, params, response schemas | Managed endpoint shims, SDK updates |
-| **Rate Limits** | Thresholds, windows, patterns | Automatic throttling, retry guidance |
-| **Session Handling** | Token formats, expiry behavior | Session refresh, expiry webhooks |
+| **Signing Rules** | Algorithms, parameters, timestamps | Updates Dynamic Rules so your requests are properly signed |
+| **Auth Flows** | Login, 2FA, CAPTCHA, device checks | Link service manages the complexity of authentication |
+| **Proxy Infrastructure** | IP requirements, routing | Manages residential proxies and request routing |
+| **Rate Limits** | Thresholds, windows, patterns | Per-connection token bucket rate limiting |
+| **Session Handling** | Token formats, expiry behavior | Session lifecycle management, expiry webhooks |
 
 <Tip>
-  **You don't need to monitor OnlyFans yourself.** Subscribe to webhooks for connection status changes, and use the SDK or Access API to stay insulated from upstream shifts.
+  **Subscribe to webhooks** for connection status changes, and use the SDK or Access API so you don't need to build signing and proxy infrastructure yourself.
 </Tip>
 
 ---
@@ -111,10 +111,10 @@ Even with OFAuth handling the volatility, follow these practices:
 
 ## The Bottom Line
 
-OnlyFans' API will change. That's not a risk—it's a certainty.
+Building on OnlyFans' API requires infrastructure you shouldn't have to build yourself—request signing, proxy management, session lifecycle, and authentication flows.
 
-**OFAuth's job is to track those changes so you don't have to.** Dynamic Rules update automatically. Link adapts to auth changes. The Access API provides stable contracts over shifting endpoints.
+**OFAuth provides that infrastructure.** Dynamic Rules handle signing. Link manages authentication. The Access API handles proxying and session management so you can make API requests directly.
 
 <Info>
-  Focus on your product. Let OFAuth handle OnlyFans.
+  Focus on your product. Let OFAuth handle the infrastructure.
 </Info>
