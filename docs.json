@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "almond",
+  "theme": "palm",
   "name": "OFAuth",
   "logo": {
     "dark": "/logo/dark.svg",
@@ -638,7 +638,26 @@
   "api": {
     "mdx": {
       "server": "https://api-next.ofauth.com"
+    },
+    "playground": {
+      "display": "interactive"
     }
   },
-  "openapi": "https://api-next.ofauth.com/openapi.json"
+  "openapi": "https://api-next.ofauth.com/openapi.json",
+  "background": {
+    "decoration": "gradient"
+  },
+  "description": "OnlyFans API Integration",
+  "icons": {
+    "library": "fontawesome"
+  },
+  "interaction": {
+    "drilldown": true
+  },
+  "metadata": {
+    "timestamp": false
+  },
+  "seo": {
+    "indexing": "all"
+  }
 }
