@@ -37,21 +37,18 @@
         {
           "anchor": "llms.txt",
           "icon": "robot",
-          "iconType": "solid",
           "href": "https://docs-next.ofauth.com/llms.txt"
         }
       ]
     },
-    "dropdowns": [
+    "tabs": [
       {
-        "dropdown": "Getting Started",
+        "tab": "Getting Started",
         "icon": "rocket",
-        "iconType": "solid",
         "groups": [
           {
             "group": "Introduction",
             "icon": "circle-info",
-            "iconType": "solid",
             "pages": [
               "index",
               "introduction/services",
@@ -62,7 +59,6 @@
           {
             "group": "Setup",
             "icon": "wrench",
-            "iconType": "solid",
             "pages": [
               "quickstart",
               "setup/sandbox",
@@ -72,7 +68,6 @@
           {
             "group": "Reference",
             "icon": "file-lines",
-            "iconType": "solid",
             "pages": [
               "reference/webhooks",
               "reference/rate-limiting",
@@ -83,7 +78,6 @@
           {
             "group": "Advanced",
             "icon": "wand-magic-sparkles",
-            "iconType": "solid",
             "pages": [
               "advanced/dynamic-rules",
               "advanced/whitelabel"
@@ -92,14 +86,12 @@
         ]
       },
       {
-        "dropdown": "Guides",
+        "tab": "Guides",
         "icon": "map",
-        "iconType": "solid",
         "groups": [
           {
             "group": "Authentication",
             "icon": "key",
-            "iconType": "solid",
             "pages": [
               "guides/connections",
               "guides/link"
@@ -108,7 +100,6 @@
           {
             "group": "Messaging",
             "icon": "comments",
-            "iconType": "solid",
             "pages": [
               "guides/messaging",
               "guides/how-to/send-message",
@@ -118,7 +109,6 @@
           {
             "group": "Content",
             "icon": "file-lines",
-            "iconType": "solid",
             "pages": [
               "guides/content",
               "guides/how-to/create-post",
@@ -128,7 +118,6 @@
           {
             "group": "Media",
             "icon": "photo-film",
-            "iconType": "solid",
             "pages": [
               "guides/media",
               "guides/how-to/upload-media",
@@ -138,7 +127,6 @@
           {
             "group": "Management",
             "icon": "chart-line",
-            "iconType": "solid",
             "pages": [
               "guides/fans",
               "guides/earnings",
@@ -148,14 +136,12 @@
         ]
       },
       {
-        "dropdown": "API Reference",
+        "tab": "API Reference",
         "icon": "terminal",
-        "iconType": "solid",
         "groups": [
           {
             "group": "Account API",
             "icon": "building",
-            "iconType": "solid",
             "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               "api-reference/core/overview",
@@ -163,7 +149,6 @@
               {
                 "group": "Settings",
                 "icon": "gear",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/account/settings",
                   "PATCH /v2/account/settings"
@@ -172,7 +157,6 @@
               {
                 "group": "Connections",
                 "icon": "plug",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/account/connections",
                   "POST /v2/account/connections/import",
@@ -205,7 +189,6 @@
               {
                 "group": "Account (Self)",
                 "icon": "user-circle",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/self",
                   "PATCH /v2/access/self",
@@ -217,12 +200,10 @@
               {
                 "group": "Chats & Messages",
                 "icon": "comments",
-                "iconType": "solid",
                 "pages": [
                   {
                     "group": "Direct Messages",
                     "icon": "comment",
-                    "iconType": "solid",
                     "pages": [
                       {
                         "group": "Messages",
@@ -244,7 +225,6 @@
                   {
                     "group": "Mass Messages",
                     "icon": "comments",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/mass-messages",
                       "GET /v2/access/mass-messages/:massMessageId",
@@ -258,7 +238,6 @@
               {
                 "group": "Subscribers",
                 "icon": "users",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/subscribers",
                   "PUT /v2/access/subscribers/:userId/note",
@@ -269,7 +248,6 @@
               {
                 "group": "Subscriptions",
                 "icon": "user-check",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/subscriptions",
                   "GET /v2/access/subscriptions/count",
@@ -285,7 +263,6 @@
               {
                 "group": "Users",
                 "icon": "user",
-                "iconType": "solid",
                 "pages": [
                   {
                     "group": "Lookup",
@@ -307,7 +284,6 @@
                   {
                     "group": "User Lists",
                     "icon": "list",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/users/lists",
                       "POST /v2/access/users/lists",
@@ -325,7 +301,6 @@
               {
                 "group": "Posts",
                 "icon": "file-lines",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/posts",
                   "GET /v2/access/users/:userId/posts",
@@ -338,13 +313,11 @@
               {
                 "group": "Media & Vault",
                 "icon": "folder",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/vault/media",
                   {
                     "group": "Vault Lists",
                     "icon": "folder-open",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/vault/lists",
                       "POST /v2/access/vault/lists",
@@ -356,7 +329,6 @@
                   {
                     "group": "Uploads",
                     "icon": "upload",
-                    "iconType": "solid",
                     "pages": [
                       "POST /v2/access/uploads/check",
                       "POST /v2/access/uploads/init",
@@ -370,7 +342,6 @@
               {
                 "group": "Earnings",
                 "icon": "dollar-sign",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/access/earnings/chart",
                   "GET /v2/access/earnings/transactions",
@@ -380,12 +351,10 @@
               {
                 "group": "Analytics",
                 "icon": "chart-bar",
-                "iconType": "solid",
                 "pages": [
                   {
                     "group": "Posts",
                     "icon": "file-lines",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/analytics/posts/chart",
                       "GET /v2/access/analytics/posts/top",
@@ -395,7 +364,6 @@
                   {
                     "group": "Stories",
                     "icon": "book-open",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/analytics/stories/chart",
                       "GET /v2/access/analytics/stories/top"
@@ -404,7 +372,6 @@
                   {
                     "group": "Streams",
                     "icon": "video",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/analytics/streams/chart",
                       "GET /v2/access/analytics/streams/top"
@@ -413,7 +380,6 @@
                   {
                     "group": "Mass Messages",
                     "icon": "comments",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/analytics/mass-messages/chart",
                       "GET /v2/access/analytics/mass-messages/purchased",
@@ -423,7 +389,6 @@
                   {
                     "group": "Promotions & Campaigns",
                     "icon": "bullhorn",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/analytics/promotions/chart",
                       "GET /v2/access/analytics/promotions/top",
@@ -436,7 +401,6 @@
                   {
                     "group": "Visitor Analytics",
                     "icon": "globe",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/analytics/visitor-countries/chart",
                       "GET /v2/access/analytics/visitor-countries/top"
@@ -447,12 +411,10 @@
               {
                 "group": "Promotions",
                 "icon": "gift",
-                "iconType": "solid",
                 "pages": [
                   {
                     "group": "Tracking Links",
                     "icon": "link",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/promotions/tracking-links",
                       "POST /v2/access/promotions/tracking-links",
@@ -477,7 +439,6 @@
                   {
                     "group": "Trial Links",
                     "icon": "clock",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/promotions/trial-links",
                       "POST /v2/access/promotions/trial-links",
@@ -496,7 +457,6 @@
                   {
                     "group": "Promotions",
                     "icon": "gift",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/promotions",
                       "GET /v2/access/promotions/:promotionId",
@@ -514,7 +474,6 @@
                   {
                     "group": "Bundles",
                     "icon": "box",
-                    "iconType": "solid",
                     "pages": [
                       "GET /v2/access/promotions/bundles",
                       "GET /v2/access/promotions/bundles/:bundleId",
@@ -541,13 +500,11 @@
           {
             "group": "Vault Cache API",
             "icon": "database",
-            "iconType": "solid",
             "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
               {
                 "group": "Cache",
                 "icon": "box-archive",
-                "iconType": "solid",
                 "pages": [
                   "POST /v2/vault/cache/list/:listId",
                   "GET /v2/vault/cache/status",
@@ -557,7 +514,6 @@
               {
                 "group": "Media",
                 "icon": "photo-film",
-                "iconType": "solid",
                 "pages": [
                   "GET /v2/vault/:mediaId",
                   "POST /v2/vault/batch",
@@ -571,14 +527,12 @@
         ]
       },
       {
-        "dropdown": "SDK",
+        "tab": "SDK",
         "icon": "code",
-        "iconType": "solid",
         "groups": [
           {
             "group": "Getting Started",
             "icon": "rocket",
-            "iconType": "solid",
             "pages": [
               "sdk/index",
               "sdk/quickstart"
@@ -587,7 +541,6 @@
           {
             "group": "Core Concepts",
             "icon": "cube",
-            "iconType": "solid",
             "pages": [
               "sdk/core-concepts/architecture",
               "sdk/core-concepts/authentication",
@@ -597,12 +550,10 @@
           {
             "group": "Modules",
             "icon": "puzzle-piece",
-            "iconType": "solid",
             "pages": [
               {
                 "group": "Authentication",
                 "icon": "key",
-                "iconType": "solid",
                 "pages": [
                   "sdk/modules/authentication/link-authentication",
                   "sdk/modules/authentication/link-connections"
@@ -620,7 +571,6 @@
           {
             "group": "Advanced",
             "icon": "gears",
-            "iconType": "solid",
             "pages": [
               "sdk/advanced/error-handling"
             ]
