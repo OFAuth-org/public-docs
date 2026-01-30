@@ -66,15 +66,17 @@ The `type` field in error responses will be one of the following:
 
 | Type | HTTP Status | Description | Action Required |
 |------|-------------|-------------|-----------------|
+| `UNAUTHORIZED` | 401 | Missing or invalid API key | Check API key |
 | `SESSION_NOT_PROVIDED` | 401 | Connection not found or missing session data | Re-authenticate user via Link |
 | `SESSION_EXPIRED` | 401 | User session has expired | Re-authenticate user via Link |
+| `FORBIDDEN` | 403 | Insufficient permissions | Check connection permissions |
 | `RULES_OUTDATED` | 401 | Dynamic rules need updating | Retry—OFAuth handles this automatically |
 | `BAD_REQUEST` | 400 | Invalid request parameters | Fix request format/data |
+| `RESOURCE_NOT_FOUND` | 404 | Requested resource not found | Check resource ID |
 | `ROUTE_NOT_FOUND` | 404 | Endpoint path not found | Check endpoint URL |
 | `RATE_LIMIT_EXCEEDED` | 429 | Request rate limit exceeded | Wait and retry with backoff |
-| `PROXY_ERROR` | 502 | Upstream proxy error | Retry after delay |
-| `NETWORK_ERROR` | 503 | Network connectivity issue | Retry after delay |
-| `UNKNOWN_ERROR` | 500 | Unexpected error | Retry or contact support |
+| `UPLOAD_ERROR` | 502 | Media upload failed | Retry upload |
+| `UNKNOWN_ERROR` | 500/503 | Unexpected or temporary error | Retry or contact support |
 
 ---
 
@@ -84,7 +86,8 @@ Some errors include an `actionRequired` field suggesting how to resolve the issu
 
 | Action | Description |
 |--------|-------------|
-| `refresh_session` | User needs to re-authenticate via Link |
+| `relink_connection` | Connection expired—user needs to re-authenticate via Link |
+| `verify_identity` | ID verification required—prompt user to complete verification on OnlyFans |
 | `refresh_rules` | Dynamic rules are outdated (retry automatically) |
 | `try_again` | Transient error—retry the request |
 
@@ -122,9 +125,9 @@ When a user's OnlyFans session expires:
 
 ```json
 {
-  "error": "Session has expired, please login again",
+  "error": "Connection expired",
   "type": "SESSION_EXPIRED",
-  "actionRequired": "refresh_session",
+  "actionRequired": "relink_connection",
   "requestId": "req_abc123"
 }
 ```
@@ -145,14 +148,14 @@ When a connection ID doesn't exist or has no session data:
 
 **Resolution**: The connection may have been deleted or never completed. Create a new Link session for the user.
 
-### Proxy Error
+### Service Unavailable
 
-When there's an issue reaching OnlyFans:
+When there's a temporary issue:
 
 ```json
 {
-  "error": "Proxy error occurred",
-  "type": "PROXY_ERROR",
+  "error": "Service temporarily unavailable",
+  "type": "UNKNOWN_ERROR",
   "actionRequired": "try_again",
   "requestId": "req_abc123"
 }
