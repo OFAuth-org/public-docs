@@ -257,7 +257,7 @@ console.log("Uploaded media ID:", media.id)
 
 OFAuth provides two complementary solutions for handling OnlyFans media:
 
-| Feature      | Media Proxy             | Vault Cache                  |
+| Feature      | Media Proxy             | Vault+                  |
 | ------------ | ----------------------- | ---------------------------- |
 | **Purpose**  | Display current content | Build media libraries        |
 | **Access**   | Via API response URLs   | By media ID directly         |
@@ -267,7 +267,7 @@ OFAuth provides two complementary solutions for handling OnlyFans media:
 | **Best for** | Immediate display       | PPV features, offline access |
 
 <Card title="Media Storage Guide" icon="database" href="/guides/media-storage">
-  Learn when to use Media Proxy vs Vault Cache with detailed examples
+  Learn when to use Media Proxy vs Vault+ with detailed examples
 </Card>
 
 ***
@@ -315,7 +315,7 @@ await fetch("https://media.ofauth.com/abc123...", { method: "POST" })
 // Response: { "success": true, "mediaId": "123456", "status": "queued" }
 ```
 
-### Purge Cached Media
+### Purge Stored Media
 
 Remove a specific media item from persistent cache with a `DELETE` request:
 
@@ -331,13 +331,13 @@ await fetch("https://media.ofauth.com/abc123...", { method: "DELETE" })
     Billed per KB of bandwidth transferred. Cache hits (within 7 days) are free.
   </Card>
 
-  <Card title="Vault Cache" icon="database">
+  <Card title="Vault+" icon="database">
     Billed per GB/month of storage. Persistent storage for media you need long-term access to.
   </Card>
 </CardGroup>
 
 <Info>
-  Monitor usage in your [dashboard](https://app.ofauth.com). Media Proxy is best for temporary display; Vault Cache is best for building permanent media libraries.
+  Monitor usage in your [dashboard](https://app.ofauth.com). Media Proxy is best for temporary display; Vault+ is best for building permanent media libraries.
 </Info>
 
 ***
@@ -471,7 +471,7 @@ List types: `custom`, `messages`, `posts`, `stories`, `streams`, `media_stickers
 
 <CardGroup cols={2}>
   <Card title="Media Storage" icon="database" href="/guides/media-storage">
-    Media Proxy vs Vault Cache - when to use each
+    Media Proxy vs Vault+ - when to use each
   </Card>
 
   <Card title="Access API" icon="key" href="/api-reference/access/overview">

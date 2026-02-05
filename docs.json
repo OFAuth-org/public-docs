@@ -498,7 +498,7 @@
             ]
           },
           {
-            "group": "Vault Cache API",
+            "group": "Vault+ API",
             "icon": "database",
             "openapi": "https://api-next.ofauth.com/openapi.json",
             "pages": [
@@ -506,20 +506,20 @@
                 "group": "Cache",
                 "icon": "box-archive",
                 "pages": [
-                  "POST /v2/vault/cache/list/:listId",
-                  "GET /v2/vault/cache/status",
-                  "GET /v2/vault/cache/stats"
+                  "POST /v2/vault-plus/store/list/:listId",
+                  "GET /v2/vault-plus/store/status",
+                  "GET /v2/vault-plus/store/stats"
                 ]
               },
               {
                 "group": "Media",
                 "icon": "photo-film",
                 "pages": [
-                  "GET /v2/vault/:mediaId",
-                  "POST /v2/vault/batch",
-                  "GET /v2/vault/list",
-                  "DELETE /v2/vault/:mediaId",
-                  "DELETE /v2/vault/purge"
+                  "GET /v2/vault-plus/:mediaId",
+                  "POST /v2/vault-plus/batch",
+                  "GET /v2/vault-plus/list",
+                  "DELETE /v2/vault-plus/:mediaId",
+                  "DELETE /v2/vault-plus/purge"
                 ]
               }
             ]

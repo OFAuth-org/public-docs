@@ -51,7 +51,7 @@ sequenceDiagram
 | Get notified when connections change | [Webhooks](#webhooks) | Recommended |
 | Access OnlyFans media (images, videos) | [Media Proxy](#media-proxy) | Automatic |
 | Manage connections and org settings | [Account API](#account-api) | As needed |
-| Store media permanently beyond session expiry | [Vault Cache](#vault-cache) | Optional |
+| Store media permanently beyond session expiry | [Vault+](#vault-plus) | Optional |
 | Sign requests for direct OnlyFans API calls | [Dynamic Rules](#dynamic-rules) | Advanced |
 
 <Info>
@@ -119,12 +119,12 @@ Administrative interface for managing your organization, connections, and settin
   Complete endpoint documentation
 </Card>
 
-## Vault Cache
+## Vault+
 
-Persistent media storage that survives session expiry. Unlike Media Proxy (temporary edge caching), Vault Cache stores media permanently and serves it by ID.
+Persistent media storage that survives session expiry. Unlike Media Proxy (temporary edge caching), Vault+ stores media permanently and serves it by ID.
 
 <Card title="Media Storage Guide" icon="database" href="/guides/media-storage">
-  Media Proxy vs Vault Cache — when to use which
+  Media Proxy vs Vault+ — when to use which
 </Card>
 
 ## Dynamic Rules
