@@ -1,11 +1,11 @@
 ---
 title: 'Media Storage'
-description: 'How to use Media Proxy and Vault Cache for OnlyFans media'
+description: 'How to use Media Proxy and Vault+ for OnlyFans media'
 ---
 
-API responses include `media.ofauth.com` URLs for all media. These URLs automatically route to either edge cache or persistent storage (Vault Cache), and trigger auto-caching based on your configuration.
+API responses include `media.ofauth.com` URLs for all media. These URLs automatically route to either edge cache or persistent storage (Vault+), and trigger auto-caching based on your configuration.
 
-|                  | Media Proxy        | Vault Cache                          |
+|                  | Media Proxy        | Vault+                          |
 | ---------------- | ------------------ | ------------------------------------ |
 | **What it does** | Edge-cached URLs   | Persistent storage with access by ID |
 | **Setup**        | Automatic          | Enable per connection                |
@@ -24,30 +24,30 @@ Use `media.ofauth.com` URLs directly in your app:
 
 When requested:
 
-1. If cached in Vault Cache → serves from persistent storage
+1. If stored in Vault+ → serves from persistent storage
 2. Otherwise → fetches from OnlyFans, caches at edge
 
 ***
 
-## Setting Up Vault Cache
+## Setting Up Vault+
 
 ### Enable for a Connection
 
 ```bash
-curl -X PATCH 'https://api.ofauth.com/v2/settings/:connectionId' \
+curl -X PATCH 'https://api.ofauth.com/v2/account/connections/:connectionId/settings' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
-  -d '{ "vaultCache": { "enabled": true } }'
+  -d '{ "vaultPlus": { "enabled": true } }'
 ```
 
 ### Configure Auto-Caching (Organization Defaults)
 
 ```bash
-curl -X PATCH 'https://api.ofauth.com/v2/settings' \
+curl -X PATCH 'https://api.ofauth.com/v2/account/settings' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
-    "vaultCache": {
+    "vaultPlus": {
       "autoEnableForNewConnections": true,
       "defaultSettings": {
         "autoCacheVault": true,
@@ -75,19 +75,19 @@ curl -X POST 'https://media.ofauth.com/abc123...'
 ### Cache an Entire Vault List
 
 ```bash
-curl -X POST 'https://api.ofauth.com/v2/vault/cache/list/:listId' \
+curl -X POST 'https://api.ofauth.com/v2/vault-plus/store/list/:listId' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_xxx'
 ```
 
 ***
 
-## Accessing Cached Media
+## Accessing Stored Media
 
 ### Get by Media ID
 
 ```bash
-curl -X GET 'https://api.ofauth.com/v2/vault/:mediaId' \
+curl -X GET 'https://api.ofauth.com/v2/vault-plus/:mediaId' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_xxx'
 ```
@@ -99,31 +99,31 @@ Response:
   "mediaId": "12345",
   "presignedUrl": "https://...",
   "expiresAt": 1234567890,
-  "status": "cached"
+  "status": "stored"
 }
 ```
 
 ### Batch Get URLs (up to 100)
 
 ```bash
-curl -X POST 'https://api.ofauth.com/v2/vault/urls' \
+curl -X POST 'https://api.ofauth.com/v2/vault-plus/batch' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_xxx' \
   -H 'Content-Type: application/json' \
   -d '{ "mediaIds": ["12345", "12346", "12347"] }'
 ```
 
-### List Cached Media
+### List Stored Media
 
 ```bash
-curl -X GET 'https://api.ofauth.com/v2/vault/list?status=cached' \
+curl -X GET 'https://api.ofauth.com/v2/vault-plus/list?status=stored' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_xxx'
 ```
 
 ***
 
-## Purging Cached Media
+## Purging Stored Media
 
 ### Via Media Proxy URL
 
@@ -134,7 +134,7 @@ curl -X DELETE 'https://media.ofauth.com/abc123...'
 ### Via API
 
 ```bash
-curl -X DELETE 'https://api.ofauth.com/v2/vault/:mediaId' \
+curl -X DELETE 'https://api.ofauth.com/v2/vault-plus/:mediaId' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_xxx'
 ```
@@ -142,7 +142,7 @@ curl -X DELETE 'https://api.ofauth.com/v2/vault/:mediaId' \
 ### Purge All for a Connection
 
 ```bash
-curl -X DELETE 'https://api.ofauth.com/v2/vault/purge' \
+curl -X DELETE 'https://api.ofauth.com/v2/vault-plus/purge' \
   -H 'apikey: YOUR_API_KEY' \
   -H 'x-connection-id: conn_xxx'
 ```
