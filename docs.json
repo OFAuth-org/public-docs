@@ -32,15 +32,7 @@
     "items": "border"
   },
   "navigation": {
-    "global": {
-      "anchors": [
-        {
-          "anchor": "llms.txt",
-          "icon": "robot",
-          "href": "https://docs-next.ofauth.com/llms.txt"
-        }
-      ]
-    },
+    "global": {},
     "tabs": [
       {
         "tab": "Getting Started",
@@ -487,17 +479,6 @@
             ]
           },
           {
-            "group": "Dynamic Rules API",
-            "icon": "https://next.ofauth.com/rules_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi.json",
-            "pages": [
-              "api-reference/dynamic-rules/overview",
-              "GET /v2/dynamic-rules",
-              "POST /v2/dynamic-rules/sign",
-              "GET /v2/dynamic-rules/status"
-            ]
-          },
-          {
             "group": "Vault+ API",
             "icon": "database",
             "openapi": "https://api-next.ofauth.com/openapi.json",
@@ -523,6 +504,17 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Dynamic Rules API",
+            "icon": "https://next.ofauth.com/rules_icon.png",
+            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "pages": [
+              "api-reference/dynamic-rules/overview",
+              "GET /v2/dynamic-rules",
+              "POST /v2/dynamic-rules/sign",
+              "GET /v2/dynamic-rules/status"
+            ]
           }
         ]
       },
@@ -531,10 +523,15 @@
         "icon": "puzzle-piece",
         "groups": [
           {
+            "group": "Libraries & Integrations",
+            "pages": [
+              "sdk/index"
+            ]
+          },
+          {
             "group": "SDKs",
             "icon": "code",
             "pages": [
-              "sdk/index",
               "sdk/typescript/index",
               "sdk/python/index",
               "sdk/go/index",
