@@ -1,0 +1,224 @@
+---
+title: "Account & Webhooks"
+description: "Manage your OFAuth account, connections, settings, and handle webhook events"
+---
+
+## Account Info
+
+Retrieve organization details for the authenticated API key.
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
+
+const account = await client.account.whoami();
+console.log(account.id, account.permissions);
+```
+
+## Connection Management
+
+### List Connections
+
+List all connections for your organization, optionally filtering by status.
+
+```typescript
+const connections = await client.account.connections.list({
+  status: 'active',
+  limit: 10,
+});
+
+for (const conn of connections.list) {
+  console.log(conn.id, conn.status, conn.userData.username);
+}
+
+// Auto-paginate through all connections
+for await (const conn of client.account.connections.iterate()) {
+  console.log(conn.id);
+}
+```
+
+### Delete Connection
+
+Disconnect a connection and log out the user. This stops billing for the connection.
+
+```typescript
+await client.account.connections.delete({ connectionId: 'conn_xxx' });
+```
+
+### Invalidate Connection
+
+Mark a connection as expired and log out the user. The connection record is preserved, allowing the user to reconnect.
+
+```typescript
+await client.account.connections.invalidate({ connectionId: 'conn_xxx' });
+```
+
+## Connection Settings
+
+Get and update settings for individual connections, including vault cache configuration.
+
+```typescript
+// Get connection settings
+const settings = await client.account.connections.getSettings({
+  connectionId: 'conn_xxx',
+});
+
+// Update connection settings
+await client.account.connections.updateSettings({
+  connectionId: 'conn_xxx',
+  body: {
+    vaultCache: { enabled: true },
+  },
+});
+```
+
+## Organization Settings
+
+Get and update organization-level settings, including default vault cache configuration.
+
+```typescript
+// Get org settings
+const orgSettings = await client.account.getSettings();
+
+// Update org settings
+await client.account.updateSettings({
+  body: {
+    vaultCache: { enabled: true },
+    applyToExistingConnections: true,
+  },
+});
+```
+
+---
+
+## Webhook Verification
+
+OFAuth sends webhook events using the [Svix](https://www.svix.com/) protocol with HMAC-SHA256 signatures. All SDKs include built-in verification and routing.
+
+<Info>
+  Webhooks are configured in the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks). From there you can set your endpoint URL, select event types, view delivery history, and rotate secrets.
+</Info>
+
+### Event Types
+
+<CardGroup cols={2}>
+  <Card title="Connection Events" icon="link">
+    **connection.created** — New connection established
+
+    **connection.updated** — Connection status or data changed
+
+    **connection.expired** — Connection session expired
+  </Card>
+  <Card title="System Events" icon="gear">
+    **rules.updated** — Dynamic rules configuration changed
+  </Card>
+</CardGroup>
+
+### Event Payload Structure
+
+All webhook events follow the Svix format with these fields:
+
+```json
+{
+  "eventType": "connection.created",
+  "live": true,
+  "data": {
+    "connection": {
+      "id": "conn_xxx",
+      "platformUserId": "12345",
+      "status": "active",
+      "userData": {
+        "userId": "12345",
+        "name": "Display Name",
+        "username": "creator",
+        "avatar": "https://..."
+      },
+      "permissions": ["earnings:read", "subscribers:read"]
+    },
+    "clientReferenceId": "your-ref-id"
+  }
+}
+```
+
+### Verifying Signatures
+
+<Warning>
+  Always verify webhook signatures before processing events. The signing secret starts with `whsec_` and is available in your dashboard.
+</Warning>
+
+```typescript
+import { verifyWebhookPayload } from '@ofauth/onlyfans-sdk';
+
+// Express.js example — use express.raw() for the webhook route
+app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+  try {
+    const event = verifyWebhookPayload(
+      req.body,
+      req.headers,
+      'whsec_your_signing_secret'
+    );
+    console.log(event.eventType, event.data);
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Webhook verification failed:', error);
+    res.status(401).json({ error: 'Invalid signature' });
+  }
+});
+```
+
+### Webhook Router
+
+All SDKs provide a router that verifies signatures and dispatches events to typed handlers.
+
+```typescript
+import { createWebhookRouter, createExpressWebhookMiddleware } from '@ofauth/onlyfans-sdk';
+
+const router = createWebhookRouter({
+  secret: 'whsec_your_signing_secret',
+});
+
+router.on('connection.created', async (event) => {
+  const conn = event.data.connection;
+  console.log(`New connection: ${conn.id} (${conn.userData?.username})`);
+});
+
+router.on('connection.expired', async (event) => {
+  console.log(`Connection expired: ${event.data.connection.id}`);
+});
+
+router.on('rules.updated', async (event) => {
+  console.log(`Rules updated: revision ${event.data.revision}`);
+});
+
+// Express.js — use express.raw() middleware
+app.post('/webhooks', express.raw({ type: 'application/json' }),
+  createExpressWebhookMiddleware(router)
+);
+
+// Cloudflare Workers / Deno / Bun
+import { createFetchWebhookHandler } from '@ofauth/onlyfans-sdk';
+const handler = createFetchWebhookHandler(router);
+// export default { fetch: handler };
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Webhook Security" icon="shield-check">
+    - Always verify HMAC signatures before processing
+    - Use HTTPS endpoints only
+    - Rotate secrets periodically via the dashboard
+    - Log events for debugging delivery issues
+  </Card>
+  <Card title="Reliability" icon="rotate">
+    - Process events idempotently (you may receive duplicates)
+    - Respond with `200` quickly, then process async
+    - Monitor delivery history in the dashboard
+    - Use the router's `onError` handler for graceful failures
+  </Card>
+</CardGroup>
+
+<Note>
+  For webhook delivery behavior and retry policies, see the [Webhooks reference](/reference/webhooks).
+</Note>

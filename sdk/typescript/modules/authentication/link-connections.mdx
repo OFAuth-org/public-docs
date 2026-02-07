@@ -1,0 +1,196 @@
+---
+title: "Connection Management"
+description: "List, monitor, import, and manage OnlyFans connections"
+---
+
+## Overview
+
+Connections represent authenticated OnlyFans accounts linked to your organization. After a user completes the [Link flow](/sdk/typescript/modules/authentication/link-authentication), you receive a connection ID (`conn_xxx`) that you use for all Access API calls. This page covers managing those connections.
+
+## List Connections
+
+Retrieve all connections with optional filters for status, import type, and pagination.
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
+
+// List all connections
+const connections = await client.account.connections.list({});
+for (const conn of connections.list) {
+  console.log(`${conn.id}: ${conn.userData.username} (${conn.status})`);
+}
+
+// Filter by status
+const active = await client.account.connections.list({
+  status: 'active',
+  limit: 10,
+});
+
+// Filter by imported flag
+const imported = await client.account.connections.list({
+  imported: 'true',
+});
+```
+
+### Query Parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `status` | `"active"` \| `"expired"` \| `"awaiting_2fa"` | Filter by connection status |
+| `imported` | `"true"` \| `"false"` | Filter by whether connection was imported |
+| `limit` | `number` | Items per page (default 20) |
+| `offset` | `number` | Number of items to skip |
+
+## Pagination
+
+### Automatic Iteration (TypeScript)
+
+The TypeScript SDK provides an async iterator that handles pagination automatically:
+
+```typescript
+// Iterate over ALL connections, across all pages
+for await (const connection of client.account.connections.iterate()) {
+  console.log(connection.id, connection.userData.username);
+}
+
+// With options
+for await (const connection of client.account.connections.iterate({
+  status: 'active',
+  maxItems: 100,
+  pageSize: 20,
+})) {
+  console.log(connection.id);
+}
+```
+
+## Connection Settings
+
+Each connection has settings you can read and update, including vault cache configuration.
+
+### Get Settings
+
+```typescript
+const settings = await client.account.connections.getSettings({
+  connectionId: 'conn_xxx',
+});
+
+console.log('Connection:', settings.connectionId);
+console.log('Vault cache enabled:', settings.vaultCache.enabled);
+console.log('Storage used:', settings.vaultCache.stats.totalStorageBytes);
+```
+
+### Update Settings
+
+```typescript
+const updated = await client.account.connections.updateSettings({
+  connectionId: 'conn_xxx',
+  body: {
+    vaultCache: {
+      enabled: true,
+      settings: {
+        autoCacheVault: true,
+        cacheImages: true,
+        cacheVideos: true,
+      },
+    },
+  },
+});
+```
+
+## Delete Connection
+
+Permanently disconnect an account. This logs the user out and stops billing for the connection.
+
+```typescript
+try {
+  await client.account.connections.delete({
+    connectionId: 'conn_xxx',
+  });
+  console.log('Connection deleted');
+} catch (error) {
+  console.error('Failed to delete:', error);
+}
+```
+
+<Warning>
+  Deleting a connection is permanent. The user must re-authenticate through Link to restore access.
+</Warning>
+
+## Invalidate Connection
+
+Mark a connection as expired without deleting it. The connection record is preserved, allowing the user to reconnect with updated permissions.
+
+```typescript
+await client.account.connections.invalidate({
+  connectionId: 'conn_xxx',
+});
+console.log('Connection invalidated — user must re-authenticate');
+```
+
+### Invalidate vs Delete
+
+| | Invalidate | Delete |
+| --- | --- | --- |
+| Connection record | Preserved | Removed |
+| User can reconnect | Yes, with same connection ID | Must create new connection |
+| Use case | Force re-auth, update permissions | Full disconnect, stop billing |
+
+## Import Connection
+
+Import an externally managed OnlyFans session. Imported connections are not billed monthly and are not health-checked. They can be used through the Access API immediately.
+
+```typescript
+const imported = await client.account.connections.createImport({
+  body: {
+    cookie: 'sess=your_session; auth_id=12345; auth_uid_12345=xxx',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    permissions: ['profile:read', 'posts:read', 'messages:read'],
+    clientReferenceId: 'my-ref-123',
+  },
+});
+
+console.log('Imported connection:', imported.id);
+console.log('Status:', imported.status);
+console.log('User:', imported.userData.username);
+```
+
+### Update Imported Session
+
+Refresh an imported connection's session data without deleting and re-importing:
+
+```typescript
+const updated = await client.account.connections.updateImport({
+  connectionId: 'conn_xxx',
+  body: {
+    cookie: 'sess=new_session; auth_id=12345; auth_uid_12345=yyy',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  },
+});
+
+console.log('Session updated:', updated.id, updated.status);
+```
+
+<Info>
+  The new session must belong to the **same OnlyFans user** (matched by user ID from the cookie). This preserves the connection ID across session refreshes.
+</Info>
+
+## Connection Statuses
+
+| Status | Description |
+| --- | --- |
+| `active` | Connection is valid and can be used for API calls |
+| `expired` | Session has expired — user needs to re-authenticate via Link |
+| `awaiting_2fa` | Waiting for 2FA verification to complete |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access API" icon="database" href="/sdk/typescript/modules/posts">
+    Use connection IDs to fetch OnlyFans data
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
+    Get notified when connections expire or change status
+  </Card>
+</CardGroup>

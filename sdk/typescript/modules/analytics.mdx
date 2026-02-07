@@ -1,0 +1,237 @@
+---
+title: "Earnings & Analytics"
+description: "Access earnings data, transaction history, chargebacks, and content performance analytics"
+---
+
+## Earnings Chart
+
+Get time-series earnings data for a connection. Use `startDate` and `endDate` to specify a date range, and `by` to break down by earning type.
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+const chart = await client.access.earnings.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'total',         // 'total' | 'messages' | 'tips' | 'stream' | 'post' | 'subscribes' | ...
+  withTotal: true,
+});
+```
+
+**`by` parameter options:** `total`, `messages`, `tips`, `stream`, `post`, `subscribes`, `tips_profile`, `tips_post`, `tips_chat`, `tips_stream`, `tips_story`, `ref`
+
+## Transactions
+
+List individual earnings transactions, optionally filtered by type.
+
+```typescript
+// List transactions
+const transactions = await client.access.earnings.listTransactions({
+  startDate: '2024-01-01',
+  type: 'tips',            // 'subscribes' | 'chat_messages' | 'post' | 'stream' | 'tips'
+  tipsSource: 'chat',      // 'chat' | 'post_all' | 'profile' | 'story' | 'stream'
+});
+
+// Auto-paginate through all transactions
+for await (const tx of client.access.earnings.iterateTransactions({
+  type: 'tips',
+})) {
+  console.log(tx);
+}
+```
+
+## Chargebacks
+
+List chargeback records with optional date range filtering.
+
+```typescript
+const chargebacks = await client.access.earnings.listChargebacks({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 20,
+  offset: 0,
+});
+
+// Auto-paginate through all chargebacks
+for await (const cb of client.access.earnings.iterateChargebacks({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+})) {
+  console.log(cb);
+}
+```
+
+---
+
+## Analytics
+
+Content performance analytics are available across multiple categories. Each category offers a **chart** endpoint (time-series data) and a **top** endpoint (ranked content).
+
+<Info>
+  All analytics endpoints require the `analytics:read` permission.
+</Info>
+
+### Posts Analytics
+
+```typescript
+// Posts chart — time-series performance data
+const postsChart = await client.access.analytics.posts.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'views',       // 'purchases' | 'posts' | 'tips' | 'views' | 'likes' | 'comments'
+  withTotal: true,
+});
+
+// Top performing posts
+const topPosts = await client.access.analytics.posts.getTop({
+  by: 'purchases',   // 'purchases' | 'tips' | 'views' | 'likes' | 'comments'
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 10,
+});
+
+// Stats for a specific post
+const postStats = await client.access.analytics.posts.get({
+  postId: '123456',
+});
+```
+
+### Stories Analytics
+
+```typescript
+const storiesChart = await client.access.analytics.stories.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'views',       // 'tips' | 'stories' | 'views' | 'likes' | 'comments'
+});
+
+const topStories = await client.access.analytics.stories.getTop({
+  by: 'views',       // 'tips' | 'views' | 'likes' | 'comments'
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 10,
+});
+```
+
+### Streams Analytics
+
+```typescript
+const streamsChart = await client.access.analytics.streams.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'views',       // 'purchases' | 'duration' | 'tips' | 'views' | 'likes' | 'comments'
+});
+
+const topStreams = await client.access.analytics.streams.getTop({
+  by: 'views',
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 10,
+});
+```
+
+### Mass Messages Analytics
+
+```typescript
+// Mass messages chart
+const mmChart = await client.access.analytics.massMessages.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  withTotal: true,
+});
+
+// List purchased mass messages
+const purchased = await client.access.analytics.massMessages.getPurchased({
+  limit: 20,
+  offset: 0,
+});
+
+// List buyers for a specific mass message
+const buyers = await client.access.analytics.massMessages.listBuyers({
+  massMessageId: '456',
+  limit: 20,
+});
+
+// Auto-paginate through all buyers
+for await (const buyer of client.access.analytics.massMessages.iterateBuyers({
+  massMessageId: '456',
+})) {
+  console.log(buyer);
+}
+```
+
+### Promotions Analytics
+
+```typescript
+const promoChart = await client.access.analytics.promotions.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+});
+
+const topPromos = await client.access.analytics.promotions.getTop({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 10,
+});
+```
+
+### Additional Analytics
+
+The SDK also provides analytics for **trials**, **campaigns**, and **visitor countries**:
+
+```typescript
+// Trials analytics
+const trialsChart = await client.access.analytics.trials.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+});
+const topTrials = await client.access.analytics.trials.getTop({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 10,
+});
+
+// Campaigns analytics
+const campaignsChart = await client.access.analytics.campaigns.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+});
+const topCampaigns = await client.access.analytics.campaigns.getTop({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  limit: 10,
+});
+
+// Visitor countries analytics
+const countriesChart = await client.access.analytics.visitorCountries.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'total',       // 'guests' | 'total' | 'users'
+});
+const topCountries = await client.access.analytics.visitorCountries.getTop({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'total',
+});
+```
+
+### Analytics Namespace Reference
+
+| Category | TypeScript | Python | Go | C# Path |
+|---|---|---|---|---|
+| Posts chart | `client.access.analytics.posts.getChart()` | `analytics.list_posts_charts()` | `client.GetAccessAnalyticsPostsChart()` | `/v2/access/analytics/posts/chart` |
+| Posts top | `client.access.analytics.posts.getTop()` | `analytics.list_posts_tops()` | `client.GetAccessAnalyticsPostsTop()` | `/v2/access/analytics/posts/top` |
+| Post stats | `client.access.analytics.posts.get()` | `analytics.get_posts()` | `client.GetAccessAnalyticsPosts()` | `/v2/access/analytics/posts/{id}` |
+| Stories chart | `client.access.analytics.stories.getChart()` | `analytics.list_stories_charts()` | `client.GetAccessAnalyticsStoriesChart()` | `/v2/access/analytics/stories/chart` |
+| Streams chart | `client.access.analytics.streams.getChart()` | `analytics.list_streams_charts()` | `client.GetAccessAnalyticsStreamsChart()` | `/v2/access/analytics/streams/chart` |
+| Mass messages | `client.access.analytics.massMessages.getChart()` | `analytics.list_mass_messages_charts()` | `client.GetAccessAnalyticsMassMessagesChart()` | `/v2/access/analytics/mass-messages/chart` |
+| Promotions | `client.access.analytics.promotions.getChart()` | `analytics.list_promotions_charts()` | `client.GetAccessAnalyticsPromotionsChart()` | `/v2/access/analytics/promotions/chart` |
+
+<Warning>
+  When querying large date ranges, use reasonable `limit` values and pagination to avoid timeouts. The `startDate` and `endDate` parameters accept `YYYY-MM-DD` format strings.
+</Warning>

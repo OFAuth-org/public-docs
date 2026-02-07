@@ -1,0 +1,227 @@
+---
+title: "Error Handling"
+description: "Catch and handle API errors in the OFAuth Go SDK using idiomatic error checking"
+---
+
+## Overview
+
+The OFAuth Go SDK returns errors using Go's native `error` interface. The SDK provides a typed error struct with structured properties for status codes, error codes, messages, and details.
+
+<CardGroup cols={2}>
+  <Card title="Error-Based" icon="shield-check">
+    All SDK methods return `error` — use Go's idiomatic `if err != nil` pattern
+  </Card>
+  <Card title="Structured Errors" icon="info-circle">
+    The `*APIError` type includes status code, error code, message, and optional details
+  </Card>
+</CardGroup>
+
+## Error Class
+
+The Go SDK provides a typed error struct with consistent properties:
+
+```go
+import "github.com/ofauth-org/onlyfans-sdk-go"
+
+// *ofauth.APIError
+// Fields:
+//   Status:  int           — HTTP status code (e.g. 401, 404, 429)
+//   Message: string        — Human-readable error description
+//   Code:    string        — Machine-readable error code (e.g. "UNAUTHORIZED")
+//   Details: interface{}   — Additional context (optional)
+```
+
+## Basic Error Handling
+
+Check for errors after every API call:
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/ofauth-org/onlyfans-sdk-go"
+)
+
+func main() {
+    client := ofauth.NewClient("your-api-key")
+    ctx := context.Background()
+
+    account, err := client.Whoami(ctx)
+    if err != nil {
+        if apiErr, ok := err.(*ofauth.APIError); ok {
+            fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+            fmt.Printf("Error code: %s\n", apiErr.Code)
+            fmt.Printf("Details: %v\n", apiErr.Details)
+        } else {
+            // Network error or other unexpected error
+            log.Fatal(err)
+        }
+        return
+    }
+
+    fmt.Printf("Account ID: %s\n", account.Id)
+}
+```
+
+## Common Error Codes
+
+The API returns standard HTTP status codes with structured error bodies:
+
+| Status | Name | Description | Retryable |
+|--------|------|-------------|-----------|
+| `400` | Bad Request | Invalid parameters or malformed request body | No |
+| `401` | Unauthorized | Invalid or missing API key, or expired session | No |
+| `403` | Forbidden | Insufficient permissions for this operation | No |
+| `404` | Not Found | Resource or endpoint does not exist | No |
+| `429` | Too Many Requests | Rate limit exceeded — back off and retry | Yes |
+| `500` | Internal Server Error | Unexpected server error — retry with backoff | Yes |
+| `502` | Bad Gateway | Upstream service error — retry after delay | Yes |
+| `503` | Service Unavailable | Temporary outage — retry after delay | Yes |
+
+<Info>
+  Errors also include a `code` string (e.g. `"UNAUTHORIZED"`, `"SESSION_EXPIRED"`, `"RATE_LIMIT_EXCEEDED"`) for more precise programmatic handling. See the [Error Reference](/reference/error-handling) for the full list of error codes.
+</Info>
+
+## Handling Specific Errors
+
+Match on the status code or error code to handle different failure scenarios:
+
+```go
+account, err := client.Whoami(ctx)
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        switch apiErr.Status {
+        case 401:
+            // Session expired or invalid API key
+            fmt.Println("Authentication failed — re-authenticate the user")
+        case 403:
+            fmt.Println("Insufficient permissions for this connection")
+        case 404:
+            fmt.Println("Resource not found")
+        case 429:
+            fmt.Println("Rate limited — slow down requests")
+        default:
+            if apiErr.Status >= 500 {
+                fmt.Println("Server error — retry later")
+            }
+        }
+    } else {
+        log.Fatal(err)
+    }
+}
+```
+
+## Retry with Exponential Backoff
+
+For transient errors (429, 500, 502, 503), retry with increasing delays:
+
+```go
+import (
+    "fmt"
+    "math"
+    "time"
+
+    "github.com/ofauth-org/onlyfans-sdk-go"
+)
+
+func withRetry[T any](fn func() (T, error), maxRetries int) (T, error) {
+    var zero T
+    for attempt := 0; attempt <= maxRetries; attempt++ {
+        result, err := fn()
+        if err == nil {
+            return result, nil
+        }
+
+        apiErr, ok := err.(*ofauth.APIError)
+        if !ok {
+            return zero, err
+        }
+
+        retryable := apiErr.Status == 429 || apiErr.Status >= 500
+        if !retryable || attempt == maxRetries {
+            return zero, err
+        }
+
+        delay := time.Duration(math.Min(
+            float64(time.Second)*math.Pow(2, float64(attempt)),
+            float64(30*time.Second),
+        ))
+        fmt.Printf("Retrying in %v (attempt %d/%d)\n", delay, attempt+1, maxRetries)
+        time.Sleep(delay)
+    }
+    return zero, fmt.Errorf("unreachable")
+}
+
+// Usage
+account, err := withRetry(func() (*ofauth.WhoamiResponse, error) {
+    return client.Whoami(ctx)
+}, 3)
+```
+
+## Network Errors
+
+API errors (bad status codes) and network errors (timeouts, DNS failures, connection refused) are different. The SDK `*APIError` type only represents API responses — network failures return Go's native error types.
+
+```go
+import (
+    "errors"
+    "net"
+
+    "github.com/ofauth-org/onlyfans-sdk-go"
+)
+
+account, err := client.Whoami(ctx)
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        // API returned an error response (4xx, 5xx)
+        fmt.Printf("API error %d: %s\n", apiErr.Status, apiErr.Message)
+    } else if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+        // Request timed out
+        fmt.Println("Request timed out — try again")
+    } else {
+        // Network or other error
+        fmt.Println("Network error:", err)
+    }
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Always Check Errors" icon="shield-check">
+    Check `err != nil` after every API call. Ignoring errors leads to nil pointer panics.
+  </Card>
+  <Card title="Distinguish API vs Network Errors" icon="wifi">
+    Use type assertion to separate `*APIError` responses from connectivity failures.
+  </Card>
+  <Card title="Retry Transient Errors" icon="rotate">
+    Implement exponential backoff for 429, 500, 502, and 503 status codes.
+  </Card>
+  <Card title="Log Error Details" icon="file-lines">
+    Log `Status`, `Code`, and `Message` to make debugging easier. Include `requestId` from the error details when contacting support.
+  </Card>
+  <Card title="Handle Auth Errors Gracefully" icon="key">
+    On 401 errors, prompt the user to re-authenticate via Link instead of retrying.
+  </Card>
+  <Card title="Set Timeouts" icon="clock">
+    Configure request timeouts via `WithHTTPClient` to avoid hanging requests. Handle timeout errors separately from API errors.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Error Reference" icon="book" href="/reference/error-handling">
+    Full list of error types and status codes
+  </Card>
+  <Card title="Rate Limiting" icon="gauge" href="/reference/rate-limiting">
+    Token bucket system and backoff strategies
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/reference/webhooks">
+    Get notified of connection status changes
+  </Card>
+</CardGroup>

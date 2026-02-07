@@ -1,0 +1,63 @@
+---
+title: "No-Code Integrations"
+sidebarTitle: "Overview"
+description: "Automate OnlyFans workflows without writing code using n8n and Zapier"
+---
+
+OFAuth integrates with popular automation platforms so you can build powerful OnlyFans workflows without writing a single line of code.
+
+## Available Integrations
+
+<CardGroup cols={2}>
+  <Card title="n8n" icon="n" href="/sdk/no-code/n8n">
+    Community node for n8n's open-source workflow automation. Self-host or use n8n Cloud with 400+ integrations.
+  </Card>
+
+  <Card title="Zapier" icon="bolt" href="/sdk/no-code/zapier">
+    Connect OFAuth to 5,000+ apps with Zapier's triggers, searches, and actions — no code required.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+All no-code integrations authenticate with your **OFAuth API key** and operate through the same [Access API](/api-reference) used by the SDKs. You get the same capabilities — managing posts, subscribers, messages, earnings, and more — through a visual drag-and-drop interface.
+
+<Steps>
+
+<Step title="Get Your API Key">
+  Sign in to your [OFAuth dashboard](https://app.ofauth.com) and generate an API key from [**Developers → Keys**](https://app.ofauth.com/platform/developers/keys).
+</Step>
+
+<Step title="Connect the Platform">
+  Add the OFAuth integration in your automation platform (n8n or Zapier) and enter your API key.
+</Step>
+
+<Step title="Select a Connection">
+  Most operations require a **Connection ID** to specify which OnlyFans account to use. Retrieve your connections first, then reference them in subsequent actions.
+</Step>
+
+<Step title="Build Your Workflow">
+  Combine OFAuth actions with other apps to automate subscriber engagement, earnings tracking, content management, and more.
+</Step>
+
+</Steps>
+
+## Choosing a Platform
+
+| Feature | n8n | Zapier |
+|---|---|---|
+| **Hosting** | Self-hosted or Cloud | Cloud only |
+| **Pricing** | Free (self-hosted), paid Cloud | Free tier + paid plans |
+| **Integrations** | 400+ nodes | 5,000+ apps |
+| **Complexity** | More technical, more flexible | Simpler, guided setup |
+| **Best For** | Developers wanting full control | Non-technical users wanting speed |
+
+## Common Workflows
+
+Looking for inspiration? Check out our [common automation workflows](/sdk/no-code/workflows) page for ready-to-use patterns including:
+
+- Daily earnings reports to Slack or Google Sheets
+- Automatic welcome messages for new subscribers
+- Chargeback alerts and fraud monitoring
+- Content syndication to social media
+- CRM synchronization for subscriber data

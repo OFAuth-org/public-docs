@@ -1,0 +1,219 @@
+---
+title: "Messaging"
+description: "Send direct messages, manage mass campaigns, and retrieve conversations through the OFAuth SDK"
+---
+
+## Overview
+
+The Messaging module handles all chat and messaging functionality including direct messages, mass message campaigns, and chat media retrieval.
+
+<CardGroup cols={3}>
+  <Card title="Chats" icon="messages">
+    List conversations and filter by status
+  </Card>
+  <Card title="Direct Messages" icon="message">
+    Send, list, and delete messages in a chat
+  </Card>
+  <Card title="Mass Messages" icon="megaphone">
+    Create and manage mass message campaigns
+  </Card>
+</CardGroup>
+
+**Permissions required:** `messages:read` for listing, `messages:write` for sending/deleting.
+
+---
+
+## Chat List
+
+Retrieve your active conversations with filtering and pagination.
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+// List recent chats
+const chats = await client.access.chats.list({
+  limit: 20,
+  order: 'recent',
+  filter: 'unread',
+});
+
+for (const chat of chats.list) {
+  console.log(chat.withUser.username, chat.lastMessage?.text);
+}
+```
+
+### Chat List Filters
+
+| Filter | Description |
+|--------|-------------|
+| `recent` / `old` | Sort by message recency (via `order`) |
+| `priority` | Priority conversations only (via `filter`) |
+| `who_tipped` | Users who have tipped (via `filter`) |
+| `unread` | Unread conversations only (via `filter`) |
+
+You can also filter by `userListId` to show chats only from a specific user list.
+
+### Paginating Chats
+
+All SDKs support automatic pagination through iterators:
+
+```typescript
+// Async iterator handles pagination automatically
+for await (const chat of client.access.chats.iterate({
+  order: 'recent',
+  maxItems: 100,
+  pageSize: 20,
+})) {
+  console.log(chat.withUser.username);
+}
+```
+
+---
+
+## Messages
+
+### List Messages in a Chat
+
+Retrieve message history with a specific user.
+
+```typescript
+const msgs = await client.access.chats.listMessages({
+  userId: '123456789',
+  limit: 50,
+  query: 'search term', // optional text search
+});
+
+for (const msg of msgs.list) {
+  console.log(msg.text, msg.createdAt);
+}
+```
+
+### Send a Message
+
+Send a direct message to a specific user.
+
+```typescript
+const result = await client.access.chats.createMessages({
+  userId: '123456789',
+  body: {
+    text: 'Hey! Thanks for subscribing!',
+  },
+});
+
+console.log('Message sent:', result.id);
+```
+
+### Delete (Unsend) a Message
+
+```typescript
+await client.access.chats.deleteMessages({
+  userId: '123456789',
+  messageId: '987654',
+  body: {},
+});
+```
+
+---
+
+## Mass Messages
+
+Mass messages let you send a single message to multiple fans at once. They can be sent immediately or scheduled.
+
+### List Mass Messages
+
+```typescript
+const massMsgs = await client.access.listMassMessages({
+  limit: 20,
+  type: 'scheduled', // 'sent' | 'unsent' | 'scheduled'
+});
+
+for (const msg of massMsgs.list) {
+  console.log(msg.id, msg.text);
+}
+```
+
+### Create a Mass Message
+
+```typescript
+const massMsg = await client.access.createMassMessages({
+  body: {
+    text: 'New content available! Check it out!',
+    mediaIds: [12345],
+  },
+});
+
+console.log('Mass message created:', massMsg.id);
+```
+
+### Get, Update, and Delete Mass Messages
+
+```typescript
+// Get a specific mass message
+const msg = await client.access.getMassMessages({
+  massMessageId: '456',
+});
+
+// Update a mass message
+await client.access.replaceMassMessages({
+  massMessageId: '456',
+  body: {
+    text: 'Updated message text',
+  },
+});
+
+// Delete a mass message
+await client.access.deleteMassMessages({
+  massMessageId: '456',
+});
+```
+
+---
+
+## Chat Media
+
+Retrieve media shared in a chat conversation. Filter by type to get only photos, videos, or audio.
+
+```typescript
+const media = await client.access.chats.listMedia({
+  userId: '123456789',
+  limit: 20,
+  type: 'photos', // 'photos' | 'videos' | 'audios'
+});
+
+for (const item of media.list) {
+  console.log(item.id, item.type);
+}
+```
+
+---
+
+## Error Handling
+
+All SDKs throw exceptions on API errors. Use try/catch to handle them:
+
+```typescript
+import { OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+try {
+  await client.access.chats.createMessages({
+    userId: '123456789',
+    body: { text: 'Hello!' },
+  });
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('API Error:', error.status, error.message);
+    console.error('Error code:', error.code);
+  } else {
+    throw error;
+  }
+}
+```
+
+<Warning>
+  **Rate Limiting**: OnlyFans has rate limits for messaging. Space out bulk operations and handle `429` status codes with appropriate backoff.
+</Warning>

@@ -1,0 +1,130 @@
+---
+title: "Architecture"
+description: "How the OFAuth Python SDK is structured"
+---
+
+## Overview
+
+The OFAuth Python SDK provides type-safe access to the OFAuth API. It follows a consistent mental model:
+
+1. **Create a client** with your API key
+2. **Call methods** organized by API namespace
+3. **Handle errors** via language-native exceptions
+
+The SDK is generated from the same OpenAPI specification as all other OFAuth SDKs, ensuring consistent behavior and type safety.
+
+## Two API Namespaces
+
+The OFAuth API is organized into two namespaces:
+
+| Namespace | Purpose | Connection ID | Examples |
+|-----------|---------|---------------|----------|
+| **Account** | Manage your OFAuth organization | Not required | `whoami`, `connections.list`, `settings` |
+| **Access** | Read/write OnlyFans data | Required | `self`, `posts`, `chats`, `earnings` |
+
+**Account API** operations manage your OFAuth organization — listing connections, reading settings, and checking account info. These only require your API key.
+
+**Access API** operations interact with OnlyFans data through a specific connection. These require both your API key and a connection ID identifying which OnlyFans account to act on.
+
+## Client Pattern — Class Constructor + Module Functions
+
+The Python SDK uses a client class paired with standalone module functions. You pass the client as the first argument:
+
+```python
+from onlyfans_sdk import OFAuthClient, account, posts
+
+client = OFAuthClient(
+    api_key="your-api-key",
+    connection_id="conn_xxx",  # optional default
+)
+
+# Account namespace
+result = account.whoami(client)
+connections = account.list_connections(client, status="active")
+
+# Access namespace
+post_list = posts.list_posts(client, limit=20)
+```
+
+## Client Structure
+
+The following diagram shows how the client is organized:
+
+```
+OFAuth Client
+|
+|-- API Key (sent as `apiKey` header)
+|-- Connection ID (sent as `x-connection-id` header)
+|-- Base URL
+|
+|-- Account Namespace (/v2/account/*)
+|   |-- whoami
+|   |-- connections (list, delete, invalidate, settings)
+|   |-- settings (get, update)
+|
+|-- Access Namespace (/v2/access/*) — requires connection ID
+|   |-- self (creator profile)
+|   |-- posts (list, create)
+|   |-- chats (messages, conversations)
+|   |-- subscribers (list, data)
+|   |-- earnings (chart, analytics)
+|   |-- vault (media storage)
+|   |-- promotions (links, campaigns)
+|   |-- uploads (media upload with chunking)
+|
+|-- Proxy (/v2/access/proxy/*) — call any OnlyFans endpoint
+```
+
+## Type Safety
+
+The Python SDK uses Pydantic v2 models generated from the OpenAPI spec:
+
+```python
+from onlyfans_sdk import models
+
+# Pydantic v2 models generated from OpenAPI spec
+# models.V2AccountWhoamiGetResponse
+# models.V2AccessPostsGetResponse
+result = account.whoami(client)
+```
+
+## Error Handling
+
+The SDK throws language-native exceptions rather than returning result objects. The error class provides status code, message, error code, and details:
+
+```python
+from onlyfans_sdk import OFAuthError
+
+try:
+    result = account.whoami(client)
+except OFAuthError as e:
+    print(e.status, e.message, e.code)
+```
+
+## Pagination
+
+The Python SDK includes generator helpers that handle pagination automatically:
+
+```python
+from onlyfans_sdk import account
+
+# Generator — yields items one at a time
+for connection in account.iter_connections(client):
+    print(connection["id"])
+```
+
+## SDK Details
+
+| Feature | Python |
+|---------|--------|
+| Package | `onlyfans-sdk` |
+| Repository | [onlyfans-sdk-python](https://github.com/OFAuth-org/onlyfans-sdk-python) |
+| Client pattern | Class + module functions |
+| Type generation | Pydantic v2 models |
+| Pagination | Generators |
+| HTTP client | `httpx` |
+| Error type | `OFAuthError` |
+
+<Info>
+  The SDK is generated from the same OpenAPI specification as all other OFAuth SDKs and provides identical API coverage. Choose the one that matches your stack.
+</Info>

@@ -1,0 +1,108 @@
+---
+title: "SDKs"
+description: "Official OFAuth SDK for TypeScript — plus no-code integrations for n8n and Zapier"
+---
+
+## Official SDK
+
+OFAuth provides a first-party SDK generated from our OpenAPI spec, so types and methods always match the latest API.
+
+```bash
+npm install @ofauth/onlyfans-sdk
+```
+
+### Hello, OFAuth
+
+Verify your API key with a single call:
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
+
+const account = await client.account.whoami();
+console.log(account.id, account.permissions);
+```
+
+***
+
+## Feature Highlights
+
+<CardGroup cols={3}>
+  <Card title="Full Type Safety" icon="code">
+    Every SDK is generated from the OpenAPI spec — response types, request params, and error codes are all typed.
+  </Card>
+
+  <Card title="Automatic Pagination" icon="arrows-rotate">
+    Async iterators handle pagination automatically so you can `for-await` over any list.
+  </Card>
+
+  <Card title="Proxy Support" icon="globe">
+    Call any OnlyFans API endpoint directly through the OFAuth proxy when the typed methods don't cover your use case.
+  </Card>
+
+  <Card title="Media Upload" icon="cloud-arrow-up">
+    Upload images and videos with automatic chunking and progress callbacks built into the SDK.
+  </Card>
+
+  <Card title="Webhook Verification" icon="shield-check">
+    Verify incoming webhook signatures to ensure events are authentic — included out of the box.
+  </Card>
+
+  <Card title="Error Handling" icon="triangle-exclamation">
+    The SDK throws typed exceptions (`OFAuthAPIError`) with status, code, and details.
+  </Card>
+</CardGroup>
+
+***
+
+## TypeScript SDK
+
+| | TypeScript |
+| --- | --- |
+| **Package** | `@ofauth/onlyfans-sdk` |
+| **Repository** | [onlyfans-sdk-typescript](https://github.com/OFAuth-org/onlyfans-sdk-typescript) |
+| **Init** | `createOFAuthClient()` |
+| **Architecture** | Nested client with namespaces |
+| **Types** | Inline types, full IntelliSense |
+| **Pagination** | Async iterators (`for await`) |
+| **Dependencies** | None (uses `fetch`) |
+| **Key Feature** | Nested namespaces (`client.access.listPosts()`) |
+
+***
+
+## No-Code Integrations
+
+Don't want to write code? OFAuth also provides integrations for popular automation platforms:
+
+<CardGroup cols={2}>
+  <Card title="n8n" icon="n" href="https://github.com/OFAuth-org/onlyfans-n8n">
+    Community node for n8n workflows. Connect OFAuth to 400+ other services with drag-and-drop automation.
+  </Card>
+
+  <Card title="Zapier" icon="bolt" href="https://github.com/OFAuth-org/onlyfans-zapier">
+    Zapier integration with typed input fields. Build automated workflows without writing a single line of code.
+  </Card>
+</CardGroup>
+
+***
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/sdk/typescript/quickstart">
+    Install the SDK and make your first API call in under 5 minutes
+  </Card>
+
+  <Card title="Architecture" icon="sitemap" href="/sdk/typescript/core-concepts/architecture">
+    Understand how the SDK is structured and how it maps to the API
+  </Card>
+
+  <Card title="Configuration" icon="gear" href="/sdk/typescript/core-concepts/configuration">
+    Connection IDs, custom base URLs, proxy setup, and advanced options
+  </Card>
+
+  <Card title="Error Handling" icon="triangle-exclamation" href="/sdk/typescript/advanced/error-handling">
+    Typed exceptions, retry strategies, and debugging tips
+  </Card>
+</CardGroup>

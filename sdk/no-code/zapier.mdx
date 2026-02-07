@@ -1,0 +1,150 @@
+---
+title: "Zapier Integration"
+sidebarTitle: "Zapier"
+description: "Connect OFAuth to 5,000+ apps with Zapier triggers, searches, and actions"
+---
+
+The [OFAuth Zapier integration](https://github.com/OFAuth-org/onlyfans-zapier) connects your OnlyFans account to 5,000+ apps through Zapier's automation platform. Build Zaps with triggers, searches, and actions — no code required.
+
+<Info>
+  **App name:** Search for **OFAuth** in the Zapier app directory or use a direct invitation link from your OFAuth dashboard.
+</Info>
+
+## Setup
+
+<Steps>
+
+<Step title="Install the Integration">
+  Find OFAuth in the Zapier App Directory, or use the direct invitation link from your OFAuth dashboard.
+</Step>
+
+<Step title="Connect Your Account">
+  1. Create a new Zap
+  2. Search for **OFAuth** as your trigger or action app
+  3. Click **Connect Account**
+  4. Enter your OFAuth API key from [app.ofauth.com/platform/developers/keys](https://app.ofauth.com/platform/developers/keys)
+  5. Click **Continue**
+</Step>
+
+<Step title="Configure Connection ID">
+  Most actions require a **Connection ID** to specify which OnlyFans account to operate on. Select from the dropdown (populated from your connections) or pass dynamically from a previous Zap step.
+</Step>
+
+</Steps>
+
+## Triggers
+
+Triggers start a Zap when an event occurs on your OnlyFans account.
+
+| Trigger | Description |
+|---|---|
+| **Account Info** | Account details changed |
+| **Connection List** | New connection added |
+| **Connection Status** | Connection status changed |
+| **Self Profile** | Creator profile updated |
+| **Self Notifications** | New notification received |
+| **Earnings Chart** | New earnings data |
+| **Earnings Transactions** | New transaction recorded |
+| **Earnings Chargebacks** | New chargeback received |
+| **Analytics Posts Chart** | New post analytics |
+| **Analytics Posts Top** | Top posts updated |
+| **Analytics Stories Chart** | New story analytics |
+| **Analytics Stories Top** | Top stories updated |
+| **Analytics Streams Chart** | New stream analytics |
+| **Analytics Streams Top** | Top streams updated |
+| **Analytics Mass Messages** | Mass message stats updated |
+| **Analytics Promotions** | Promotion stats updated |
+
+## Searches
+
+Searches find existing data to use in subsequent Zap steps.
+
+| Search | Description |
+|---|---|
+| **Connection Settings** | Find connection settings |
+| **Posts** | Search posts |
+| **User Posts** | Find posts by user |
+| **Chat Messages** | Search chat messages |
+| **Chat Media** | Find media in chats |
+| **Mass Messages** | Search mass messages |
+| **Mass Message Buyers** | Find message buyers |
+| **Analytics Posts** | Get post analytics |
+| **Subscriptions** | Search subscriptions |
+| **Subscription History** | Get subscription history |
+
+## Actions
+
+Actions perform operations on your OnlyFans account.
+
+| Action | Description |
+|---|---|
+| **Create Post** | Create a new post |
+| **Send Chat Message** | Send a message to a user |
+| **Send Mass Message** | Send a mass message |
+| **Create Tracking Link** | Create a tracking link |
+| **Share Tracking Link** | Share tracking link access |
+| **Create Trial Link** | Create a trial link |
+| **Share Trial Link** | Share trial link access |
+| **Create Promotion** | Create a promotion |
+| **Finish Promotion** | End a promotion |
+| **Create Bundle** | Create a subscription bundle |
+| **Create User List** | Create a user list |
+| **Add User to List** | Add a user to a list |
+| **Restrict User** | Restrict a user |
+| **Invalidate Connection** | Invalidate a connection |
+| **Create Vault List** | Create a vault list |
+| **Add Media to Vault** | Add media to vault list |
+| **Initialize Link** | Initialize a connection link |
+| **Sign Dynamic Rules** | Sign dynamic API rules |
+
+## Common Input Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `connectionId` | String | The OFAuth connection ID (required for most operations) |
+| `limit` | Number | Maximum results to return |
+| `offset` | Number | Pagination offset |
+
+Date fields accept ISO 8601 format: `2024-01-15` or `2024-01-15T10:30:00Z`.
+
+## Example Zaps
+
+### Auto-Post to Social Media
+
+**Trigger:** OFAuth — New Post Created
+**Action:** Twitter — Create Tweet
+**Use Case:** Automatically share new OnlyFans posts on Twitter.
+
+### Track Earnings in Google Sheets
+
+**Trigger:** OFAuth — New Transaction
+**Action:** Google Sheets — Create Row
+**Use Case:** Log all earnings to a spreadsheet for tracking and accounting.
+
+### Welcome New Subscribers
+
+**Trigger:** OFAuth — New Subscriber
+**Action:** OFAuth — Send Chat Message
+**Use Case:** Automatically send a personalized welcome message to new subscribers.
+
+### Chargeback Alerts
+
+**Trigger:** OFAuth — New Chargeback
+**Action:** Slack — Send Message
+**Use Case:** Get instant Slack notifications when chargebacks occur.
+
+### Sync Subscribers to CRM
+
+**Trigger:** OFAuth — New Subscriber
+**Action:** HubSpot — Create Contact
+**Use Case:** Add new subscribers to your CRM automatically.
+
+<Info>
+  See the [Common Workflows](/sdk/no-code/workflows) page for more detailed automation patterns that work across both n8n and Zapier.
+</Info>
+
+## Resources
+
+- [GitHub Repository](https://github.com/OFAuth-org/onlyfans-zapier)
+- [OFAuth API Reference](/api-reference)
+- [Zapier Developer Platform](https://developer.zapier.com)

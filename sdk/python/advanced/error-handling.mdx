@@ -1,0 +1,178 @@
+---
+title: "Error Handling"
+description: "Catch and handle API errors in the OFAuth Python SDK using exception-based patterns"
+---
+
+## Overview
+
+The OFAuth Python SDK throws exceptions when API requests fail. It provides a dedicated error class with structured properties for status codes, error codes, messages, and details.
+
+<CardGroup cols={2}>
+  <Card title="Exception-Based" icon="shield-check">
+    The SDK throws typed exceptions — use try/except to handle errors
+  </Card>
+  <Card title="Structured Errors" icon="info-circle">
+    Every exception includes status code, error code, message, and optional details
+  </Card>
+</CardGroup>
+
+## Error Class
+
+The Python SDK provides `OFAuthError` with consistent properties:
+
+```python
+from onlyfans_sdk import OFAuthError
+
+# OFAuthError
+# Properties:
+#   status: int          — HTTP status code (e.g. 401, 404, 429)
+#   message: str         — Human-readable error description
+#   code: str            — Machine-readable error code (e.g. "UNAUTHORIZED")
+#   details: dict        — Additional context (optional)
+```
+
+## Basic Error Handling
+
+Wrap API calls in try/except to handle errors:
+
+```python
+from onlyfans_sdk import OFAuthClient, OFAuthError, account
+
+client = OFAuthClient(api_key="your-api-key")
+
+try:
+    result = account.whoami(client)
+    print("Account ID:", result["id"])
+except OFAuthError as e:
+    print(f"API Error {e.status}: {e.message}")
+    print(f"Error code: {e.code}")
+    print(f"Details: {e.details}")
+except Exception as e:
+    # Network error or other unexpected error
+    raise
+```
+
+## Common Error Codes
+
+The API returns standard HTTP status codes with structured error bodies:
+
+| Status | Name | Description | Retryable |
+|--------|------|-------------|-----------|
+| `400` | Bad Request | Invalid parameters or malformed request body | No |
+| `401` | Unauthorized | Invalid or missing API key, or expired session | No |
+| `403` | Forbidden | Insufficient permissions for this operation | No |
+| `404` | Not Found | Resource or endpoint does not exist | No |
+| `429` | Too Many Requests | Rate limit exceeded — back off and retry | Yes |
+| `500` | Internal Server Error | Unexpected server error — retry with backoff | Yes |
+| `502` | Bad Gateway | Upstream service error — retry after delay | Yes |
+| `503` | Service Unavailable | Temporary outage — retry after delay | Yes |
+
+<Info>
+  Errors also include a `code` string (e.g. `"UNAUTHORIZED"`, `"SESSION_EXPIRED"`, `"RATE_LIMIT_EXCEEDED"`) for more precise programmatic handling. See the [Error Reference](/reference/error-handling) for the full list of error codes.
+</Info>
+
+## Handling Specific Errors
+
+Match on the status code or error code to handle different failure scenarios:
+
+```python
+from onlyfans_sdk import OFAuthError
+
+try:
+    profile = self_module.list_selfs(client)
+except OFAuthError as e:
+    if e.status == 401:
+        # Session expired or invalid API key
+        print("Authentication failed — re-authenticate the user")
+    elif e.status == 403:
+        print("Insufficient permissions for this connection")
+    elif e.status == 404:
+        print("Resource not found")
+    elif e.status == 429:
+        print("Rate limited — slow down requests")
+    elif e.status >= 500:
+        print("Server error — retry later")
+```
+
+## Retry with Exponential Backoff
+
+For transient errors (429, 500, 502, 503), retry with increasing delays:
+
+```python
+import time
+from onlyfans_sdk import OFAuthError
+
+def with_retry(fn, max_retries=3):
+    for attempt in range(max_retries + 1):
+        try:
+            return fn()
+        except OFAuthError as e:
+            retryable = e.status in (429, 500, 502, 503)
+            if not retryable or attempt == max_retries:
+                raise
+
+            delay = min(2 ** attempt, 30)
+            print(f"Retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+            time.sleep(delay)
+
+# Usage
+result = with_retry(lambda: account.whoami(client))
+```
+
+## Network Errors
+
+API errors (bad status codes) and network errors (timeouts, DNS failures, connection refused) are different. The SDK error class only represents API responses — network failures throw `httpx` native error types.
+
+```python
+import httpx
+from onlyfans_sdk import OFAuthError
+
+try:
+    result = account.whoami(client)
+except OFAuthError as e:
+    # API returned an error response (4xx, 5xx)
+    print(f"API error {e.status}: {e.message}")
+except httpx.TimeoutException:
+    # Request timed out
+    print("Request timed out — try again")
+except httpx.ConnectError:
+    # Could not connect to the server
+    print("Network error — check your connection")
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Always Catch SDK Exceptions" icon="shield-check">
+    Wrap every API call in try/except. Unhandled exceptions crash your application.
+  </Card>
+  <Card title="Distinguish API vs Network Errors" icon="wifi">
+    Check the exception type to separate server responses from connectivity failures.
+  </Card>
+  <Card title="Retry Transient Errors" icon="rotate">
+    Implement exponential backoff for 429, 500, 502, and 503 status codes.
+  </Card>
+  <Card title="Log Error Details" icon="file-lines">
+    Log `status`, `code`, and `message` to make debugging easier. Include `requestId` from the error details when contacting support.
+  </Card>
+  <Card title="Handle Auth Errors Gracefully" icon="key">
+    On 401 errors, prompt the user to re-authenticate via Link instead of retrying.
+  </Card>
+  <Card title="Set Timeouts" icon="clock">
+    Configure request timeouts to avoid hanging requests. Handle timeout errors separately from API errors.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Error Reference" icon="book" href="/reference/error-handling">
+    Full list of error types and status codes
+  </Card>
+  <Card title="Rate Limiting" icon="gauge" href="/reference/rate-limiting">
+    Token bucket system and backoff strategies
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/reference/webhooks">
+    Get notified of connection status changes
+  </Card>
+</CardGroup>

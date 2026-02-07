@@ -1,0 +1,213 @@
+---
+title: "Error Handling"
+description: "Catch and handle API errors in the OFAuth C# SDK using exception-based patterns"
+---
+
+## Overview
+
+The OFAuth SDK throws exceptions when API requests fail. The C# SDK has a dedicated error class with structured properties for status codes, error codes, messages, and details.
+
+<CardGroup cols={2}>
+  <Card title="Exception-Based" icon="shield-check">
+    The SDK throws typed exceptions — use try/catch to handle errors
+  </Card>
+  <Card title="Structured Errors" icon="info-circle">
+    Every exception includes status code, error code, message, and optional details
+  </Card>
+</CardGroup>
+
+## Error Classes
+
+The C# SDK provides a typed error class with consistent properties:
+
+```csharp
+using OFAuth;
+
+// OFAuthException extends Exception
+// Properties:
+//   Status: int            — HTTP status code (e.g. 401, 404, 429)
+//   Message: string        — Human-readable error description
+//   Code: string           — Machine-readable error code (e.g. "UNAUTHORIZED")
+//   Details: object        — Additional context (optional)
+```
+
+## Basic Error Handling
+
+Wrap API calls in try/catch to handle errors:
+
+```csharp
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key");
+
+try
+{
+    var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+    Console.WriteLine($"Account ID: {account.Id}");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"API Error {ex.Status}: {ex.Message}");
+    Console.WriteLine($"Error code: {ex.Code}");
+    Console.WriteLine($"Details: {ex.Details}");
+}
+catch (HttpRequestException ex)
+{
+    // Network error or other unexpected error
+    throw;
+}
+```
+
+## Common Error Codes
+
+The API returns standard HTTP status codes with structured error bodies:
+
+| Status | Name | Description | Retryable |
+|--------|------|-------------|-----------|
+| `400` | Bad Request | Invalid parameters or malformed request body | No |
+| `401` | Unauthorized | Invalid or missing API key, or expired session | No |
+| `403` | Forbidden | Insufficient permissions for this operation | No |
+| `404` | Not Found | Resource or endpoint does not exist | No |
+| `429` | Too Many Requests | Rate limit exceeded — back off and retry | Yes |
+| `500` | Internal Server Error | Unexpected server error — retry with backoff | Yes |
+| `502` | Bad Gateway | Upstream service error — retry after delay | Yes |
+| `503` | Service Unavailable | Temporary outage — retry after delay | Yes |
+
+<Info>
+  Errors also include a `code` string (e.g. `"UNAUTHORIZED"`, `"SESSION_EXPIRED"`, `"RATE_LIMIT_EXCEEDED"`) for more precise programmatic handling. See the [Error Reference](/reference/error-handling) for the full list of error codes.
+</Info>
+
+## Handling Specific Errors
+
+Match on the status code or error code to handle different failure scenarios:
+
+```csharp
+try
+{
+    var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+}
+catch (OFAuthException ex)
+{
+    switch (ex.Status)
+    {
+        case 401:
+            // Session expired or invalid API key
+            Console.WriteLine("Authentication failed — re-authenticate the user");
+            break;
+        case 403:
+            Console.WriteLine("Insufficient permissions for this connection");
+            break;
+        case 404:
+            Console.WriteLine("Resource not found");
+            break;
+        case 429:
+            Console.WriteLine("Rate limited — slow down requests");
+            break;
+        default:
+            if (ex.Status >= 500)
+                Console.WriteLine("Server error — retry later");
+            break;
+    }
+}
+```
+
+## Retry with Exponential Backoff
+
+For transient errors (429, 500, 502, 503), retry with increasing delays:
+
+```csharp
+using OFAuth;
+
+async Task<T> WithRetryAsync<T>(
+    Func<Task<T>> fn,
+    int maxRetries = 3)
+{
+    for (int attempt = 0; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            return await fn();
+        }
+        catch (OFAuthException ex)
+        {
+            bool retryable = ex.Status is 429 or 500 or 502 or 503;
+            if (!retryable || attempt == maxRetries) throw;
+
+            var delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(2, attempt), 30));
+            Console.WriteLine($"Retrying in {delay.TotalSeconds}s (attempt {attempt + 1}/{maxRetries})");
+            await Task.Delay(delay);
+        }
+    }
+    throw new InvalidOperationException("Unreachable");
+}
+
+// Usage
+var account = await WithRetryAsync(
+    () => client.GetAsync<WhoamiResponse>("/v2/account/whoami")
+);
+```
+
+## Network Errors
+
+API errors (bad status codes) and network errors (timeouts, DNS failures, connection refused) are different. The SDK error class only represents API responses — network failures throw .NET's native error types.
+
+```csharp
+using OFAuth;
+
+try
+{
+    var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+}
+catch (OFAuthException ex)
+{
+    // API returned an error response (4xx, 5xx)
+    Console.WriteLine($"API error {ex.Status}: {ex.Message}");
+}
+catch (TaskCanceledException)
+{
+    // Request timed out
+    Console.WriteLine("Request timed out — try again");
+}
+catch (HttpRequestException)
+{
+    // Network error (DNS failure, connection refused, etc.)
+    Console.WriteLine("Network error — check your connection");
+}
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Always Catch SDK Exceptions" icon="shield-check">
+    Wrap every API call in try/catch. Unhandled exceptions crash your application.
+  </Card>
+  <Card title="Distinguish API vs Network Errors" icon="wifi">
+    Check the exception type to separate server responses from connectivity failures.
+  </Card>
+  <Card title="Retry Transient Errors" icon="rotate">
+    Implement exponential backoff for 429, 500, 502, and 503 status codes.
+  </Card>
+  <Card title="Log Error Details" icon="file-lines">
+    Log `status`, `code`, and `message` to make debugging easier. Include `requestId` from the error details when contacting support.
+  </Card>
+  <Card title="Handle Auth Errors Gracefully" icon="key">
+    On 401 errors, prompt the user to re-authenticate via Link instead of retrying.
+  </Card>
+  <Card title="Set Timeouts" icon="clock">
+    Configure request timeouts to avoid hanging requests. Handle timeout errors separately from API errors.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Error Reference" icon="book" href="/reference/error-handling">
+    Full list of error types and status codes
+  </Card>
+  <Card title="Rate Limiting" icon="gauge" href="/reference/rate-limiting">
+    Token bucket system and backoff strategies
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/reference/webhooks">
+    Get notified of connection status changes
+  </Card>
+</CardGroup>

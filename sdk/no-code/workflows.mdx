@@ -1,0 +1,178 @@
+---
+title: "Common Workflows"
+sidebarTitle: "Workflows"
+description: "Ready-to-use automation patterns for OnlyFans with n8n and Zapier"
+---
+
+These workflow patterns work with both [n8n](/sdk/no-code/n8n) and [Zapier](/sdk/no-code/zapier). Each describes a common automation use case with the OFAuth resources and operations involved.
+
+## Earnings & Finance
+
+<CardGroup cols={2}>
+  <Card title="Daily Earnings Report" icon="chart-line">
+    Send a daily summary of earnings to Slack, Discord, or email.
+
+    **Flow:** Schedule Trigger → OFAuth (Earnings → Get) → Messaging App (Send)
+
+    **OFAuth resource:** Earnings
+  </Card>
+
+  <Card title="Transaction Logging" icon="table">
+    Log every transaction to Google Sheets or Airtable for accounting.
+
+    **Flow:** OFAuth (Earnings Transactions trigger) → Spreadsheet (Create Row)
+
+    **OFAuth resource:** Earnings
+  </Card>
+
+  <Card title="Chargeback Alerts" icon="triangle-exclamation">
+    Get instant notifications when a chargeback is received.
+
+    **Flow:** OFAuth (Earnings Chargebacks trigger) → Slack/Email (Alert)
+
+    **OFAuth resource:** Earnings
+  </Card>
+
+  <Card title="Revenue Dashboard" icon="gauge">
+    Update a live dashboard with earnings and analytics data on a schedule.
+
+    **Flow:** Schedule Trigger → OFAuth (Earnings → Get) → Google Sheets (Update)
+
+    **OFAuth resource:** Earnings, Analytics
+  </Card>
+</CardGroup>
+
+## Subscriber Engagement
+
+<CardGroup cols={2}>
+  <Card title="Welcome New Subscribers" icon="hand-wave">
+    Automatically send a personalized welcome message when someone subscribes.
+
+    **Flow:** OFAuth (New Subscriber trigger) → OFAuth (Chats → Send Message)
+
+    **OFAuth resource:** Subscribers, Chats
+  </Card>
+
+  <Card title="Sync Subscribers to CRM" icon="address-book">
+    Add new subscribers to HubSpot, Salesforce, or another CRM.
+
+    **Flow:** OFAuth (New Subscriber trigger) → CRM (Create Contact)
+
+    **OFAuth resource:** Subscribers
+  </Card>
+
+  <Card title="Subscriber List Management" icon="list">
+    Automatically organize subscribers into lists based on activity or subscription tier.
+
+    **Flow:** OFAuth (Subscribers → Get All) → Filter → OFAuth (Create User List / Add User to List)
+
+    **OFAuth resource:** Subscribers, Users
+  </Card>
+
+  <Card title="Re-engagement Campaigns" icon="envelope">
+    Identify inactive subscribers and send targeted messages.
+
+    **Flow:** Schedule Trigger → OFAuth (Subscriptions → Search) → Filter Inactive → OFAuth (Send Mass Message)
+
+    **OFAuth resource:** Subscriptions, Mass Messages
+  </Card>
+</CardGroup>
+
+## Content Management
+
+<CardGroup cols={2}>
+  <Card title="Cross-Post to Social Media" icon="share-nodes">
+    Automatically share new OnlyFans posts on Twitter, Instagram, or other platforms.
+
+    **Flow:** OFAuth (New Post trigger) → Social Platform (Create Post)
+
+    **OFAuth resource:** Posts
+  </Card>
+
+  <Card title="Content Calendar Sync" icon="calendar">
+    Sync all posts to Airtable, Notion, or Google Sheets for content tracking.
+
+    **Flow:** OFAuth (Posts → Get All) → Spreadsheet/Database (Create Records)
+
+    **OFAuth resource:** Posts
+  </Card>
+
+  <Card title="Analytics Digest" icon="chart-bar">
+    Generate weekly content performance reports from post and story analytics.
+
+    **Flow:** Schedule Trigger → OFAuth (Analytics → Get) → Email/Slack (Send Report)
+
+    **OFAuth resource:** Analytics
+  </Card>
+
+  <Card title="Vault Organization" icon="box-archive">
+    Automatically organize vault media into lists based on metadata or upload date.
+
+    **Flow:** Schedule Trigger → OFAuth (Vault → Get All) → OFAuth (Create Vault List / Add Media to Vault)
+
+    **OFAuth resource:** Vault
+  </Card>
+</CardGroup>
+
+## Promotions & Growth
+
+<CardGroup cols={2}>
+  <Card title="Promotion Tracking" icon="bullhorn">
+    Monitor active promotions and get notified on performance changes.
+
+    **Flow:** OFAuth (Analytics Promotions trigger) → Slack/Sheets (Log)
+
+    **OFAuth resource:** Analytics, Promotions
+  </Card>
+
+  <Card title="Trial Link Distribution" icon="link">
+    Automatically create and share trial links through email or messaging platforms.
+
+    **Flow:** Trigger → OFAuth (Create Trial Link) → Email/DM (Send Link)
+
+    **OFAuth resource:** Promotions
+  </Card>
+
+  <Card title="Tracking Link Analytics" icon="chart-pie">
+    Create tracking links and log click/conversion data for campaign analysis.
+
+    **Flow:** OFAuth (Create Tracking Link) → Spreadsheet (Log) → Schedule Check
+
+    **OFAuth resource:** Promotions
+  </Card>
+</CardGroup>
+
+## Connection Monitoring
+
+<CardGroup cols={2}>
+  <Card title="Connection Status Alerts" icon="signal">
+    Get notified when a connection's status changes (active, expired, etc.).
+
+    **Flow:** OFAuth (Connection Status trigger) → Slack/Email (Alert)
+
+    **OFAuth resource:** Connections
+  </Card>
+
+  <Card title="New Connection Onboarding" icon="plug">
+    Trigger onboarding actions when a new OnlyFans account is connected.
+
+    **Flow:** OFAuth (Connection List trigger) → Multi-step setup actions
+
+    **OFAuth resource:** Connections
+  </Card>
+</CardGroup>
+
+---
+
+## Building Your Own
+
+These patterns are starting points. Both n8n and Zapier support:
+
+- **Conditional logic** — branch workflows based on earnings thresholds, subscriber counts, or any data field
+- **Loops** — process batches of subscribers, posts, or messages
+- **Multi-step flows** — chain multiple OFAuth operations together with other apps
+- **Scheduled triggers** — run workflows hourly, daily, or weekly
+
+<Info>
+  All OFAuth operations require a **Connection ID** to specify which OnlyFans account to access. Use the **Connections** resource to list available connections before building your workflow.
+</Info>

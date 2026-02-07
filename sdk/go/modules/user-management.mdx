@@ -1,0 +1,227 @@
+---
+title: "Users & Profile"
+description: "Manage your creator profile, look up users, handle restrictions, and organize user lists through the OFAuth Go SDK"
+---
+
+## Overview
+
+The Users & Profile modules cover your own creator profile, user lookups, restrictions/blocking, and user list management.
+
+<CardGroup cols={2}>
+  <Card title="Self Profile" icon="user-circle">
+    Get and update your creator profile
+  </Card>
+  <Card title="Users" icon="users">
+    Look up users, search, and manage restrictions
+  </Card>
+</CardGroup>
+
+---
+
+## Self Profile
+
+### Get Creator Profile
+
+Retrieve the authenticated creator's profile information.
+
+```go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+profile, err := client.GetAccessSelf(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("%s (@%s)\n", (*profile)["name"], (*profile)["username"])
+```
+
+### Update Creator Profile
+
+Update your profile information such as display name and bio.
+
+```go
+_, err := client.UpdateAccessSelf(ctx, struct {
+    Name  string `json:"name"`
+    About string `json:"about"`
+}{
+    Name:  "New Display Name",
+    About: "Updated bio information",
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**Permissions:** `profile:read` for get, `profile:write` for update.
+
+---
+
+## Users
+
+### Get User by ID
+
+Retrieve another user's profile by their ID.
+
+```go
+user, err := client.GetAccessUsers(ctx, "987654321")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("%s\n", (*user)["username"])
+```
+
+**Permission required:** `profile:read`
+
+### List Users by IDs
+
+Look up multiple user profiles in a single request (up to 10 IDs).
+
+```go
+result, err := client.GetAccessUsersList(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "userIds": []string{"123,456,789"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### Search Users
+
+Search for performers/users by name or username.
+
+```go
+results, err := client.AccessUsersSearch(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "query": []string{"example"},
+        "limit": []string{"20"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**Permission required:** `profile:read`
+
+---
+
+## Restrictions
+
+### Restrict / Unrestrict a User
+
+Restricted users can still see your profile but cannot interact with your content.
+
+```go
+// Restrict a user
+_, err := client.CreateAccessUsersRestrict(ctx, "987654321")
+
+// Unrestrict a user
+_, err = client.DeleteAccessUsersRestrict(ctx, "987654321")
+```
+
+**Permission required:** `users:write`
+
+### List Restricted Users
+
+```go
+restricted, err := client.GetAccessUsersRestrict(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### List Blocked Users
+
+```go
+blocked, err := client.GetAccessUsersBlocked(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+---
+
+## User Lists
+
+User lists let you organize your fans into groups for targeted messaging and management.
+
+### List User Lists
+
+```go
+lists, err := client.ListAccessUsersLists(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, list := range lists.List {
+    fmt.Println(list.Id, list.Name)
+}
+```
+
+### Create, Update, and Delete User Lists
+
+```go
+// Create a list
+newList, err := client.CreateAccessUsersLists(ctx, struct {
+    Name string `json:"name"`
+}{Name: "VIP Fans"})
+
+// Update a list
+_, err = client.UpdateAccessUsersLists(ctx, "123", struct {
+    Name string `json:"name"`
+}{Name: "Super VIP Fans"})
+
+// Delete a list
+_, err = client.DeleteAccessUsersLists(ctx, "123")
+```
+
+**Permissions:** `lists:read` for listing, `lists:write` for create/update/delete.
+
+### Add and Remove Users from Lists
+
+```go
+// Add a user to a list
+_, err := client.CreateAccessUsersListsUsers(ctx, "123", "987654321")
+
+// Remove a user from a list
+_, err = client.DeleteAccessUsersListsUsers(ctx, "123", "987654321")
+```
+
+### List Users in a List
+
+```go
+listUsers, err := client.ListAccessUsersListsUsers(ctx, "123", &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+---
+
+## Error Handling
+
+All SDK methods return errors. Use type assertion to check for API errors:
+
+```go
+user, err := client.GetAccessUsers(ctx, "999")
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+    } else {
+        log.Fatal(err)
+    }
+}
+```

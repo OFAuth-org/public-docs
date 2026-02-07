@@ -1,0 +1,276 @@
+---
+title: "Content & Media"
+description: "Create posts, manage your vault, and upload media with progress tracking through the OFAuth SDK"
+---
+
+## Overview
+
+The Content & Media modules cover post management, vault media organization, and file uploads with automatic chunking and progress callbacks.
+
+<CardGroup cols={3}>
+  <Card title="Posts" icon="file-text">
+    Create, edit, list, and delete posts
+  </Card>
+  <Card title="Vault" icon="folder">
+    Browse vault media and organize into lists
+  </Card>
+  <Card title="Upload" icon="upload">
+    Upload media with automatic chunking and progress tracking
+  </Card>
+</CardGroup>
+
+---
+
+## Posts
+
+### List Posts
+
+Retrieve your own posts with sorting and filtering.
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+const posts = await client.access.listPosts({
+  limit: 20,
+  sortBy: 'publish_date',
+  sortDirection: 'desc',
+});
+
+for (const post of posts.list) {
+  console.log(post.id, post.text);
+}
+```
+
+### Post Sorting Options
+
+| Sort By | Description |
+|---------|-------------|
+| `publish_date` | Sort by publication date |
+| `tips` | Sort by tip amount received |
+| `favorites_count` | Sort by number of favorites |
+
+### Create a Post
+
+```typescript
+const newPost = await client.access.createPosts({
+  body: {
+    text: 'Check out my new content!',
+    price: 10.00,
+    mediaIds: [12345, 67890],
+  },
+});
+
+console.log('Post created:', newPost.id);
+```
+
+### Get, Edit, and Delete Posts
+
+```typescript
+// Get a post by ID
+const post = await client.access.getPosts({ postId: '12345' });
+console.log(post.text);
+
+// Edit a post
+await client.access.replacePosts({
+  postId: '12345',
+  body: {
+    text: 'Updated post content!',
+    price: 15.00,
+  },
+});
+
+// Delete a post
+await client.access.deletePosts({ postId: '12345' });
+```
+
+---
+
+## Vault
+
+### List Vault Media
+
+Browse media in your vault with filtering and sorting.
+
+```typescript
+const media = await client.access.vault.listMedia({
+  limit: 20,
+  mediaType: 'video',
+  sortBy: 'recent',
+});
+
+for (const item of media.list) {
+  console.log(item.id, item.type);
+}
+```
+
+### Vault Media Filters
+
+| Filter | Values |
+|--------|--------|
+| `mediaType` | `photo`, `video`, `audio`, `gif` |
+| `sortBy` | `recent`, `most-liked`, `highest-tips` |
+| `sortDirection` | `asc`, `desc` |
+| `listId` | Filter by vault list ID |
+
+### Vault Lists
+
+Organize vault media into lists (folders).
+
+```typescript
+// List vault lists
+const lists = await client.access.vault.lists.list({
+  limit: 20,
+});
+
+// Create a vault list
+const newList = await client.access.vault.lists.create({
+  body: { name: 'Exclusive Content' },
+});
+
+// Update a vault list
+await client.access.vault.lists.update({
+  listId: '123',
+  body: { name: 'Premium Content' },
+});
+
+// Delete a vault list
+await client.access.vault.lists.delete({ listId: '123' });
+
+// Add media to a vault list
+await client.access.vault.lists.createMedia({
+  listId: '123',
+  body: { mediaIds: [456, 789] },
+});
+```
+
+---
+
+## Media Upload
+
+The SDK handles the entire upload flow automatically: initializing the upload, chunking large files into parts, uploading each part, and finalizing. Progress callbacks let you track upload progress in real time.
+
+<Note>
+  **Automatic chunking**: Large files are automatically split into parts. Small files use a single-part upload that completes in one request.
+</Note>
+
+### Upload with Progress Tracking
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+// Step 1: Initialize the upload
+const init = await client.access.uploads.init({
+  body: {
+    filename: 'video.mp4',
+    filesize: file.size,
+    mimeType: 'video/mp4',
+  },
+});
+
+console.log('Upload session:', init.mediaUploadId);
+
+// Step 2: Upload the file (single-part for small files)
+const result = await client.access.uploads.replace({
+  mediaUploadId: init.mediaUploadId,
+  body: file,
+});
+
+console.log('Upload complete! Media:', result);
+
+// For large files, use multi-part upload:
+// await client.access.uploads.replaceParts({ mediaUploadId, partNumber: 1, body: chunk1 });
+// await client.access.uploads.replaceParts({ mediaUploadId, partNumber: 2, body: chunk2 });
+// await client.access.uploads.complete({ body: { mediaUploadId } });
+```
+
+### Upload Flow Details
+
+The upload process works in three stages:
+
+1. **Initialize** — `POST /v2/access/uploads/init` returns a `mediaUploadId` and part information
+2. **Upload parts** — For single-part uploads, `PUT /v2/access/uploads/{id}` sends the whole file. For multi-part, `PUT /v2/access/uploads/{id}/parts/{partNumber}` sends each chunk
+3. **Complete** — For multi-part uploads, `POST /v2/access/uploads/complete` finalizes the upload
+
+<Tip>
+  The TypeScript, Python, and Go SDKs handle this entire flow automatically via their high-level upload methods. You only need to call one function.
+</Tip>
+
+---
+
+## Content Workflow Example
+
+A common pattern is uploading media first, then attaching it to a post:
+
+```typescript
+import { createOFAuthClient, OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+try {
+  // 1. Upload media (init + replace for single-part)
+  const init = await client.access.uploads.init({
+    body: {
+      filename: 'video.mp4',
+      filesize: videoFile.size,
+      mimeType: 'video/mp4',
+    },
+  });
+
+  const upload = await client.access.uploads.replace({
+    mediaUploadId: init.mediaUploadId,
+    body: videoFile,
+  });
+
+  // 2. Create post with uploaded media
+  const post = await client.access.createPosts({
+    body: {
+      text: 'New exclusive content!',
+      price: 9.99,
+      mediaIds: [upload.mediaId],
+    },
+  });
+
+  console.log('Post published:', post.id);
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('Failed:', error.status, error.message);
+  } else {
+    throw error;
+  }
+}
+```
+
+---
+
+## Error Handling
+
+```typescript
+import { OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+try {
+  await client.access.createPosts({
+    body: { text: 'Hello world!' },
+  });
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('API Error:', error.status, error.message);
+    console.error('Error code:', error.code);
+    console.error('Details:', error.details);
+  } else {
+    throw error;
+  }
+}
+```

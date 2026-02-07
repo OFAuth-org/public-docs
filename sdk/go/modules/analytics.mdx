@@ -1,0 +1,200 @@
+---
+title: "Earnings & Analytics"
+description: "Access earnings data, transaction history, chargebacks, and content performance analytics"
+---
+
+## Earnings Chart
+
+Get time-series earnings data for a connection. Use `startDate` and `endDate` to specify a date range, and `by` to break down by earning type.
+
+```go
+earnings, err := client.GetAccessEarningsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"total"},
+        "withTotal": []string{"true"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**`by` parameter options:** `total`, `messages`, `tips`, `stream`, `post`, `subscribes`, `tips_profile`, `tips_post`, `tips_chat`, `tips_stream`, `tips_story`, `ref`
+
+## Transactions
+
+List individual earnings transactions, optionally filtered by type.
+
+```go
+transactions, err := client.ListAccessEarningsTransactions(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate":  []string{"2024-01-01"},
+        "type":       []string{"tips"},
+        "tipsSource": []string{"chat"},
+    },
+})
+```
+
+## Chargebacks
+
+List chargeback records with optional date range filtering.
+
+```go
+chargebacks, err := client.ListAccessEarningsChargebacks(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "limit":     []string{"20"},
+    },
+})
+```
+
+---
+
+## Analytics
+
+Content performance analytics are available across multiple categories. Each category offers a **chart** endpoint (time-series data) and a **top** endpoint (ranked content).
+
+<Info>
+  All analytics endpoints require the `analytics:read` permission.
+</Info>
+
+### Posts Analytics
+
+```go
+// Posts chart
+postsChart, err := client.GetAccessAnalyticsPostsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"views"},
+        "withTotal": []string{"true"},
+    },
+})
+
+// Top performing posts
+topPosts, err := client.GetAccessAnalyticsPostsTop(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "by":        []string{"purchases"},
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "limit":     []string{"10"},
+    },
+})
+
+// Stats for a specific post
+postStats, err := client.GetAccessAnalyticsPosts(ctx, "123456")
+```
+
+### Stories Analytics
+
+```go
+storiesChart, err := client.GetAccessAnalyticsStoriesChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"views"},
+    },
+})
+
+topStories, err := client.GetAccessAnalyticsStoriesTop(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "by":        []string{"views"},
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "limit":     []string{"10"},
+    },
+})
+```
+
+### Streams Analytics
+
+```go
+streamsChart, err := client.GetAccessAnalyticsStreamsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"views"},
+    },
+})
+```
+
+### Mass Messages Analytics
+
+```go
+mmChart, err := client.GetAccessAnalyticsMassMessagesChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "withTotal": []string{"true"},
+    },
+})
+
+purchased, err := client.GetAccessAnalyticsMassMessagesPurchased(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+
+buyers, err := client.ListAccessAnalyticsMassMessagesBuyers(ctx, "456", &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+```
+
+### Promotions Analytics
+
+```go
+promoChart, err := client.GetAccessAnalyticsPromotionsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+    },
+})
+```
+
+### Additional Analytics
+
+The SDK also provides analytics for **trials**, **campaigns**, and **visitor countries**:
+
+```go
+// Trials
+trialsChart, err := client.GetAccessAnalyticsTrialsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+    },
+})
+
+// Campaigns
+campaignsChart, err := client.GetAccessAnalyticsCampaignsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+    },
+})
+
+// Visitor countries
+countriesChart, err := client.GetAccessAnalyticsVisitorCountriesChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"total"},
+    },
+})
+```
+
+### Analytics Namespace Reference
+
+| Category | Go Method | C# Path |
+|---|---|---|
+| Posts chart | `client.GetAccessAnalyticsPostsChart()` | `/v2/access/analytics/posts/chart` |
+| Posts top | `client.GetAccessAnalyticsPostsTop()` | `/v2/access/analytics/posts/top` |
+| Post stats | `client.GetAccessAnalyticsPosts()` | `/v2/access/analytics/posts/{id}` |
+| Stories chart | `client.GetAccessAnalyticsStoriesChart()` | `/v2/access/analytics/stories/chart` |
+| Streams chart | `client.GetAccessAnalyticsStreamsChart()` | `/v2/access/analytics/streams/chart` |
+| Mass messages | `client.GetAccessAnalyticsMassMessagesChart()` | `/v2/access/analytics/mass-messages/chart` |
+| Promotions | `client.GetAccessAnalyticsPromotionsChart()` | `/v2/access/analytics/promotions/chart` |
+
+<Warning>
+  When querying large date ranges, use reasonable `limit` values and pagination to avoid timeouts. The `startDate` and `endDate` parameters accept `YYYY-MM-DD` format strings.
+</Warning>

@@ -1,0 +1,92 @@
+---
+title: "Stories"
+description: "Access OnlyFans story data and analytics through the SDK"
+---
+
+## Overview
+
+The OFAuth SDK does not expose dedicated story CRUD endpoints. OnlyFans stories are ephemeral content that auto-expire, and the platform's API surface for stories is limited. However, you can access **story analytics** through the analytics namespace, and reach any story endpoint directly via the **proxy method**.
+
+## Story Analytics
+
+The SDK includes analytics endpoints that return story performance data: view counts, tips, likes, and top-performing stories.
+
+### Story Analytics Chart
+
+```typescript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+try {
+  const chart = await client.access.analytics.stories.getChart({
+    startDate: '2024-01-01',
+    endDate: '2024-01-31',
+    by: 'viewers',
+  });
+
+  console.log('Total views:', chart.total);
+  console.log('Change:', chart.delta);
+  for (const point of chart.chart) {
+    console.log(`${point.date}: ${point.count}`);
+  }
+} catch (error) {
+  console.error('Failed to get story analytics:', error);
+}
+```
+
+### Top Stories
+
+Retrieve your highest-performing stories by a given metric:
+
+```typescript
+const topStories = await client.access.analytics.stories.getTop({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'viewers',
+});
+
+for (const story of topStories.items) {
+  console.log(`Story ${story.id}: ${story.viewersCount} viewers, ${story.likesCount} likes`);
+}
+```
+
+## Accessing Story Endpoints via Proxy
+
+For any OnlyFans story endpoint not covered by the SDK's typed methods, use the proxy to call the API directly:
+
+```typescript
+// Fetch stories for the authenticated user
+const stories = await client.proxy({
+  path: '/stories',
+  method: 'GET',
+  connectionId: 'conn_xxx',
+});
+
+console.log('Stories:', stories);
+
+// Delete a story
+await client.proxy({
+  path: '/stories/123456',
+  method: 'DELETE',
+  connectionId: 'conn_xxx',
+});
+```
+
+<Tip>
+  The proxy method lets you call **any** OnlyFans API endpoint. This is the recommended approach for story creation, deletion, and other operations not yet exposed as typed SDK methods.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Posts" icon="images" href="/sdk/typescript/modules/posts">
+    Manage OnlyFans posts with full CRUD support
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/sdk/typescript/modules/analytics">
+    Explore the complete analytics suite
+  </Card>
+</CardGroup>

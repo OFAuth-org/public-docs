@@ -1,0 +1,216 @@
+---
+title: "Messaging"
+description: "Send direct messages, manage mass campaigns, and retrieve conversations through the OFAuth Go SDK"
+---
+
+## Overview
+
+The Messaging module handles all chat and messaging functionality including direct messages, mass message campaigns, and chat media retrieval.
+
+<CardGroup cols={3}>
+  <Card title="Chats" icon="messages">
+    List conversations and filter by status
+  </Card>
+  <Card title="Direct Messages" icon="message">
+    Send, list, and delete messages in a chat
+  </Card>
+  <Card title="Mass Messages" icon="megaphone">
+    Create and manage mass message campaigns
+  </Card>
+</CardGroup>
+
+**Permissions required:** `messages:read` for listing, `messages:write` for sending/deleting.
+
+---
+
+## Chat List
+
+Retrieve your active conversations with filtering and pagination.
+
+```go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+chats, err := client.ListAccessChats(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit":  []string{"20"},
+        "order":  []string{"recent"},
+        "filter": []string{"unread"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, chat := range chats.List {
+    fmt.Println(chat.WithUser.Username)
+}
+```
+
+### Chat List Filters
+
+| Filter | Description |
+|--------|-------------|
+| `recent` / `old` | Sort by message recency (via `order`) |
+| `priority` | Priority conversations only (via `filter`) |
+| `who_tipped` | Users who have tipped (via `filter`) |
+| `unread` | Unread conversations only (via `filter`) |
+
+You can also filter by `userListId` to show chats only from a specific user list.
+
+### Paginating Chats
+
+<Note>
+  The Go SDK uses manual pagination for chats. Use the `offset` and `limit` query parameters with the `HasMore` flag to page through results.
+</Note>
+
+---
+
+## Messages
+
+### List Messages in a Chat
+
+Retrieve message history with a specific user.
+
+```go
+msgs, err := client.ListAccessChatsMessages(ctx, "123456789", &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit": []string{"50"},
+        "query": []string{"search term"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, msg := range msgs.List {
+    fmt.Println(msg.Text, msg.CreatedAt)
+}
+```
+
+### Send a Message
+
+Send a direct message to a specific user.
+
+```go
+result, err := client.CreateAccessChatsMessages(ctx, "123456789", struct {
+    Text string `json:"text"`
+}{
+    Text: "Hey! Thanks for subscribing!",
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Message sent:", result.Id)
+```
+
+### Delete (Unsend) a Message
+
+```go
+err := client.DeleteAccessChatsMessages(ctx, "123456789", "987654", struct{}{})
+```
+
+---
+
+## Mass Messages
+
+Mass messages let you send a single message to multiple fans at once. They can be sent immediately or scheduled.
+
+### List Mass Messages
+
+```go
+massMsgs, err := client.ListAccessMassMessages(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit": []string{"20"},
+        "type":  []string{"scheduled"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, msg := range massMsgs.List {
+    fmt.Println(msg.Id, msg.Text)
+}
+```
+
+### Create a Mass Message
+
+```go
+massMsg, err := client.CreateAccessMassMessages(ctx, struct {
+    Text     string `json:"text"`
+    MediaIds []int  `json:"mediaIds"`
+}{
+    Text:     "New content available! Check it out!",
+    MediaIds: []int{12345},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Mass message created:", massMsg.Id)
+```
+
+### Get, Update, and Delete Mass Messages
+
+```go
+// Get a specific mass message
+msg, err := client.GetAccessMassMessages(ctx, "456")
+
+// Update a mass message
+_, err = client.ReplaceAccessMassMessages(ctx, "456", struct {
+    Text string `json:"text"`
+}{
+    Text: "Updated message text",
+})
+
+// Delete a mass message
+_, err = client.DeleteAccessMassMessages(ctx, "456")
+```
+
+---
+
+## Chat Media
+
+Retrieve media shared in a chat conversation. Filter by type to get only photos, videos, or audio.
+
+```go
+media, err := client.ListAccessChatsMedia(ctx, "123456789", &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit": []string{"20"},
+        "type":  []string{"photos"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, item := range media.List {
+    fmt.Println(item.Id, item.Type)
+}
+```
+
+---
+
+## Error Handling
+
+All SDK methods return errors. Use type assertion to check for API errors:
+
+```go
+result, err := client.CreateAccessChatsMessages(ctx, "123456789", struct {
+    Text string `json:"text"`
+}{Text: "Hello!"})
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+    } else {
+        log.Fatal(err)
+    }
+}
+```
+
+<Warning>
+  **Rate Limiting**: OnlyFans has rate limits for messaging. Space out bulk operations and handle `429` status codes with appropriate backoff.
+</Warning>

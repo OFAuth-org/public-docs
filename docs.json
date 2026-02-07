@@ -32,6 +32,24 @@
     "items": "border"
   },
   "navigation": {
+    "versions": [
+      {
+        "version": "TypeScript",
+        "default": true
+      },
+      {
+        "version": "Python"
+      },
+      {
+        "version": "Go"
+      },
+      {
+        "version": "C#"
+      },
+      {
+        "version": "No-Code"
+      }
+    ],
     "global": {
       "anchors": [
         {
@@ -526,59 +544,307 @@
           }
         ]
       },
-      {
-        "tab": "SDK",
-        "icon": "code",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket",
-            "pages": [
-              "sdk/index",
-              "sdk/quickstart"
-            ]
-          },
-          {
-            "group": "Core Concepts",
-            "icon": "cube",
-            "pages": [
-              "sdk/core-concepts/architecture",
-              "sdk/core-concepts/authentication",
-              "sdk/core-concepts/configuration"
-            ]
-          },
-          {
-            "group": "API Modules",
-            "icon": "puzzle-piece",
-            "pages": [
-              {
-                "group": "Authentication",
-                "icon": "key",
-                "pages": [
-                  "sdk/modules/authentication/link-authentication",
-                  "sdk/modules/authentication/link-connections"
-                ]
-              },
-              "sdk/modules/user-management",
-              "sdk/modules/messaging",
-              "sdk/modules/content-management",
-              "sdk/modules/stories",
-              "sdk/modules/account",
-              "sdk/modules/analytics",
-              "sdk/modules/subscriptions"
-            ]
-          },
-          {
-            "group": "Advanced",
-            "icon": "gears",
-            "pages": [
-              "sdk/advanced/error-handling"
-            ]
-          }
-        ]
-      }
+       {
+         "tab": "SDK",
+         "icon": "code",
+         "version": "TypeScript",
+         "groups": [
+           {
+             "group": "Getting Started",
+             "icon": "rocket",
+             "pages": [
+               "sdk/typescript/index",
+               "sdk/typescript/quickstart"
+             ]
+           },
+           {
+             "group": "Core Concepts",
+             "icon": "cube",
+             "pages": [
+               "sdk/typescript/core-concepts/architecture",
+               "sdk/typescript/core-concepts/authentication",
+               "sdk/typescript/core-concepts/configuration"
+             ]
+           },
+           {
+             "group": "API Modules",
+             "icon": "puzzle-piece",
+             "pages": [
+               {
+                 "group": "Authentication",
+                 "icon": "key",
+                 "pages": [
+                   "sdk/typescript/modules/authentication/link-authentication",
+                   "sdk/typescript/modules/authentication/link-connections"
+                 ]
+               },
+               "sdk/typescript/modules/user-management",
+               "sdk/typescript/modules/messaging",
+               "sdk/typescript/modules/content-management",
+               "sdk/typescript/modules/stories",
+               "sdk/typescript/modules/account",
+               "sdk/typescript/modules/analytics",
+               "sdk/typescript/modules/subscriptions"
+             ]
+           },
+           {
+             "group": "Advanced",
+             "icon": "gears",
+             "pages": [
+               "sdk/typescript/advanced/error-handling"
+             ]
+           }
+         ]
+       },
+       {
+         "tab": "SDK",
+         "icon": "code",
+         "version": "Python",
+         "groups": [
+           {
+             "group": "Getting Started",
+             "icon": "rocket",
+             "pages": [
+               "sdk/python/index",
+               "sdk/python/quickstart"
+             ]
+           },
+           {
+             "group": "Core Concepts",
+             "icon": "cube",
+             "pages": [
+               "sdk/python/core-concepts/architecture",
+               "sdk/python/core-concepts/authentication",
+               "sdk/python/core-concepts/configuration"
+             ]
+           },
+           {
+             "group": "API Modules",
+             "icon": "puzzle-piece",
+             "pages": [
+               {
+                 "group": "Authentication",
+                 "icon": "key",
+                 "pages": [
+                   "sdk/python/modules/authentication/link-authentication",
+                   "sdk/python/modules/authentication/link-connections"
+                 ]
+               },
+               "sdk/python/modules/user-management",
+               "sdk/python/modules/messaging",
+               "sdk/python/modules/content-management",
+               "sdk/python/modules/stories",
+               "sdk/python/modules/account",
+               "sdk/python/modules/analytics",
+               "sdk/python/modules/subscriptions"
+             ]
+           },
+           {
+             "group": "Advanced",
+             "icon": "gears",
+             "pages": [
+               "sdk/python/advanced/error-handling"
+             ]
+           }
+         ]
+       },
+       {
+         "tab": "SDK",
+         "icon": "code",
+         "version": "Go",
+         "groups": [
+           {
+             "group": "Getting Started",
+             "icon": "rocket",
+             "pages": [
+               "sdk/go/index",
+               "sdk/go/quickstart"
+             ]
+           },
+           {
+             "group": "Core Concepts",
+             "icon": "cube",
+             "pages": [
+               "sdk/go/core-concepts/architecture",
+               "sdk/go/core-concepts/authentication",
+               "sdk/go/core-concepts/configuration"
+             ]
+           },
+           {
+             "group": "API Modules",
+             "icon": "puzzle-piece",
+             "pages": [
+               {
+                 "group": "Authentication",
+                 "icon": "key",
+                 "pages": [
+                   "sdk/go/modules/authentication/link-authentication",
+                   "sdk/go/modules/authentication/link-connections"
+                 ]
+               },
+               "sdk/go/modules/user-management",
+               "sdk/go/modules/messaging",
+               "sdk/go/modules/content-management",
+               "sdk/go/modules/stories",
+               "sdk/go/modules/account",
+               "sdk/go/modules/analytics",
+               "sdk/go/modules/subscriptions"
+             ]
+           },
+           {
+             "group": "Advanced",
+             "icon": "gears",
+             "pages": [
+               "sdk/go/advanced/error-handling"
+             ]
+           }
+         ]
+       },
+       {
+         "tab": "SDK",
+         "icon": "code",
+         "version": "C#",
+         "groups": [
+           {
+             "group": "Getting Started",
+             "icon": "rocket",
+             "pages": [
+               "sdk/csharp/index",
+               "sdk/csharp/quickstart"
+             ]
+           },
+           {
+             "group": "Core Concepts",
+             "icon": "cube",
+             "pages": [
+               "sdk/csharp/core-concepts/architecture",
+               "sdk/csharp/core-concepts/authentication",
+               "sdk/csharp/core-concepts/configuration"
+             ]
+           },
+           {
+             "group": "API Modules",
+             "icon": "puzzle-piece",
+             "pages": [
+               {
+                 "group": "Authentication",
+                 "icon": "key",
+                 "pages": [
+                   "sdk/csharp/modules/authentication/link-authentication",
+                   "sdk/csharp/modules/authentication/link-connections"
+                 ]
+               },
+               "sdk/csharp/modules/user-management",
+               "sdk/csharp/modules/messaging",
+               "sdk/csharp/modules/content-management",
+               "sdk/csharp/modules/stories",
+               "sdk/csharp/modules/account",
+               "sdk/csharp/modules/analytics",
+               "sdk/csharp/modules/subscriptions"
+             ]
+           },
+           {
+             "group": "Advanced",
+             "icon": "gears",
+             "pages": [
+               "sdk/csharp/advanced/error-handling"
+             ]
+           }
+         ]
+       },
+       {
+         "tab": "SDK",
+         "icon": "code",
+         "version": "No-Code",
+         "groups": [
+           {
+             "group": "Overview",
+             "icon": "rocket",
+             "pages": [
+               "sdk/no-code/index"
+             ]
+           },
+           {
+             "group": "Integrations",
+             "icon": "puzzle-piece",
+             "pages": [
+               "sdk/no-code/n8n",
+               "sdk/no-code/zapier"
+             ]
+           },
+           {
+             "group": "Automation",
+             "icon": "robot",
+             "pages": [
+               "sdk/no-code/workflows"
+             ]
+           }
+         ]
+       }
     ]
   },
+  "redirects": [
+    {
+      "source": "/sdk/index",
+      "destination": "/sdk/typescript/index"
+    },
+    {
+      "source": "/sdk/quickstart",
+      "destination": "/sdk/typescript/quickstart"
+    },
+    {
+      "source": "/sdk/core-concepts/architecture",
+      "destination": "/sdk/typescript/core-concepts/architecture"
+    },
+    {
+      "source": "/sdk/core-concepts/authentication",
+      "destination": "/sdk/typescript/core-concepts/authentication"
+    },
+    {
+      "source": "/sdk/core-concepts/configuration",
+      "destination": "/sdk/typescript/core-concepts/configuration"
+    },
+    {
+      "source": "/sdk/modules/account",
+      "destination": "/sdk/typescript/modules/account"
+    },
+    {
+      "source": "/sdk/modules/analytics",
+      "destination": "/sdk/typescript/modules/analytics"
+    },
+    {
+      "source": "/sdk/modules/content-management",
+      "destination": "/sdk/typescript/modules/content-management"
+    },
+    {
+      "source": "/sdk/modules/messaging",
+      "destination": "/sdk/typescript/modules/messaging"
+    },
+    {
+      "source": "/sdk/modules/stories",
+      "destination": "/sdk/typescript/modules/stories"
+    },
+    {
+      "source": "/sdk/modules/subscriptions",
+      "destination": "/sdk/typescript/modules/subscriptions"
+    },
+    {
+      "source": "/sdk/modules/user-management",
+      "destination": "/sdk/typescript/modules/user-management"
+    },
+    {
+      "source": "/sdk/modules/authentication/link-authentication",
+      "destination": "/sdk/typescript/modules/authentication/link-authentication"
+    },
+    {
+      "source": "/sdk/modules/authentication/link-connections",
+      "destination": "/sdk/typescript/modules/authentication/link-connections"
+    },
+    {
+      "source": "/sdk/advanced/error-handling",
+      "destination": "/sdk/typescript/advanced/error-handling"
+    }
+  ],
   "footer": {
     "socials": {
       "telegram": "https://t.me/ofauth",

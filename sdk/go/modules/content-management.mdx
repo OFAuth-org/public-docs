@@ -1,0 +1,227 @@
+---
+title: "Content & Media"
+description: "Create posts, manage your vault, and upload media with progress tracking through the OFAuth Go SDK"
+---
+
+## Overview
+
+The Content & Media modules cover post management, vault media organization, and file uploads with automatic chunking and progress callbacks.
+
+<CardGroup cols={3}>
+  <Card title="Posts" icon="file-text">
+    Create, edit, list, and delete posts
+  </Card>
+  <Card title="Vault" icon="folder">
+    Browse vault media and organize into lists
+  </Card>
+  <Card title="Upload" icon="upload">
+    Upload media with automatic chunking and progress tracking
+  </Card>
+</CardGroup>
+
+---
+
+## Posts
+
+### List Posts
+
+Retrieve your own posts with sorting and filtering.
+
+```go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+myPosts, err := client.ListAccessPosts(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit":         []string{"20"},
+        "sortBy":        []string{"publish_date"},
+        "sortDirection": []string{"desc"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, post := range myPosts.List {
+    fmt.Printf("Post %d: %s\n", post.Id, post.Text)
+}
+```
+
+### Post Sorting Options
+
+| Sort By | Description |
+|---------|-------------|
+| `publish_date` | Sort by publication date |
+| `tips` | Sort by tip amount received |
+| `favorites_count` | Sort by number of favorites |
+
+### Create a Post
+
+```go
+newPost, err := client.CreateAccessPosts(ctx, struct {
+    Text     string  `json:"text"`
+    Price    float64 `json:"price"`
+    MediaIds []int   `json:"mediaIds"`
+}{
+    Text:     "Check out my new content!",
+    Price:    10.00,
+    MediaIds: []int{12345, 67890},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Post created:", newPost.Id)
+```
+
+### Get, Edit, and Delete Posts
+
+```go
+// Get a post by ID
+post, err := client.GetAccessPosts(ctx, "12345")
+
+// Edit a post
+_, err = client.ReplaceAccessPosts(ctx, "12345", struct {
+    Text  string  `json:"text"`
+    Price float64 `json:"price"`
+}{
+    Text:  "Updated post content!",
+    Price: 15.00,
+})
+
+// Delete a post
+_, err = client.DeleteAccessPosts(ctx, "12345")
+```
+
+---
+
+## Vault
+
+### List Vault Media
+
+Browse media in your vault with filtering and sorting.
+
+```go
+media, err := client.ListAccessVaultMedia(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit":     []string{"20"},
+        "mediaType": []string{"video"},
+        "sortBy":    []string{"recent"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, item := range media.List {
+    fmt.Println(item.Id, item.Type)
+}
+```
+
+### Vault Media Filters
+
+| Filter | Values |
+|--------|--------|
+| `mediaType` | `photo`, `video`, `audio`, `gif` |
+| `sortBy` | `recent`, `most-liked`, `highest-tips` |
+| `sortDirection` | `asc`, `desc` |
+| `listId` | Filter by vault list ID |
+
+### Vault Lists
+
+Organize vault media into lists (folders).
+
+```go
+// List vault lists
+lists, err := client.ListAccessVaultLists(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+
+// Create a vault list
+newList, err := client.CreateAccessVaultLists(ctx, struct {
+    Name string `json:"name"`
+}{Name: "Exclusive Content"})
+
+// Update a vault list
+_, err = client.UpdateAccessVaultLists(ctx, "123", struct {
+    Name string `json:"name"`
+}{Name: "Premium Content"})
+
+// Delete a vault list
+_, err = client.DeleteAccessVaultLists(ctx, "123")
+
+// Add media to a vault list
+_, err = client.CreateAccessVaultListsMedia(ctx, "123", struct {
+    MediaIds []int `json:"mediaIds"`
+}{MediaIds: []int{456, 789}})
+```
+
+---
+
+## Media Upload
+
+The SDK handles the entire upload flow automatically: initializing the upload, chunking large files into parts, uploading each part, and finalizing. Progress callbacks let you track upload progress in real time.
+
+<Note>
+  **Automatic chunking**: Large files are automatically split into parts. Small files use a single-part upload that completes in one request.
+</Note>
+
+### Upload with Progress Tracking
+
+```go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key")
+
+data, err := os.ReadFile("video.mp4")
+if err != nil {
+    log.Fatal(err)
+}
+
+file := bytes.NewReader(data)
+filesize := int64(len(data))
+
+result, err := client.UploadMedia(ctx, file, filesize, &ofauth.UploadConfig{
+    ConnectionID: "conn_xxx",
+    Filename:     "video.mp4",
+    MimeType:     "video/mp4",
+    OnProgress: func(uploaded, total int64) {
+        percent := float64(uploaded) / float64(total) * 100
+        fmt.Printf("Upload progress: %.1f%%\n", percent)
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Upload complete! Media: %v\n", result.Media)
+```
+
+### Upload Flow Details
+
+The upload process works in three stages:
+
+1. **Initialize** — `POST /v2/access/uploads/init` returns a `mediaUploadId` and part information
+2. **Upload parts** — For single-part uploads, `PUT /v2/access/uploads/{id}` sends the whole file. For multi-part, `PUT /v2/access/uploads/{id}/parts/{partNumber}` sends each chunk
+3. **Complete** — For multi-part uploads, `POST /v2/access/uploads/complete` finalizes the upload
+
+<Tip>
+  The Go SDK handles this entire flow automatically via the `UploadMedia` method. You only need to call one function.
+</Tip>
+
+---
+
+## Error Handling
+
+```go
+_, err := client.CreateAccessPosts(ctx, struct {
+    Text string `json:"text"`
+}{Text: "Hello world!"})
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+    } else {
+        log.Fatal(err)
+    }
+}
+```

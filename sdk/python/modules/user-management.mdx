@@ -1,0 +1,216 @@
+---
+title: "Users & Profile"
+description: "Manage your creator profile, look up users, handle restrictions, and organize user lists through the OFAuth Python SDK"
+---
+
+## Overview
+
+The Users & Profile modules cover your own creator profile, user lookups, restrictions/blocking, and user list management.
+
+<CardGroup cols={2}>
+  <Card title="Self Profile" icon="user-circle">
+    Get and update your creator profile
+  </Card>
+  <Card title="Users" icon="users">
+    Look up users, search, and manage restrictions
+  </Card>
+</CardGroup>
+
+---
+
+## Self Profile
+
+### Get Creator Profile
+
+Retrieve the authenticated creator's profile information.
+
+```python
+from onlyfans_sdk import OFAuthClient
+from onlyfans_sdk import self as self_module  # 'self' is a Python keyword
+
+client = OFAuthClient(api_key="your-api-key", connection_id="conn_xxx")
+
+profile = self_module.list_selfs(client)
+print(f"{profile['name']} (@{profile['username']})")
+print(f"Subscribers: {profile['subscribersCount']}")
+```
+
+### Update Creator Profile
+
+Update your profile information such as display name and bio.
+
+```python
+self_module.update_self(
+    client,
+    body={
+        "name": "New Display Name",
+        "about": "Updated bio information",
+    },
+)
+```
+
+**Permissions:** `profile:read` for get, `profile:write` for update.
+
+---
+
+## Users
+
+### Get User by ID
+
+Retrieve another user's profile by their ID.
+
+```python
+from onlyfans_sdk import users
+
+user = users.get_users(client, user_id="987654321")
+print(f"{user['name']} (@{user['username']})")
+```
+
+**Permission required:** `profile:read`
+
+### List Users by IDs
+
+Look up multiple user profiles in a single request (up to 10 IDs).
+
+```python
+result = users.list_lists(client, user_ids="123,456,789")
+
+for user in result:
+    print(user["id"], user["username"])
+```
+
+### Search Users
+
+Search for performers/users by name or username.
+
+```python
+results = users.list_searchs(client, query="example", limit=20)
+
+for user in results["list"]:
+    print(user["username"])
+```
+
+**Permission required:** `profile:read`
+
+---
+
+## Restrictions
+
+### Restrict / Unrestrict a User
+
+Restricted users can still see your profile but cannot interact with your content.
+
+```python
+# Restrict a user
+users.create_restrict(client, user_id="987654321")
+
+# Unrestrict a user
+users.delete_restrict(client, user_id="987654321")
+```
+
+**Permission required:** `users:write`
+
+### List Restricted Users
+
+```python
+restricted = users.list_restricts(client, limit=20)
+
+for user in restricted["list"]:
+    print(user["username"])
+```
+
+### List Blocked Users
+
+```python
+blocked = users.list_blockeds(client, limit=20)
+
+for user in blocked["list"]:
+    print(user["username"])
+```
+
+---
+
+## User Lists
+
+User lists let you organize your fans into groups for targeted messaging and management.
+
+### List User Lists
+
+```python
+from onlyfans_sdk import user_lists
+
+lists = user_lists.list_users_users_lists(client, limit=20)
+
+for lst in lists["list"]:
+    print(lst["id"], lst["name"])
+```
+
+### Create, Update, and Delete User Lists
+
+```python
+# Create a list
+new_list = user_lists.create_users_users_lists(
+    client,
+    body={"name": "VIP Fans"},
+)
+print("Created list:", new_list["id"])
+
+# Update a list
+user_lists.update_users_users_lists(
+    client,
+    list_id="123",
+    body={"name": "Super VIP Fans"},
+)
+
+# Delete a list
+user_lists.delete_users_users_lists(client, list_id="123")
+```
+
+**Permissions:** `lists:read` for listing, `lists:write` for create/update/delete.
+
+### Add and Remove Users from Lists
+
+```python
+# Add a user to a list
+user_lists.create_users_lists_users(
+    client,
+    list_id="123",
+    user_id="987654321",
+)
+
+# Remove a user from a list
+user_lists.delete_users_lists_users(
+    client,
+    list_id="123",
+    user_id="987654321",
+)
+```
+
+### List Users in a List
+
+```python
+list_users = user_lists.list_users_lists_users(
+    client,
+    list_id="123",
+    limit=20,
+)
+
+for user in list_users["list"]:
+    print(user["username"])
+```
+
+---
+
+## Error Handling
+
+Use try/except to handle API errors:
+
+```python
+from onlyfans_sdk import OFAuthError
+
+try:
+    user = users.get_users(client, user_id="999")
+except OFAuthError as e:
+    print(f"API Error {e.status}: {e}")
+    print(f"Error code: {e.code}")
+```

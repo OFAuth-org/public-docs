@@ -1,0 +1,221 @@
+---
+title: "Users & Profile"
+description: "Manage your creator profile, look up users, handle restrictions, and organize user lists through the OFAuth SDK"
+---
+
+## Overview
+
+The Users & Profile modules cover your own creator profile, user lookups, restrictions/blocking, and user list management.
+
+<CardGroup cols={2}>
+  <Card title="Self Profile" icon="user-circle">
+    Get and update your creator profile
+  </Card>
+  <Card title="Users" icon="users">
+    Look up users, search, and manage restrictions
+  </Card>
+</CardGroup>
+
+---
+
+## Self Profile
+
+### Get Creator Profile
+
+Retrieve the authenticated creator's profile information.
+
+```csharp
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
+
+var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+Console.WriteLine($"{profile.Name} (@{profile.Username})");
+Console.WriteLine($"Subscribers: {profile.SubscribersCount}");
+```
+
+### Update Creator Profile
+
+Update your profile information such as display name and bio.
+
+```csharp
+await client.PatchAsync<SelfResponse>(
+    "/v2/access/self",
+    body: new
+    {
+        name = "New Display Name",
+        about = "Updated bio information"
+    }
+);
+```
+
+**Permissions:** `profile:read` for get, `profile:write` for update.
+
+---
+
+## Users
+
+### Get User by ID
+
+Retrieve another user's profile by their ID.
+
+```csharp
+var user = await client.GetAsync<UserResponse>("/v2/access/users/987654321");
+Console.WriteLine($"{user.Name} (@{user.Username})");
+```
+
+**Permission required:** `profile:read`
+
+### List Users by IDs
+
+Look up multiple user profiles in a single request (up to 10 IDs).
+
+```csharp
+var result = await client.GetAsync<List<UserResponse>>(
+    "/v2/access/users/list",
+    query: new Dictionary<string, string?> { ["userIds"] = "123,456,789" }
+);
+
+foreach (var user in result)
+{
+    Console.WriteLine($"{user.Id}: {user.Username}");
+}
+```
+
+### Search Users
+
+Search for performers/users by name or username.
+
+```csharp
+var results = await client.GetAsync<UsersSearchResponse>(
+    "/v2/access/users/search",
+    query: new Dictionary<string, string?>
+    {
+        ["query"] = "example",
+        ["limit"] = "20"
+    }
+);
+
+foreach (var user in results.List)
+{
+    Console.WriteLine(user.Username);
+}
+```
+
+**Permission required:** `profile:read`
+
+---
+
+## Restrictions
+
+### Restrict / Unrestrict a User
+
+Restricted users can still see your profile but cannot interact with your content.
+
+```csharp
+// Restrict a user
+await client.PostAsync<object>("/v2/access/users/987654321/restrict");
+
+// Unrestrict a user
+await client.DeleteAsync<object>("/v2/access/users/987654321/restrict");
+```
+
+**Permission required:** `users:write`
+
+### List Restricted Users
+
+```csharp
+var restricted = await client.GetAsync<UsersRestrictResponse>(
+    "/v2/access/users/restrict",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+
+### List Blocked Users
+
+```csharp
+var blocked = await client.GetAsync<UsersBlockedResponse>(
+    "/v2/access/users/blocked",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+
+---
+
+## User Lists
+
+User lists let you organize your fans into groups for targeted messaging and management.
+
+### List User Lists
+
+```csharp
+var lists = await client.GetAsync<UsersListsResponse>(
+    "/v2/access/users/lists",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+
+foreach (var list in lists.List)
+{
+    Console.WriteLine($"{list.Id}: {list.Name}");
+}
+```
+
+### Create, Update, and Delete User Lists
+
+```csharp
+// Create a list
+var newList = await client.PostAsync<UserListResponse>(
+    "/v2/access/users/lists",
+    body: new { name = "VIP Fans" }
+);
+Console.WriteLine($"Created list: {newList.Id}");
+
+// Update a list
+await client.PatchAsync<UserListResponse>(
+    "/v2/access/users/lists/123",
+    body: new { name = "Super VIP Fans" }
+);
+
+// Delete a list
+await client.DeleteAsync<object>("/v2/access/users/lists/123");
+```
+
+**Permissions:** `lists:read` for listing, `lists:write` for create/update/delete.
+
+### Add and Remove Users from Lists
+
+```csharp
+// Add a user to a list
+await client.PostAsync<object>("/v2/access/users/lists/123/users/987654321");
+
+// Remove a user from a list
+await client.DeleteAsync<object>("/v2/access/users/lists/123/users/987654321");
+```
+
+### List Users in a List
+
+```csharp
+var listUsers = await client.GetAsync<UsersListUsersResponse>(
+    "/v2/access/users/lists/123/users",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+
+---
+
+## Error Handling
+
+All SDKs throw exceptions on API errors. Use try/catch to handle them:
+
+```csharp
+try
+{
+    var user = await client.GetAsync<UserResponse>("/v2/access/users/999");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"API Error {ex.Status}: {ex.Message}");
+    Console.WriteLine($"Error code: {ex.Code}");
+}
+```

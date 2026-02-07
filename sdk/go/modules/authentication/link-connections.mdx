@@ -1,0 +1,210 @@
+---
+title: "Connection Management"
+description: "List, monitor, import, and manage OnlyFans connections"
+---
+
+## Overview
+
+Connections represent authenticated OnlyFans accounts linked to your organization. After a user completes the [Link flow](/sdk/go/modules/authentication/link-authentication), you receive a connection ID (`conn_xxx`) that you use for all Access API calls. This page covers managing those connections.
+
+## List Connections
+
+Retrieve all connections with optional filters for status, import type, and pagination.
+
+```go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key")
+
+// List all connections
+connections, err := client.ListAccountConnections(ctx, nil)
+if err != nil {
+    log.Fatal(err)
+}
+for _, conn := range connections.List {
+    fmt.Printf("%s: %s (%s)\n", conn.Id, conn.UserData.Username, conn.Status)
+}
+
+// Filter by status
+active, err := client.ListAccountConnections(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "status": []string{"active"},
+        "limit":  []string{"10"},
+    },
+})
+```
+
+### Query Parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `status` | `"active"` \| `"expired"` \| `"awaiting_2fa"` | Filter by connection status |
+| `imported` | `"true"` \| `"false"` | Filter by whether connection was imported |
+| `limit` | `number` | Items per page (default 20) |
+| `offset` | `number` | Number of items to skip |
+
+## Pagination
+
+### Manual Pagination
+
+```go
+offset := 0
+limit := 20
+
+for {
+    connections, err := client.ListAccountConnections(ctx, &ofauth.RequestOptions{
+        Query: url.Values{
+            "limit":  []string{fmt.Sprintf("%d", limit)},
+            "offset": []string{fmt.Sprintf("%d", offset)},
+        },
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, conn := range connections.List {
+        fmt.Printf("%s: %s\n", conn.Id, conn.UserData.Username)
+    }
+
+    if !connections.HasMore {
+        break
+    }
+    offset += len(connections.List)
+}
+```
+
+## Connection Settings
+
+Each connection has settings you can read and update, including vault cache configuration.
+
+### Get Settings
+
+```go
+settings, err := client.GetAccountConnectionsSettings(ctx, "conn_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Vault cache enabled:", settings.VaultCache.Enabled)
+```
+
+### Update Settings
+
+```go
+updated, err := client.UpdateAccountConnectionsSettings(ctx, "conn_xxx", struct {
+    VaultCache *struct {
+        Enabled  *bool       `json:"enabled,omitempty"`
+        Settings interface{} `json:"settings,omitempty"`
+    } `json:"vaultCache,omitempty"`
+}{
+    VaultCache: &struct {
+        Enabled  *bool       `json:"enabled,omitempty"`
+        Settings interface{} `json:"settings,omitempty"`
+    }{
+        Enabled: boolPtr(true),
+        Settings: map[string]interface{}{
+            "autoCacheVault": true,
+            "cacheImages":    true,
+            "cacheVideos":    true,
+        },
+    },
+})
+```
+
+## Delete Connection
+
+Permanently disconnect an account. This logs the user out and stops billing for the connection.
+
+```go
+_, err := client.DeleteAccountConnections(ctx, "conn_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Connection deleted")
+```
+
+<Warning>
+  Deleting a connection is permanent. The user must re-authenticate through Link to restore access.
+</Warning>
+
+## Invalidate Connection
+
+Mark a connection as expired without deleting it. The connection record is preserved, allowing the user to reconnect with updated permissions.
+
+```go
+_, err := client.AccountConnectionsInvalidate(ctx, "conn_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Connection invalidated — user must re-authenticate")
+```
+
+### Invalidate vs Delete
+
+| | Invalidate | Delete |
+| --- | --- | --- |
+| Connection record | Preserved | Removed |
+| User can reconnect | Yes, with same connection ID | Must create new connection |
+| Use case | Force re-auth, update permissions | Full disconnect, stop billing |
+
+## Import Connection
+
+Import an externally managed OnlyFans session. Imported connections are not billed monthly and are not health-checked. They can be used through the Access API immediately.
+
+```go
+cookie := "sess=your_session; auth_id=12345; auth_uid_12345=xxx"
+userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+imported, err := client.CreateAccountConnectionsImport(ctx, struct {
+    Cookie            string   `json:"cookie"`
+    UserAgent         string   `json:"userAgent"`
+    Permissions       []string `json:"permissions,omitempty"`
+    ClientReferenceId *string  `json:"clientReferenceId,omitempty"`
+}{
+    Cookie:      cookie,
+    UserAgent:   userAgent,
+    Permissions: []string{"profile:read", "posts:read", "messages:read"},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Imported connection:", imported.Id)
+fmt.Println("Status:", imported.Status)
+fmt.Println("User:", imported.UserData.Username)
+```
+
+### Update Imported Session
+
+Refresh an imported connection's session data without deleting and re-importing:
+
+```go
+updated, err := client.UpdateAccountConnectionsImport(ctx, "conn_xxx", struct {
+    Cookie    string `json:"cookie"`
+    UserAgent string `json:"userAgent"`
+}{
+    Cookie:    "sess=new_session; auth_id=12345; auth_uid_12345=yyy",
+    UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+})
+```
+
+<Info>
+  The new session must belong to the **same OnlyFans user** (matched by user ID from the cookie). This preserves the connection ID across session refreshes.
+</Info>
+
+## Connection Statuses
+
+| Status | Description |
+| --- | --- |
+| `active` | Connection is valid and can be used for API calls |
+| `expired` | Session has expired — user needs to re-authenticate via Link |
+| `awaiting_2fa` | Waiting for 2FA verification to complete |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Access API" icon="database" href="/sdk/go/modules/content-management">
+    Use connection IDs to fetch OnlyFans data
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
+    Get notified when connections expire or change status
+  </Card>
+</CardGroup>
