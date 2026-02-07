@@ -1,0 +1,121 @@
+---
+title: "Link Embed"
+sidebarTitle: "Link Embed"
+description: "Drop-in popup component for OnlyFans account authentication"
+---
+
+The Link Embed is a JavaScript library that opens OFAuth's authentication flow in a popup window, keeping users in your app.
+
+<Info>
+  **Package:** `@ofauth/link-embed` — available via npm or CDN.
+</Info>
+
+## Installation
+
+<CodeGroup>
+  ```bash npm
+  npm install @ofauth/link-embed
+  ```
+
+  ```html CDN
+  <script
+    src="https://unpkg.com/@ofauth/link-embed/dist/embed.global.js"
+    defer
+    data-auto-init
+  ></script>
+  ```
+</CodeGroup>
+
+## JavaScript Usage
+
+```javascript
+import { OFAuthLinkEmbed } from '@ofauth/link-embed';
+
+const handler = OFAuthLinkEmbed.create({
+  theme: 'auto',
+  async onSuccess(metadata) {
+    console.log('Connected:', metadata.connection.id);
+    await storeConnection(metadata.connection.id);
+  },
+  onClose(metadata) {
+    console.log('Closed:', metadata.type);
+  },
+  async onInvalidSession() {
+    const response = await fetch("/api/create-link-session");
+    const { url } = await response.json();
+    handler.open(url);
+  }
+});
+
+// Open the authentication popup
+async function connectOnlyFans() {
+  const response = await fetch("/api/create-link-session");
+  const { url } = await response.json();
+  handler.open(url);
+}
+```
+
+## Configuration
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `theme` | `'light' \| 'dark' \| 'auto'` | Theme for the popup (default: `'auto'`) |
+| `onSuccess` | `(metadata) => void` | Called when authentication succeeds |
+| `onClose` | `(metadata) => void` | Called when user closes the popup |
+| `onInvalidSession` | `() => void` | Called when the session expires |
+
+## Success Metadata
+
+```typescript
+interface SuccessMetadata {
+  successUrl: string;
+  connection: {
+    id: string;         // Connection ID to store
+    userData: {
+      id: string;
+      name: string;
+      username: string;
+      avatar: string;
+    };
+  };
+}
+```
+
+## No-Build Usage
+
+For sites without a build step, use the global script with `data-` attributes:
+
+```html
+<a
+  data-ofauth-link
+  href="https://link.ofauth.com/cs_xxxxxxxxx"
+  data-ofauth-theme="auto"
+>
+  Connect OnlyFans Account
+</a>
+
+<script
+  src="https://unpkg.com/@ofauth/link-embed/dist/embed.global.js"
+  defer
+  data-auto-init
+></script>
+
+<script>
+  document.querySelector('[data-ofauth-link]')
+    .addEventListener('success', (e) => {
+      console.log('Connected:', e.detail.metadata.connection.id);
+    });
+</script>
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Link Guide" icon="link" href="/guides/link">
+    Full guide covering hosted mode, redirect flow, and embed mode.
+  </Card>
+
+  <Card title="Link API" icon="terminal" href="/api-reference/link/overview">
+    API reference for creating and managing Link sessions.
+  </Card>
+</CardGroup>
