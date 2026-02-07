@@ -1,527 +1,340 @@
 ---
-title: "Link Authentication (Enterprise)"
-description: "Enterprise SDK methods for programmatic authentication - requires approval"
+title: "Link Authentication"
+description: "Connect OnlyFans accounts using the OFAuth Link flow"
 ---
 
 ## Overview
 
-<Warning>
-  **Enterprise Feature**: The programmatic Link authentication methods documented on this page are part of [Enterprise Whitelabel](/advanced/whitelabel) and require approval before use. Contact [support@ofauth.com](mailto:support@ofauth.com) to request access.
-</Warning>
-
-The Link module (`sdk.link`) provides direct authentication capabilities for building custom login experiences. This is intended for approved enterprise partners who need full control over the authentication flow.
+Link is OFAuth's hosted authentication flow. You initialize a session, redirect the user to authenticate on OFAuth's secure page, then poll for the result. When authentication completes, you receive a **connection ID** that you use for all subsequent API calls.
 
 <Info>
-  **For most applications**: Use [Hosted Mode](/guides/link#hosted-mode) or [Link Embed](/guides/link#embed-mode) instead. These provide excellent user experiences and are available immediately without approval.
+  The Link flow handles credentials, 2FA, and session management on OFAuth's side. Your application never touches OnlyFans passwords.
 </Info>
 
-## Session Initialization
+## Complete Link Flow
 
-### `initSession(options)`
+```mermaid
+sequenceDiagram
+    participant App as Your App
+    participant OFAuth as OFAuth API
+    participant User as User Browser
 
-Initialize a new authentication session for OnlyFans login.
+    App->>OFAuth: Initialize Link session
+    OFAuth-->>App: { url, expiresAt }
+    App->>User: Redirect to url
+    User->>OFAuth: Authenticates on hosted page
+    OFAuth-->>User: Redirects to your redirectUrl
+    App->>OFAuth: Poll status with clientSecret
+    OFAuth-->>App: { status: "completed", data: { id: "conn_xxx" } }
+```
 
-<ParamField path="options" type="InitSessionOptions" required>
-  Configuration for the authentication session.
-</ParamField>
+## Initialize a Link Session
 
-<ParamField path="options.mode" type="'whitelabel'" required>
-  The session mode. Requires [Enterprise Whitelabel](/advanced/whitelabel) approval.
-</ParamField>
+Create a Link session and redirect the user to the returned URL.
 
-<ParamField path="options.clientReferenceId" type="string" required>
-  A unique identifier for this session. Use this to track sessions in your application.
-</ParamField>
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-<ParamField path="options.webhook" type="string">
-  Optional webhook URL to receive authentication status updates.
-</ParamField>
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
 
-<ResponseField name="clientSecret" type="string">
-  The session secret used for subsequent authentication operations.
-</ResponseField>
-
-<ResponseField name="sessionId" type="string">
-  Internal session identifier.
-</ResponseField>
-
-<RequestExample>
-  ```typescript Initialize Session (Enterprise Only)
-  // Requires Enterprise Whitelabel approval
-  const authSession = await sdk.link.initSession({
-    mode: "whitelabel",
-    clientReferenceId: "user_123_session_" + Date.now(),
-    webhook: "https://your-app.com/webhooks/auth" // Optional
-  })
-
-  console.log("Session secret:", authSession.clientSecret)
-  // Store this secret for subsequent authentication calls
-  ```
-</RequestExample>
-
-<ResponseExample>
-  ```json Success Response
-  {
-    "data": {
-      "clientSecret": "cs_1234567890abcdef",
-      "sessionId": "session_abcdef123456"
+try {
+  const session = await client.link.init({
+    body: {
+      redirectUrl: 'https://yourapp.com/callback',
     },
-    "error": undefined
-  }
-  ```
-</ResponseExample>
+  });
 
-## Login Methods
+  console.log('Redirect user to:', session.url);
+  console.log('Expires at:', session.expiresAt);
+} catch (error) {
+  console.error('Failed to initialize Link:', error);
+}
+```
 
-### `loginWithCredentials(clientSecret, email, password, proxyOptions?)`
+```python Python
+from onlyfans_sdk import OFAuthClient, link
 
-Attempt to log in to OnlyFans using email and password credentials.
+client = OFAuthClient(api_key="your-api-key")
 
-<ParamField path="clientSecret" type="string" required>
-  The client secret obtained from `initSession()`.
-</ParamField>
-
-<ParamField path="email" type="string" required>
-  The user's OnlyFans email address.
-</ParamField>
-
-<ParamField path="password" type="string" required>
-  The user's OnlyFans password.
-</ParamField>
-
-<ParamField path="proxyOptions" type="ProxyOptions">
-  Optional proxy configuration for the login request.
-
-  <Expandable title="Proxy Options">
-    <ParamField path="url" type="string" required>
-      Proxy URL in format: `http://username:password@proxy.example.com:8080`
-    </ParamField>
-  </Expandable>
-</ParamField>
-
-<ResponseField name="status" type="'completed' | 'awaiting_2fa' | 'failed'" required>
-  The login attempt status.
-</ResponseField>
-
-<ResponseField name="data" type="object">
-  Present when status is 'completed'. Contains the session data for API calls.
-
-  <Expandable title="Session Data">
-    <ResponseField name="session" type="object" required>
-      Authentication headers to use for OnlyFans API calls.
-    </ResponseField>
-
-    <ResponseField name="user" type="object" required>
-      Basic user information for the authenticated account.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-<ResponseField name="error" type="string">
-  Present when status is 'failed'. Contains the error message.
-</ResponseField>
-
-<RequestExample>
-  ```typescript Login with Email/Password
-  const loginResult = await sdk.link.loginWithCredentials(
-    authSession.clientSecret,
-    "user@example.com",
-    "secure_password_123",
-    {
-      url: "http://proxy_user:proxy_pass@proxy.example.com:8080" // Optional
-    }
-  )
-
-  if (loginResult.status === "completed") {
-    const session = loginResult.data.session
-    console.log("Login successful!")
-    
-    // Store session securely for API calls
-    await storeUserSession(loginResult.data.user.id, session)
-    
-  } else if (loginResult.status === "awaiting_2fa") {
-    console.log("2FA required")
-    // Prompt user for 2FA code
-    
-  } else {
-    console.error("Login failed:", loginResult.error)
-  }
-  ```
-</RequestExample>
-
-<ResponseExample>
-  ```json Successful Login
-  {
-    "status": "completed",
-    "data": {
-      "session": {
-        "user-id": "123456789",
-        "x-bc": "random_browser_context_string",
-        "cookie": "session_cookies_here",
-        "user-agent": "Mozilla/5.0..."
-      },
-      "user": {
-        "id": "123456789",
-        "username": "example_user",
-        "name": "Example User",
-        "email": "user@example.com"
-      }
-    }
-  }
-  ```
-</ResponseExample>
-
-<ResponseExample>
-  ```json 2FA Required
-  {
-    "status": "awaiting_2fa",
-    "data": {
-      "twoFactorState": {
-        "options": ["app", "phone"],
-        "phoneLast4": "1234",
-        "phoneCode": {
-          "checkAttemptsLeft": 2,
-          "checkAttemptsLimit": 3,
-          "expirationDate": "2025-02-13T07:20:11+00:00",
-          "expirationSeconds": 300,
-          "lastSentDate": "2025-02-13T07:15:11+00:00",
-          "requestAttemptsLeft": 2,
-          "requestAttemptsLimit": 3
-        }
-      }
-    }
-  }
-  ```
-</ResponseExample>
-
-### `submitTwoFactorCode(clientSecret, code)`
-
-Submit a two-factor authentication code when login requires 2FA.
-
-<ParamField path="clientSecret" type="string" required>
-  The client secret from the authentication session.
-</ParamField>
-
-<ParamField path="code" type="string" required>
-  The 6-digit 2FA code from the user's authenticator app.
-</ParamField>
-
-<ResponseField name="status" type="'completed' | 'failed'" required>
-  The 2FA verification status.
-</ResponseField>
-
-<ResponseField name="data" type="object">
-  Present when status is 'completed'. Contains session and user data.
-</ResponseField>
-
-<ResponseField name="error" type="string">
-  Present when status is 'failed'. Contains the error message.
-</ResponseField>
-
-<RequestExample>
-  ```typescript Submit 2FA Code
-  // After login returns "awaiting_2fa" status
-  const twoFactorCode = await getTwoFactorCodeFromUser() // Your UI implementation
-
-  const otpResult = await sdk.link.submitTwoFactorCode(
-    authSession.clientSecret,
-    twoFactorCode
-  )
-
-  if (otpResult.status === "completed") {
-    const session = otpResult.data.session
-    console.log("2FA verification successful!")
-    
-    // Store session for API calls
-    await storeUserSession(otpResult.data.user.id, session)
-    
-  } else {
-    console.error("2FA failed:", otpResult.error)
-    // Allow user to retry or go back to password entry
-  }
-  ```
-</RequestExample>
-
-<ResponseExample>
-  ```json Successful 2FA
-  {
-    "status": "completed",
-    "data": {
-      "session": {
-        "user-id": "123456789",
-        "x-bc": "browser_context_after_2fa",
-        "cookie": "updated_session_cookies",
-        "user-agent": "Mozilla/5.0..."
-      },
-      "user": {
-        "id": "123456789",
-        "username": "example_user",
-        "name": "Example User",
-        "email": "user@example.com"
-      }
-    }
-  }
-  ```
-</ResponseExample>
-
-## Session Status
-
-### `getAuthenticationStatus(clientSecret)`
-
-Check the current status of an authentication session.
-
-<ParamField path="clientSecret" type="string" required>
-  The client secret from the authentication session.
-</ParamField>
-
-<ResponseField name="status" type="'pending' | 'completed' | 'failed' | 'expired'" required>
-  Current authentication status.
-</ResponseField>
-
-<ResponseField name="data" type="object">
-  Present when status is 'completed'. Contains session and user data.
-</ResponseField>
-
-<ResponseField name="error" type="string">
-  Present when status is 'failed' or 'expired'.
-</ResponseField>
-
-<RequestExample>
-  ```typescript Check Authentication Status
-  const status = await sdk.link.getAuthenticationStatus(
-    authSession.clientSecret
-  )
-
-  switch (status.status) {
-    case "pending":
-      console.log("Authentication still in progress...")
-      break
-      
-    case "completed":
-      console.log("Authentication successful!")
-      const session = status.data.session
-      // Use session for API calls
-      break
-      
-    case "failed":
-      console.error("Authentication failed:", status.error)
-      break
-      
-    case "expired":
-      console.log("Session expired, need to start over")
-      break
-  }
-  ```
-</RequestExample>
-
-## Complete Authentication Flow
-
-Here's a complete example showing the full authentication flow with error handling:
-
-```typescript Complete Authentication Example
-async function authenticateUser(
-  email: string,
-  password: string,
-  getTwoFactorCode: () => Promise<string>
-): Promise<{ session: any; user: any } | null> {
-  
-  try {
-    // Step 1: Initialize session
-    const authSession = await sdk.link.initSession({
-      mode: "whitelabel",
-      clientReferenceId: `auth_${Date.now()}_${Math.random()}`
+try:
+    session = link.init_v2_link(client, body={
+        "redirectUrl": "https://yourapp.com/callback",
     })
-    
-    console.log("Session initialized:", authSession.clientSecret)
-    
-    // Step 2: Attempt login
-    const loginResult = await sdk.link.loginWithCredentials(
-      authSession.clientSecret,
-      email,
-      password
-    )
-    
-    if (loginResult.status === "completed") {
-      // Login successful without 2FA
-      console.log("Login successful!")
-      return {
-        session: loginResult.data.session,
-        user: loginResult.data.user
-      }
-    }
-    
-    if (loginResult.status === "awaiting_2fa") {
-      // Step 3: Handle 2FA if required
-      console.log("2FA required, requesting code...")
-      
-      const twoFactorCode = await getTwoFactorCode()
-      
-      const otpResult = await sdk.link.submitTwoFactorCode(
-        authSession.clientSecret,
-        twoFactorCode
-      )
-      
-      if (otpResult.status === "completed") {
-        console.log("2FA verification successful!")
-        return {
-          session: otpResult.data.session,
-          user: otpResult.data.user
+
+    print("Redirect user to:", session["url"])
+    print("Expires at:", session["expiresAt"])
+except Exception as e:
+    print("Failed to initialize Link:", e)
+```
+
+```go Go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key")
+
+redirectUrl := "https://yourapp.com/callback"
+session, err := client.LinkInit(ctx, struct {
+    RedirectUrl       *string `json:"redirectUrl,omitempty"`
+    ClientReferenceId *string `json:"clientReferenceId,omitempty"`
+    ConnectionId      *string `json:"connectionId,omitempty"`
+    Geolocation       *struct {
+        Country string  `json:"country"`
+        State   *string `json:"state,omitempty"`
+        City    *string `json:"city,omitempty"`
+    } `json:"geolocation,omitempty"`
+}{
+    RedirectUrl: &redirectUrl,
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Redirect user to:", session.Url)
+fmt.Println("Expires at:", session.ExpiresAt)
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key");
+
+try
+{
+    var session = await client.PostAsync<LinkInitResponse>(
+        "/v2/link/init",
+        body: new { redirectUrl = "https://yourapp.com/callback" }
+    );
+
+    Console.WriteLine($"Redirect user to: {session.Url}");
+    Console.WriteLine($"Expires at: {session.ExpiresAt}");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"Error: {ex.Status} {ex.Message}");
+}
+```
+</CodeGroup>
+
+### Init Options
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `redirectUrl` | `string` | URL to redirect the user to after authentication |
+| `clientReferenceId` | `string` | Your own reference ID to track this session |
+| `connectionId` | `string` | Existing connection ID for re-authentication |
+
+## Poll Link Status
+
+After the user authenticates, poll the Link session to check if it completed. The response includes the status and, when completed, the connection data.
+
+<CodeGroup>
+```typescript TypeScript
+const status = await client.link.get({
+  clientSecret: 'cs_xxx',
+});
+
+console.log('Status:', status.status);
+// "initialized" | "pending" | "awaiting_2fa" | "completed" | "denied" | "failed"
+
+if (status.status === 'completed' && status.data) {
+  console.log('Connection ID:', status.data.id);
+  console.log('Username:', status.data.userData.username);
+}
+```
+
+```python Python
+status = link.get_v2_link(client, client_secret="cs_xxx")
+
+print("Status:", status["status"])
+
+if status["status"] == "completed" and "data" in status:
+    print("Connection ID:", status["data"]["id"])
+    print("Username:", status["data"]["userData"]["username"])
+```
+
+```go Go
+status, err := client.GetLink(ctx, "cs_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Status:", status.Status)
+
+if status.Status == "completed" && status.Data != nil {
+    fmt.Println("Connection ID:", status.Data.Id)
+}
+```
+
+```csharp C#
+var status = await client.GetAsync<LinkStatusResponse>("/v2/link/cs_xxx");
+
+Console.WriteLine($"Status: {status.Status}");
+
+if (status.Status == "completed" && status.Data != null)
+{
+    Console.WriteLine($"Connection ID: {status.Data.Id}");
+    Console.WriteLine($"Username: {status.Data.UserData.Username}");
+}
+```
+</CodeGroup>
+
+### Status Values
+
+| Status | Meaning |
+| --- | --- |
+| `initialized` | Session created, user hasn't started yet |
+| `pending` | User is in the authentication process |
+| `awaiting_2fa` | Waiting for 2FA verification |
+| `completed` | Authentication successful — connection ID available |
+| `denied` | User denied access |
+| `invalid_credentials` | Credentials were incorrect |
+| `failed` | Authentication failed |
+| `not_found` | Session not found or expired |
+
+## Delete a Link Session
+
+Cancel a Link session that is no longer needed:
+
+<CodeGroup>
+```typescript TypeScript
+await client.link.delete({ clientSecret: 'cs_xxx' });
+```
+
+```python Python
+link.delete_v2_link(client, client_secret="cs_xxx")
+```
+
+```go Go
+_, err := client.DeleteLink(ctx, "cs_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+```csharp C#
+await client.DeleteAsync<object>("/v2/link/cs_xxx");
+```
+</CodeGroup>
+
+## Complete Polling Example
+
+In production, you'll typically poll the Link status in a loop until authentication completes or fails:
+
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient, OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
+
+async function waitForAuthentication(clientSecret: string): Promise<string> {
+  const maxAttempts = 60;
+  const pollInterval = 3000; // 3 seconds
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const status = await client.link.get({ clientSecret });
+
+    switch (status.status) {
+      case 'completed':
+        if (status.data && 'id' in status.data) {
+          console.log('Authenticated:', status.data.userData.username);
+          return status.data.id; // Connection ID
         }
-      } else {
-        console.error("2FA verification failed:", otpResult.error)
-        return null
-      }
+        throw new Error('Completed but no connection data');
+
+      case 'initialized':
+      case 'pending':
+      case 'awaiting_2fa':
+        // Still in progress, keep polling
+        await new Promise(r => setTimeout(r, pollInterval));
+        break;
+
+      case 'denied':
+      case 'invalid_credentials':
+      case 'failed':
+      case 'not_found':
+        throw new Error(`Authentication ${status.status}`);
     }
-    
-    // Login failed
-    console.error("Login failed:", loginResult.error)
-    return null
-    
-  } catch (error) {
-    console.error("Authentication error:", error)
-    return null
   }
+
+  throw new Error('Authentication timed out');
 }
 
 // Usage
-const authResult = await authenticateUser(
-  "user@example.com",
-  "password123",
-  async () => {
-    // Your implementation to get 2FA code from user
-    return prompt("Enter 2FA code:")
-  }
-)
-
-if (authResult) {
-  console.log("Authenticated as:", authResult.user.username)
-  
-  // Now you can use the session for API calls
-  const { data: profile } = await sdk.self.getMe({
-    authentication: { session: authResult.session }
-  })
-  
-  console.log("Profile loaded:", profile)
-} else {
-  console.log("Authentication failed")
-}
-```
-
-## Error Handling
-
-Authentication methods can fail for various reasons. Here are common error scenarios:
-
-### Invalid Credentials
-
-```typescript
-const loginResult = await sdk.link.loginWithCredentials(
-  clientSecret,
-  "wrong@email.com",
-  "wrong_password"
-)
-
-if (loginResult.status === "failed") {
-  console.error("Invalid credentials:", loginResult.error)
-  // Show error message to user
-}
-```
-
-### Account Restrictions
-
-```typescript
-// Some accounts may be restricted or suspended
-if (loginResult.status === "failed" && 
-    loginResult.error.includes("restricted")) {
-  console.log("Account has restrictions")
-  // Handle account restriction scenario
-}
-```
-
-### Network Issues
-
-```typescript
 try {
-  const loginResult = await sdk.link.loginWithCredentials(
-    clientSecret,
-    email,
-    password
-  )
+  const session = await client.link.init({
+    body: { redirectUrl: 'https://yourapp.com/callback' },
+  });
+
+  console.log('Send user to:', session.url);
+
+  // After user is redirected back, poll for completion
+  const connectionId = await waitForAuthentication('cs_xxx');
+  console.log('Connection ID:', connectionId);
 } catch (error) {
-  if (error.message.includes("network") || 
-      error.message.includes("timeout")) {
-    console.log("Network error, please try again")
-    // Implement retry logic
+  if (error instanceof OFAuthAPIError) {
+    console.error('API error:', error.status, error.message);
+  } else {
+    console.error('Error:', error);
   }
 }
 ```
 
-## Best Practices
+```python Python
+import time
+from onlyfans_sdk import OFAuthClient, OFAuthError, link
+
+client = OFAuthClient(api_key="your-api-key")
+
+
+def wait_for_authentication(client_secret: str) -> str:
+    max_attempts = 60
+    poll_interval = 3  # seconds
+
+    for _ in range(max_attempts):
+        status = link.get_v2_link(client, client_secret=client_secret)
+
+        if status["status"] == "completed" and "data" in status:
+            print("Authenticated:", status["data"]["userData"]["username"])
+            return status["data"]["id"]  # Connection ID
+
+        if status["status"] in ("initialized", "pending", "awaiting_2fa"):
+            time.sleep(poll_interval)
+            continue
+
+        raise Exception(f"Authentication {status['status']}")
+
+    raise Exception("Authentication timed out")
+
+
+# Usage
+try:
+    session = link.init_v2_link(client, body={
+        "redirectUrl": "https://yourapp.com/callback",
+    })
+
+    print("Send user to:", session["url"])
+
+    # After user is redirected back, poll for completion
+    connection_id = wait_for_authentication("cs_xxx")
+    print("Connection ID:", connection_id)
+except OFAuthError as e:
+    print(f"API error {e.status}: {e}")
+except Exception as e:
+    print("Error:", e)
+```
+</CodeGroup>
 
 <Warning>
-  **Security**: Never log or store passwords in plain text. Always use secure storage for session data and implement proper session expiration.
+  **Use Sandbox for testing!** Before testing with real OnlyFans accounts, use the [Sandbox environment](/setup/sandbox) with test credentials. Too many login attempts on production accounts can trigger OnlyFans "suspicious activity" detection.
 </Warning>
-
-<Tip>
-  **Session Management**: Sessions can expire. Implement session validation and refresh logic in your application.
-</Tip>
-
-<Info>
-  **Rate Limiting**: Authentication endpoints are rate limited. Don't attempt too many login requests in quick succession.
-</Info>
-
-### Secure Session Storage
-
-```typescript
-// Example secure session storage
-import crypto from "crypto"
-
-const ENCRYPTION_KEY = process.env.SESSION_ENCRYPTION_KEY // 32 bytes key
-
-function encryptSession(sessionData: any): string {
-  const iv = crypto.randomBytes(16)
-  const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY)
-  let encrypted = cipher.update(JSON.stringify(sessionData), 'utf8', 'hex')
-  encrypted += cipher.final('hex')
-  return iv.toString('hex') + ':' + encrypted
-}
-
-function decryptSession(encryptedData: string): any {
-  const [ivHex, encrypted] = encryptedData.split(':')
-  const iv = Buffer.from(ivHex, 'hex')
-  const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY)
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return JSON.parse(decrypted)
-}
-
-// Store session securely
-async function storeSession(userId: string, session: any) {
-  const encrypted = encryptSession(session)
-  
-  await database.sessions.upsert({
-    where: { userId },
-    update: { 
-      sessionData: encrypted,
-      updatedAt: new Date()
-    },
-    create: {
-      userId,
-      sessionData: encrypted,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-  })
-}
-```
 
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Connection Management" icon="link" href="/sdk/modules/authentication/link-connections">
-    Learn how to manage active OnlyFans connections
+    Manage, monitor, and import connections
   </Card>
-
-  <Card title="User Management" icon="user" href="/sdk/modules/user-management">
-    Start making authenticated API calls to manage users and profiles
+  <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
+    Get notified when connections change status
   </Card>
 </CardGroup>

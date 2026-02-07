@@ -1,40 +1,18 @@
 ---
-title: "SDK Quickstart"
-sidebarTitle: "Quick Start"
-description: "Set up the OnlyFans SDK in your Node.js project with complete configuration options"
+title: "Quickstart"
+sidebarTitle: "Quickstart"
+description: "Install an OFAuth SDK and make your first API call in under 5 minutes"
 ---
 
-## Prerequisites
+<Info>
+  **Prerequisites:** You need an [OFAuth account](https://app.ofauth.com) and an API key. Grab your key from [app.ofauth.com/platform/developers/keys](https://app.ofauth.com/platform/developers/keys).
+</Info>
 
-Before installing the OnlyFans SDK, ensure your development environment meets these requirements:
+<Steps>
 
-- **Node.js** — Minimum version 16.0 or higher.
+<Step title="Install the SDK">
 
-  ```bash
-  # Check your Node.js version
-  node --version
-
-  # Should output v16.0.0 or higher
-  ```
-
-- **TypeScript** — Recommended 4.5 or higher for full type support.
-
-  ```bash
-  # Install TypeScript globally if needed
-  npm install -g typescript
-
-  # Check TypeScript version
-  tsc --version
-  ```
-
-- **Package Manager** — Use any modern option:
-  - npm (bundled with Node.js)
-  - pnpm (recommended for speed)
-  - yarn (v1 or v2+)
-
-## Installation
-
-Choose your preferred package manager to install the OnlyFans SDK:
+Pick your language and install the package:
 
 <CodeGroup>
 ```bash npm
@@ -48,169 +26,252 @@ pnpm add @ofauth/onlyfans-sdk
 ```bash yarn
 yarn add @ofauth/onlyfans-sdk
 ```
+
+```bash pip
+pip install onlyfans-sdk
+```
+
+```bash Go
+go get github.com/ofauth-org/onlyfans-sdk-go
+```
+
+```bash .NET
+dotnet add package OnlyFans.SDK
+```
+</CodeGroup>
+
+</Step>
+
+<Step title="Initialize the client">
+
+Create a client with your API key:
+
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: process.env.OFAUTH_API_KEY!,
+});
+```
+
+```python Python
+from onlyfans_sdk import OFAuthClient
+
+client = OFAuthClient(api_key="your-api-key")
+```
+
+```go Go
+package main
+
+import "github.com/ofauth-org/onlyfans-sdk-go"
+
+func main() {
+    client := ofauth.NewClient("your-api-key")
+}
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key");
+```
+</CodeGroup>
+
+<Tip>
+  Never hard-code your API key. Use environment variables (`OFAUTH_API_KEY`) or a secrets manager in production.
+</Tip>
+
+</Step>
+
+<Step title="Verify your API key">
+
+Call `whoami` to confirm your key works:
+
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient, OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: process.env.OFAUTH_API_KEY!,
+});
+
+try {
+  const account = await client.account.whoami();
+  console.log('Account ID:', account.id);
+  console.log('Permissions:', account.permissions);
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('API Error:', error.status, error.message);
+  }
+  throw error;
+}
+```
+
+```python Python
+from onlyfans_sdk import OFAuthClient, OFAuthError, account
+
+client = OFAuthClient(api_key="your-api-key")
+
+try:
+    result = account.whoami(client)
+    print("Account ID:", result["id"])
+    print("Permissions:", result["permissions"])
+except OFAuthError as e:
+    print(f"API Error {e.status}: {e}")
+```
+
+```go Go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/ofauth-org/onlyfans-sdk-go"
+)
+
+func main() {
+    client := ofauth.NewClient("your-api-key")
+
+    acc, err := client.Whoami(context.Background())
+    if err != nil {
+        if apiErr, ok := err.(*ofauth.APIError); ok {
+            fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+        }
+        log.Fatal(err)
+    }
+
+    fmt.Println("Account ID:", acc.Id)
+    fmt.Println("Permissions:", acc.Permissions)
+}
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key");
+
+try
+{
+    var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+    Console.WriteLine($"Account ID: {account.Id}");
+    Console.WriteLine($"Permissions: {string.Join(", ", account.Permissions)}");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"API Error {ex.Status}: {ex.Message}");
+}
+```
 </CodeGroup>
 
 <Check>
-  The SDK package includes TypeScript definitions out of the box, so no additional `@types/` packages are needed.
+  You should see your organization ID and permissions list. If you get a `401` error, double-check your API key.
 </Check>
 
-## Basic Setup
+</Step>
 
-### 1. Import the SDK
+<Step title="Fetch OnlyFans data">
+
+Once you have a connection ID (from [Link](/quickstart#step-2-connect-an-onlyfans-account)), use the Access API to pull data from a connected OnlyFans account:
 
 <CodeGroup>
-```typescript ES Modules (TypeScript/Modern Node.js)
-import OFSDK from "@ofauth/onlyfans-sdk"
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: process.env.OFAUTH_API_KEY!,
+  connectionId: 'conn_YOUR_CONNECTION_ID',
+});
+
+// Get the connected creator's profile
+const profile = await client.access.self.get();
+console.log('Username:', profile.name);
+
+// Or pass connectionId per-request
+const profile2 = await client.access.self.get({
+  connectionId: 'conn_OTHER_CONNECTION',
+});
 ```
 
-```javascript CommonJS (Legacy Node.js)
-const OFSDK = require("@ofauth/onlyfans-sdk")
+```python Python
+from onlyfans_sdk import OFAuthClient
+from onlyfans_sdk import self as self_module  # 'self' is a Python keyword
+
+client = OFAuthClient(
+    api_key="your-api-key",
+    connection_id="conn_YOUR_CONNECTION_ID",
+)
+
+# Get the connected creator's profile
+profile = self_module.list_selfs(client)
+print("Username:", profile["name"])
+```
+
+```go Go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/ofauth-org/onlyfans-sdk-go"
+)
+
+func main() {
+    client := ofauth.NewClient("your-api-key").
+        WithConnectionID("conn_YOUR_CONNECTION_ID")
+
+    // Get the connected creator's profile
+    profile, err := client.GetAccessSelf(context.Background(), nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Println("Username:", profile.Username)
+}
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_YOUR_CONNECTION_ID");
+
+// Get the connected creator's profile
+var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+Console.WriteLine($"Username: {profile.Username}");
 ```
 </CodeGroup>
 
-### 2. Initialize the SDK
+<Check>
+  You're now pulling live data from a connected OnlyFans account through OFAuth.
+</Check>
 
-The SDK supports three different modes. Choose the one that best fits your use case:
+</Step>
 
-- **Access Mode (recommended)** — Managed API calls through OFAuth, ideal for most applications.
+</Steps>
 
-  ```typescript
-  import OFSDK from "@ofauth/onlyfans-sdk"
+***
 
-  const sdk = new OFSDK({
-    mode: "access",
-    ofauthApiKey: process.env.OFAUTH_API_KEY,
-    debugLog: false // Enable for development
-  })
-  ```
-
-  <Info>
-    Access mode uses OFAuth's managed infrastructure to handle OnlyFans API complexities automatically.
-  </Info>
-
-- **Direct Mode** — Full control over API requests, session management, and local debugging without usage costs.
-
-  ```typescript
-  import OFSDK from "@ofauth/onlyfans-sdk"
-
-  const sdk = new OFSDK({
-    mode: "direct",
-    ofauthApiKey: process.env.OFAUTH_API_KEY, // Required for request signing
-    debugLog: true // Helpful for debugging direct API calls
-  })
-  ```
-
-  <Warning>
-    Direct mode requires manual session management and handling of OnlyFans API changes.
-  </Warning>
-
-- **Custom Mode** — Enterprise setups with custom proxy infrastructure and routing requirements.
-
-  ```typescript
-  import OFSDK from "@ofauth/onlyfans-sdk"
-
-  const sdk = new OFSDK({
-    mode: "custom",
-    customOptions: {
-      baseUrl: "https://your-api-proxy.com",
-      signRequests: false, // Set to true if using OFAuth signing
-      beforeRequest: (url, request) => {
-        // Add custom headers or modify requests
-        request.headers = {
-          ...request.headers,
-          "X-Custom-Header": "your-value"
-        }
-        return request
-      }
-    },
-    ofauthApiKey: process.env.OFAUTH_API_KEY // Required if signRequests: true
-  })
-  ```
-
-  <Tip>
-    Custom mode is perfect for enterprise environments where requests need to go through internal proxies or custom infrastructure.
-  </Tip>
-
-## Verify Installation
-
-Create a simple test to verify the SDK is working correctly:
-
-```typescript test-sdk.ts
-import OFSDK from "@ofauth/onlyfans-sdk"
-
-async function testSDK() {
-  try {
-    // Initialize SDK
-    const sdk = new OFSDK({
-      mode: "access",
-      ofauthApiKey: process.env.OFAUTH_API_KEY,
-      debugLog: true
-    })
-    
-    console.log("✅ SDK initialized successfully")
-    
-    // Test a simple operation (requires valid connection)
-    // This will fail if no valid connection exists, which is expected
-    const { data, error } = await sdk.link.connections.getAll({
-      limit: 1
-    })
-    
-    if (error && error.type === "unauthorized") {
-      console.log("✅ SDK is working (authentication required for actual data)")
-    } else if (data) {
-      console.log("✅ SDK is working and authenticated")
-    } else {
-      console.error("❌ Unexpected error:", error)
-    }
-    
-  } catch (error) {
-    console.error("❌ SDK initialization failed:", error.message)
-  }
-}
-
-testSDK()
-```
-
-Run the test:
-
-```bash
-npx tsx test-sdk.ts
-# or if using regular JavaScript
-node test-sdk.js
-```
-
-## Confirm Platform Configuration
-
-Use the Account API to verify that your API key is set up correctly. The `whoami` endpoint returns basic information about your organization.
-
-```bash
-curl -s https://api.ofauth.com/v2/account/whoami \
-  -H "apikey: $OFAUTH_API_KEY"
-```
-
-```json response
-{
-  "id": "org_abc123",
-  "name": "Acme Analytics",
-  "permissions": ["link", "access", "rules"]
-}
-```
-
-<Tip>
-  The whoami response is safe to expose in internal dashboards. It never returns secrets—only basic organization information.
-</Tip>
-
-## Next Steps
+## What's Next?
 
 <CardGroup cols={2}>
   <Card title="Configuration" icon="gear" href="/sdk/core-concepts/configuration">
-    Explore detailed configuration options and SDK modes for your use case
+    Custom base URLs, HTTP clients, proxy settings, and connection defaults
   </Card>
-  <Card title="Authentication Setup" icon="key" href="/sdk/core-concepts/authentication">
-    Configure authentication modes and establish secure connections to OnlyFans
+
+  <Card title="Error Handling" icon="triangle-exclamation" href="/sdk/advanced/error-handling">
+    Typed exceptions, status codes, and debugging strategies
+  </Card>
+
+  <Card title="REST API Reference" icon="globe" href="/api-reference/access/overview">
+    Full endpoint documentation for all OFAuth APIs
+  </Card>
+
+  <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
+    Get real-time notifications when connections change status
   </Card>
 </CardGroup>
-
-<Info>
-  **Need Help?** If you encounter issues during installation, check our [troubleshooting guide](/sdk/advanced/error-handling) or reach out to [support](mailto:support@ofauth.com).
-</Info> 

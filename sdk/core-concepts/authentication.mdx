@@ -1,89 +1,291 @@
 ---
 title: "Authentication"
-description: "Set up authentication for the OnlyFans SDK with multiple modes to fit your needs"
+description: "How to authenticate with the OFAuth API using API keys and connection IDs"
 ---
 
-## Authentication Overview
+## Overview
 
-The OnlyFans SDK provides **three authentication modes** to suit different integration needs. Most applications should use **Access Mode** for the simplest setup.
+OFAuth uses a simple two-header authentication model:
 
-<CardGroup cols={3}>
-  <Card title="Access Mode" icon="cloud">
-    **Recommended** - OFAuth handles all complexity automatically
-  </Card>
+| Header | Purpose | Required |
+|--------|---------|----------|
+| `apiKey` | Identifies your organization | Always |
+| `x-connection-id` | Identifies which OnlyFans account to act on | For Access API calls |
 
-  <Card title="Direct Mode" icon="bolt">
-    **Advanced** - Direct OnlyFans API with full control
-  </Card>
+All SDKs handle setting these headers automatically based on the values you provide during initialization or per-request.
 
-  <Card title="Custom Mode" icon="cog">
-    **Enterprise** - Custom proxy infrastructure (available for enterprise needs)
-  </Card>
-</CardGroup>
+## Client Initialization
 
-## Access Mode (Recommended)
+Set your API key and an optional default connection ID when creating the client:
 
-**Best for most applications.** OFAuth handles authentication, session management, and API complexity automatically.
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-### Setup
-
-```typescript
-import OFSDK from "@ofauth/onlyfans-sdk"
-
-const sdk = new OFSDK({
-  mode: "access",
-  ofauthApiKey: process.env.OFAUTH_API_KEY
-})
+const client = createOFAuthClient({
+  apiKey: process.env.OFAUTH_API_KEY,
+  connectionId: 'conn_xxx',  // optional default for Access API calls
+});
 ```
 
-### Using Connection IDs
+```python Python
+from onlyfans_sdk import OFAuthClient
 
-Authenticate API calls using connection IDs from the OFAuth Link flow:
-
-```typescript
-// All SDK methods use the same authentication pattern
-const { data, error } = await sdk.user.getById({
-  authentication: { connectionId: "conn_123456789" },
-  userId: 123456789
-})
+client = OFAuthClient(
+    api_key=os.environ["OFAUTH_API_KEY"],
+    connection_id="conn_xxx",  # optional default for Access API calls
+)
 ```
 
-<Info>
-  **Connection IDs** are obtained through OFAuth Link and represent authorized connections to specific OnlyFans accounts. See the [Link documentation](/guides/link) for setup details.
-</Info>
+```go Go
+import "github.com/ofauth-org/onlyfans-sdk-go"
 
-## Direct Mode (Enterprise)
+client := ofauth.NewClient(os.Getenv("OFAUTH_API_KEY")).
+    WithConnectionID("conn_xxx")  // optional default for Access API calls
+```
 
-**For enterprise partners** with approved whitelabel integrations who need full control over the authentication flow.
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient(
+    apiKey: Environment.GetEnvironmentVariable("OFAUTH_API_KEY")
+).WithConnectionId("conn_xxx");  // optional default for Access API calls
+```
+</CodeGroup>
+
+## API Key
+
+Your API key authenticates your organization with the OFAuth API. It is sent as the `apiKey` header on every request.
+
+- **Production keys** start with `sk_live_...`
+- **Sandbox keys** start with `sk_sandbox_...`
+
+Get your API key from the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/keys).
 
 <Warning>
-  **Approval Required**: Direct mode is part of [Enterprise Whitelabel](/advanced/whitelabel) and requires approval. Contact [support@ofauth.com](mailto:support@ofauth.com) with your use case before implementing.
+  Keep your API key secret. Do not commit it to version control or expose it in client-side code.
 </Warning>
 
-<Card title="Enterprise Whitelabel" icon="building" href="/advanced/whitelabel">
-  Learn about enterprise whitelabel capabilities and how to request access
-</Card>
+## Connection ID
 
-## Custom Mode (Enterprise)
+A connection ID identifies a specific connected OnlyFans account. It is required for all **Access API** calls (reading posts, earnings, subscribers, etc.) and is sent as the `x-connection-id` header.
 
-**Available for enterprise setups** with custom proxy infrastructure. Contact OFAuth for configuration details.
+Connection IDs are obtained through the [OFAuth Link flow](/guides/link) when a user authenticates their OnlyFans account. They look like `conn_xxx`.
+
+### Setting a Default Connection ID
+
+If your application works with a single connection at a time, set the connection ID on the client during initialization:
+
+<CodeGroup>
+```typescript TypeScript
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+// All Access API calls use the default connection ID
+const profile = await client.access.self.get();
+const posts = await client.access.listPosts();
+```
+
+```python Python
+client = OFAuthClient(
+    api_key="your-api-key",
+    connection_id="conn_xxx",
+)
+
+# All Access API calls use the default connection ID
+from onlyfans_sdk import self as self_module, posts
+profile = self_module.list_selfs(client)
+post_list = posts.list_posts(client)
+```
+
+```go Go
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+// All Access API calls use the default connection ID
+profile, err := client.GetAccessSelf(ctx, nil)
+posts, err := client.ListAccessPosts(ctx, nil)
+```
+
+```csharp C#
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
+
+// All Access API calls use the default connection ID
+var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+var posts = await client.GetAsync<PostsListResponse>("/v2/access/posts");
+```
+</CodeGroup>
+
+### Per-Request Connection ID Override
+
+If your application manages multiple connections, you can override the connection ID on individual requests:
+
+<CodeGroup>
+```typescript TypeScript
+// Override the default connection ID for this request
+const profile = await client.access.self.get({ connectionId: 'conn_other' });
+```
+
+```python Python
+from onlyfans_sdk import self as self_module
+
+# Pass connection_id to the client's request method
+profile = client.request("GET", "/v2/access/self", connection_id="conn_other")
+```
+
+```go Go
+// Pass ConnectionID in RequestOptions
+profile, err := client.GetAccessSelf(ctx, &ofauth.RequestOptions{
+    ConnectionID: "conn_other",
+})
+```
+
+```csharp C#
+// Pass connectionId as a parameter
+var profile = await client.GetAsync<SelfResponse>(
+    "/v2/access/self",
+    connectionId: "conn_other"
+);
+```
+</CodeGroup>
+
+<Info>
+  The per-request connection ID takes precedence over the default set on the client.
+</Info>
+
+## Account vs Access API Authentication
+
+**Account API** calls only require the API key. No connection ID is needed:
+
+<CodeGroup>
+```typescript TypeScript
+// No connection ID needed
+const account = await client.account.whoami();
+const connections = await client.account.connections.list();
+```
+
+```python Python
+from onlyfans_sdk import account
+
+# No connection ID needed
+result = account.whoami(client)
+connections = account.list_connections(client)
+```
+
+```go Go
+// No connection ID needed
+account, err := client.Whoami(ctx)
+connections, err := client.ListAccountConnections(ctx, nil)
+```
+
+```csharp C#
+// No connection ID needed
+var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+var connections = await client.GetAsync<ConnectionsListResponse>("/v2/account/connections");
+```
+</CodeGroup>
+
+**Access API** calls require both the API key and a connection ID:
+
+<CodeGroup>
+```typescript TypeScript
+// Connection ID required (set on client or per-request)
+const profile = await client.access.self.get();
+const earnings = await client.access.earnings.getChart({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+});
+```
+
+```python Python
+from onlyfans_sdk import self as self_module, earnings
+
+# Connection ID required (set on client or per-request)
+profile = self_module.list_selfs(client)
+```
+
+```go Go
+// Connection ID required (set on client or per-request)
+profile, err := client.GetAccessSelf(ctx, nil)
+earnings, err := client.GetAccessEarningsChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+    },
+})
+```
+
+```csharp C#
+// Connection ID required (set on client or per-request)
+var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+var earnings = await client.GetAsync<EarningsChartResponse>(
+    "/v2/access/earnings/chart",
+    query: new Dictionary<string, string?>
+    {
+        ["startDate"] = "2024-01-01",
+        ["endDate"] = "2024-01-31"
+    }
+);
+```
+</CodeGroup>
+
+## Environment Variables
+
+Store your credentials in environment variables rather than hardcoding them:
+
+```bash .env
+# Your OFAuth API key
+OFAUTH_API_KEY=sk_live_your_api_key_here
+
+# Default connection ID (optional)
+OFAUTH_CONNECTION_ID=conn_xxx
+```
+
+<CodeGroup>
+```typescript TypeScript
+const client = createOFAuthClient({
+  apiKey: process.env.OFAUTH_API_KEY,
+  connectionId: process.env.OFAUTH_CONNECTION_ID,
+});
+```
+
+```python Python
+import os
+
+client = OFAuthClient(
+    api_key=os.environ["OFAUTH_API_KEY"],
+    connection_id=os.environ.get("OFAUTH_CONNECTION_ID"),
+)
+```
+
+```go Go
+client := ofauth.NewClient(os.Getenv("OFAUTH_API_KEY")).
+    WithConnectionID(os.Getenv("OFAUTH_CONNECTION_ID"))
+```
+
+```csharp C#
+var client = new OFAuthClient(
+    apiKey: Environment.GetEnvironmentVariable("OFAUTH_API_KEY")
+).WithConnectionId(
+    Environment.GetEnvironmentVariable("OFAUTH_CONNECTION_ID")
+);
+```
+</CodeGroup>
+
+<Warning>
+  Never commit `.env` files to version control. Add `.env` to your `.gitignore`.
+</Warning>
 
 ## Next Steps
 
-<CardGroup cols={3}>
-  <Card title="SDK Architecture" icon="boxes" href="/sdk/core-concepts/architecture">
-    **Understand the design** - Learn about the SDK's modular structure and type safety
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/sdk/core-concepts/configuration">
+    Customize base URLs, HTTP clients, and timeouts
   </Card>
-
-  <Card title="Core Modules" icon="book" href="/sdk/modules/authentication/link-authentication">
-    **Start building** - Explore the available modules and operations
-  </Card>
-
-  <Card title="Link Setup" icon="link" href="/guides/link">
-    **Authentication flows** - Set up OFAuth Link for user connections
+  <Card title="Architecture" icon="sitemap" href="/sdk/core-concepts/architecture">
+    Understand SDK structure and API namespaces
   </Card>
 </CardGroup>
-
-<Info>
-  **Recommended Path**: Start with Access mode for the simplest setup, then explore the Core Modules to understand what's possible with the SDK.
-</Info>

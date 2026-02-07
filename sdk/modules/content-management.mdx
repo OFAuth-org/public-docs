@@ -1,452 +1,724 @@
 ---
-title: "Content Management"
-description: "Create and manage posts, media vault, and uploads with full TypeScript support and automatic validation"
+title: "Content & Media"
+description: "Create posts, manage your vault, and upload media with progress tracking through the OFAuth SDK"
 ---
 
 ## Overview
 
-The OnlyFans SDK provides **comprehensive content management** through three main modules with **complete type safety** and **automatic parameter validation**.
+The Content & Media modules cover post management, vault media organization, and file uploads with automatic chunking and progress callbacks.
 
 <CardGroup cols={3}>
   <Card title="Posts" icon="file-text">
-    **sdk.posts** - Content creation, retrieval, and scheduling with type-safe parameters
+    Create, edit, list, and delete posts
   </Card>
   <Card title="Vault" icon="folder">
-    **sdk.vault** - Media management and organization with validated operations
+    Browse vault media and organize into lists
   </Card>
   <Card title="Upload" icon="upload">
-    **sdk.upload** - File uploads with progress tracking and type validation
+    Upload media with automatic chunking and progress tracking
   </Card>
 </CardGroup>
 
-## Why Use the SDK for Content Management?
+---
 
-<CardGroup cols={2}>
-  <Card title="Type-Safe Creation" icon="shield">
-    **Compile-time validation** for all post parameters, media types, and scheduling options
-  </Card>
-  <Card title="Smart Validation" icon="check-circle">
-    **Automatic parameter checking** ensures valid media IDs, price formats, and content restrictions
-  </Card>
-</CardGroup>
+## Posts
 
-## Posts Module
+### List Posts
 
-The `Posts` module handles post creation, retrieval, and management.
+Retrieve your own posts with sorting and filtering.
 
-### Methods
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-<ParamField path="sdk.posts.getById(postId, options?)" type="method">
-  Get a specific post by ID
-  
-  <Expandable title="Parameters">
-    <ParamField path="postId" type="string" required>
-      The ID of the post to retrieve
-    </ParamField>
-    
-    <ParamField path="options" type="object">
-      <Expandable title="Options">
-        <ParamField path="connectionId" type="string">
-          Connection ID for Access mode
-        </ParamField>
-        <ParamField path="session" type="object">
-          Session object for Direct mode
-        </ParamField>
-      </Expandable>
-    </ParamField>
-  </Expandable>
-  
-  <Expandable title="Response">
-    <ResponseField name="data" type="object">
-      <Expandable title="Post Object">
-        <ResponseField name="id" type="string">Post ID</ResponseField>
-        <ResponseField name="text" type="string">Post content</ResponseField>
-        <ResponseField name="price" type="number">Post price</ResponseField>
-        <ResponseField name="isOpened" type="boolean">Whether post is opened</ResponseField>
-        <ResponseField name="canPurchase" type="boolean">Whether post can be purchased</ResponseField>
-        <ResponseField name="media" type="array">Array of media items</ResponseField>
-        <ResponseField name="author" type="object">Author information</ResponseField>
-        <ResponseField name="createdAt" type="string">Creation timestamp</ResponseField>
-      </Expandable>
-    </ResponseField>
-    <ResponseField name="error" type="null">No error if successful</ResponseField>
-  </Expandable>
-</ParamField>
-
-<ParamField path="sdk.posts.getAll(options?)" type="method">
-  Get all posts from timeline
-  
-  <Expandable title="Parameters">
-    <ParamField path="options" type="object">
-      <Expandable title="Options">
-        <ParamField path="limit" type="number">
-          Number of posts to retrieve (default: 20)
-        </ParamField>
-        <ParamField path="offset" type="string">
-          Offset for pagination
-        </ParamField>
-        <ParamField path="order" type="string">
-          Sort order: "publish_date_desc" | "publish_date_asc"
-        </ParamField>
-        <ParamField path="connectionId" type="string">
-          Connection ID for Access mode
-        </ParamField>
-        <ParamField path="session" type="object">
-          Session object for Direct mode
-        </ParamField>
-      </Expandable>
-    </ParamField>
-  </Expandable>
-</ParamField>
-
-<ParamField path="sdk.posts.create(postData, options?)" type="method">
-  Create a new post
-  
-  <Expandable title="Parameters">
-    <ParamField path="postData" type="object" required>
-      <Expandable title="Post Data">
-        <ParamField path="text" type="string">Post content</ParamField>
-        <ParamField path="price" type="number">Post price (0 for free)</ParamField>
-        <ParamField path="mediaItems" type="array">Array of media item IDs</ParamField>
-        <ParamField path="schedule" type="string">Schedule date (ISO string)</ParamField>
-      </Expandable>
-    </ParamField>
-  </Expandable>
-</ParamField>
-
-### Example Usage
-
-<Tabs>
-  <Tab title="Access Mode">
-    ```typescript
-    // Get a specific post
-    const result = await sdk.posts.getById("12345", {
-      connectionId: "conn_abc123"
-    });
-    
-    if (result.error) {
-      console.error("Error:", result.error.message);
-      return;
-    }
-    
-    console.log("Post:", result.data);
-    
-    // Get timeline posts
-    const timelineResult = await sdk.posts.getAll({
-      connectionId: "conn_abc123",
-      limit: 10,
-      order: "publish_date_desc"
-    });
-    
-    if (timelineResult.data) {
-      console.log("Posts:", timelineResult.data);
-    }
-    ```
-  </Tab>
-  
-  <Tab title="Direct Mode">
-    ```typescript
-    // Get a specific post
-    const result = await sdk.posts.getById("12345", {
-      session: sessionData
-    });
-    
-    // Create a new post
-    const createResult = await sdk.posts.create({
-      text: "Hello world!",
-      price: 0,
-      mediaItems: ["media_123", "media_456"]
-    }, {
-      session: sessionData
-    });
-    ```
-  </Tab>
-</Tabs>
-
-## Vault Module
-
-The `Vault` module manages your media library and storage.
-
-### Methods
-
-<ParamField path="sdk.vault.getAll(options?)" type="method">
-  Get all media items from vault
-  
-  <Expandable title="Parameters">
-    <ParamField path="options" type="object">
-      <Expandable title="Options">
-        <ParamField path="limit" type="number">Number of items to retrieve</ParamField>
-        <ParamField path="offset" type="string">Offset for pagination</ParamField>
-        <ParamField path="type" type="string">Media type filter: "photo" | "video" | "audio"</ParamField>
-        <ParamField path="connectionId" type="string">Connection ID for Access mode</ParamField>
-        <ParamField path="session" type="object">Session object for Direct mode</ParamField>
-      </Expandable>
-    </ParamField>
-  </Expandable>
-</ParamField>
-
-<ParamField path="sdk.vault.getById(mediaId, options?)" type="method">
-  Get a specific media item by ID
-  
-  <Expandable title="Response">
-    <ResponseField name="data" type="object">
-      <Expandable title="Media Object">
-        <ResponseField name="id" type="string">Media ID</ResponseField>
-        <ResponseField name="type" type="string">Media type</ResponseField>
-        <ResponseField name="source" type="object">Media source URLs</ResponseField>
-        <ResponseField name="preview" type="object">Preview URLs</ResponseField>
-        <ResponseField name="duration" type="number">Duration (for video/audio)</ResponseField>
-        <ResponseField name="size" type="object">Dimensions</ResponseField>
-        <ResponseField name="createdAt" type="string">Upload timestamp</ResponseField>
-      </Expandable>
-    </ResponseField>
-  </Expandable>
-</ParamField>
-
-<ParamField path="sdk.vault.delete(mediaId, options?)" type="method">
-  Delete a media item from vault
-</ParamField>
-
-### Example Usage
-
-```typescript
-// Get all vault media
-const vaultResult = await sdk.vault.getAll({
-  connectionId: "conn_abc123",
-  limit: 50,
-  type: "photo"
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
 });
 
-if (vaultResult.data) {
-  console.log("Vault media:", vaultResult.data);
-}
-
-// Get specific media item
-const mediaResult = await sdk.vault.getById("media_123", {
-  connectionId: "conn_abc123"
+const posts = await client.access.listPosts({
+  limit: 20,
+  sortBy: 'publish_date',
+  sortDirection: 'desc',
 });
 
-// Delete media item
-const deleteResult = await sdk.vault.delete("media_123", {
-  connectionId: "conn_abc123"
-});
-```
-
-## Upload Module
-
-The `Upload` module handles file uploads to the platform.
-
-### Methods
-
-<ParamField path="sdk.upload.uploadFile(file, options?)" type="method">
-  Upload a file to the platform
-  
-  <Expandable title="Parameters">
-    <ParamField path="file" type="File | Buffer | string" required>
-      The file to upload (File object, Buffer, or file path)
-    </ParamField>
-    
-    <ParamField path="options" type="object">
-      <Expandable title="Options">
-        <ParamField path="type" type="string">
-          Media type: "photo" | "video" | "audio"
-        </ParamField>
-        <ParamField path="description" type="string">
-          File description
-        </ParamField>
-        <ParamField path="tags" type="array">
-          Array of tags
-        </ParamField>
-        <ParamField path="connectionId" type="string">
-          Connection ID for Access mode
-        </ParamField>
-        <ParamField path="session" type="object">
-          Session object for Direct mode
-        </ParamField>
-      </Expandable>
-    </ParamField>
-  </Expandable>
-  
-  <Expandable title="Response">
-    <ResponseField name="data" type="object">
-      <Expandable title="Upload Result">
-        <ResponseField name="id" type="string">Uploaded media ID</ResponseField>
-        <ResponseField name="url" type="string">Media URL</ResponseField>
-        <ResponseField name="type" type="string">Media type</ResponseField>
-        <ResponseField name="size" type="number">File size in bytes</ResponseField>
-        <ResponseField name="duration" type="number">Duration (for video/audio)</ResponseField>
-      </Expandable>
-    </ResponseField>
-  </Expandable>
-</ParamField>
-
-<ParamField path="sdk.upload.getUploadProgress(uploadId)" type="method">
-  Get upload progress for a specific upload
-  
-  <Expandable title="Response">
-    <ResponseField name="data" type="object">
-      <ResponseField name="progress" type="number">Upload progress (0-100)</ResponseField>
-      <ResponseField name="status" type="string">Upload status</ResponseField>
-      <ResponseField name="error" type="string">Error message if failed</ResponseField>
-    </ResponseField>
-  </Expandable>
-</ParamField>
-
-### Example Usage
-
-<Tabs>
-  <Tab title="Browser">
-    ```typescript
-    // Upload from file input
-    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-    const file = fileInput.files[0];
-    
-    const uploadResult = await sdk.upload.uploadFile(file, {
-      type: "photo",
-      description: "Profile picture",
-      connectionId: "conn_abc123"
-    });
-    
-    if (uploadResult.error) {
-      console.error("Upload failed:", uploadResult.error.message);
-      return;
-    }
-    
-    console.log("Upload successful:", uploadResult.data);
-    ```
-  </Tab>
-  
-  <Tab title="Node.js">
-    ```typescript
-    import fs from 'fs';
-    
-    // Upload from file path
-    const filePath = './image.jpg';
-    const fileBuffer = fs.readFileSync(filePath);
-    
-    const uploadResult = await sdk.upload.uploadFile(fileBuffer, {
-      type: "photo",
-      description: "Content image",
-      session: sessionData
-    });
-    
-    if (uploadResult.data) {
-      console.log("Media ID:", uploadResult.data.id);
-    }
-    ```
-  </Tab>
-</Tabs>
-
-## Integration Patterns
-
-### Content Workflow
-
-```typescript
-// Complete content creation workflow
-async function createContentPost() {
-  try {
-    // 1. Upload media files
-    const imageUpload = await sdk.upload.uploadFile(imageFile, {
-      type: "photo",
-      connectionId: "conn_abc123"
-    });
-    
-    if (imageUpload.error) {
-      throw new Error(`Upload failed: ${imageUpload.error.message}`);
-    }
-    
-    // 2. Create post with uploaded media
-    const postResult = await sdk.posts.create({
-      text: "Check out my new content!",
-      price: 10.00,
-      mediaItems: [imageUpload.data.id]
-    }, {
-      connectionId: "conn_abc123"
-    });
-    
-    if (postResult.error) {
-      throw new Error(`Post creation failed: ${postResult.error.message}`);
-    }
-    
-    console.log("Post created successfully:", postResult.data);
-    
-  } catch (error) {
-    console.error("Content creation failed:", error);
-  }
+for (const post of posts.list) {
+  console.log(post.id, post.text);
 }
 ```
 
-### Vault Management
+```python Python
+from onlyfans_sdk import OFAuthClient, posts
 
-```typescript
-// Organize vault content
-async function organizeVault() {
-  const vaultResult = await sdk.vault.getAll({
-    connectionId: "conn_abc123",
-    limit: 100
+client = OFAuthClient(api_key="your-api-key", connection_id="conn_xxx")
+
+my_posts = posts.list_posts(
+    client,
+    limit=20,
+    sort_by="publish_date",
+    sort_direction="desc",
+)
+
+for post in my_posts["list"]:
+    print(post["id"], post["text"])
+```
+
+```go Go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+myPosts, err := client.ListAccessPosts(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit":         []string{"20"},
+        "sortBy":        []string{"publish_date"},
+        "sortDirection": []string{"desc"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, post := range myPosts.List {
+    fmt.Printf("Post %d: %s\n", post.Id, post.Text)
+}
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
+
+var posts = await client.GetAsync<PostsListResponse>(
+    "/v2/access/posts",
+    query: new Dictionary<string, string?>
+    {
+        ["limit"] = "20",
+        ["sortBy"] = "publish_date",
+        ["sortDirection"] = "desc"
+    }
+);
+
+foreach (var post in posts.List)
+{
+    Console.WriteLine($"Post {post.Id}: {post.Text}");
+}
+```
+</CodeGroup>
+
+### Post Sorting Options
+
+| Sort By | Description |
+|---------|-------------|
+| `publish_date` | Sort by publication date |
+| `tips` | Sort by tip amount received |
+| `favorites_count` | Sort by number of favorites |
+
+### Create a Post
+
+<CodeGroup>
+```typescript TypeScript
+const newPost = await client.access.createPosts({
+  body: {
+    text: 'Check out my new content!',
+    price: 10.00,
+    mediaIds: [12345, 67890],
+  },
+});
+
+console.log('Post created:', newPost.id);
+```
+
+```python Python
+new_post = posts.create_posts(
+    client,
+    body={
+        "text": "Check out my new content!",
+        "price": 10.00,
+        "mediaIds": [12345, 67890],
+    },
+)
+
+print("Post created:", new_post["id"])
+```
+
+```go Go
+newPost, err := client.CreateAccessPosts(ctx, struct {
+    Text     string  `json:"text"`
+    Price    float64 `json:"price"`
+    MediaIds []int   `json:"mediaIds"`
+}{
+    Text:     "Check out my new content!",
+    Price:    10.00,
+    MediaIds: []int{12345, 67890},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Post created:", newPost.Id)
+```
+
+```csharp C#
+var newPost = await client.PostAsync<PostResponse>(
+    "/v2/access/posts",
+    body: new
+    {
+        text = "Check out my new content!",
+        price = 10.00,
+        mediaIds = new[] { 12345, 67890 }
+    }
+);
+
+Console.WriteLine($"Post created: {newPost.Id}");
+```
+</CodeGroup>
+
+### Get, Edit, and Delete Posts
+
+<CodeGroup>
+```typescript TypeScript
+// Get a post by ID
+const post = await client.access.getPosts({ postId: '12345' });
+console.log(post.text);
+
+// Edit a post
+await client.access.replacePosts({
+  postId: '12345',
+  body: {
+    text: 'Updated post content!',
+    price: 15.00,
+  },
+});
+
+// Delete a post
+await client.access.deletePosts({ postId: '12345' });
+```
+
+```python Python
+# Get a post by ID
+post = posts.get_posts(client, post_id="12345")
+print(post["text"])
+
+# Edit a post
+posts.replace_posts(
+    client,
+    post_id="12345",
+    body={"text": "Updated post content!", "price": 15.00},
+)
+
+# Delete a post
+posts.delete_posts(client, post_id="12345")
+```
+
+```go Go
+// Get a post by ID
+post, err := client.GetAccessPosts(ctx, "12345")
+
+// Edit a post
+_, err = client.ReplaceAccessPosts(ctx, "12345", struct {
+    Text  string  `json:"text"`
+    Price float64 `json:"price"`
+}{
+    Text:  "Updated post content!",
+    Price: 15.00,
+})
+
+// Delete a post
+_, err = client.DeleteAccessPosts(ctx, "12345")
+```
+
+```csharp C#
+// Get a post by ID
+var post = await client.GetAsync<PostResponse>("/v2/access/posts/12345");
+Console.WriteLine(post.Text);
+
+// Edit a post
+await client.PutAsync<PostResponse>(
+    "/v2/access/posts/12345",
+    body: new { text = "Updated post content!", price = 15.00 }
+);
+
+// Delete a post
+await client.DeleteAsync<object>("/v2/access/posts/12345");
+```
+</CodeGroup>
+
+---
+
+## Vault
+
+### List Vault Media
+
+Browse media in your vault with filtering and sorting.
+
+<CodeGroup>
+```typescript TypeScript
+const media = await client.access.vault.listMedia({
+  limit: 20,
+  mediaType: 'video',
+  sortBy: 'recent',
+});
+
+for (const item of media.list) {
+  console.log(item.id, item.type);
+}
+```
+
+```python Python
+from onlyfans_sdk import vault
+
+media = vault.list_media(
+    client,
+    limit=20,
+    media_type="video",
+    sort_by="recent",
+)
+
+for item in media["list"]:
+    print(item["id"], item["type"])
+```
+
+```go Go
+media, err := client.ListAccessVaultMedia(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit":     []string{"20"},
+        "mediaType": []string{"video"},
+        "sortBy":    []string{"recent"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, item := range media.List {
+    fmt.Println(item.Id, item.Type)
+}
+```
+
+```csharp C#
+var media = await client.GetAsync<VaultMediaResponse>(
+    "/v2/access/vault/media",
+    query: new Dictionary<string, string?>
+    {
+        ["limit"] = "20",
+        ["mediaType"] = "video",
+        ["sortBy"] = "recent"
+    }
+);
+
+foreach (var item in media.List)
+{
+    Console.WriteLine($"{item.Id}: {item.Type}");
+}
+```
+</CodeGroup>
+
+### Vault Media Filters
+
+| Filter | Values |
+|--------|--------|
+| `mediaType` | `photo`, `video`, `audio`, `gif` |
+| `sortBy` | `recent`, `most-liked`, `highest-tips` |
+| `sortDirection` | `asc`, `desc` |
+| `listId` | Filter by vault list ID |
+
+### Vault Lists
+
+Organize vault media into lists (folders).
+
+<CodeGroup>
+```typescript TypeScript
+// List vault lists
+const lists = await client.access.vault.lists.list({
+  limit: 20,
+});
+
+// Create a vault list
+const newList = await client.access.vault.lists.create({
+  body: { name: 'Exclusive Content' },
+});
+
+// Update a vault list
+await client.access.vault.lists.update({
+  listId: '123',
+  body: { name: 'Premium Content' },
+});
+
+// Delete a vault list
+await client.access.vault.lists.delete({ listId: '123' });
+
+// Add media to a vault list
+await client.access.vault.lists.createMedia({
+  listId: '123',
+  body: { mediaIds: [456, 789] },
+});
+```
+
+```python Python
+from onlyfans_sdk import vault_lists
+
+# List vault lists
+lists = vault_lists.list_vault_vault_lists(client, limit=20)
+
+# Create a vault list
+new_list = vault_lists.create_vault_vault_lists(
+    client,
+    body={"name": "Exclusive Content"},
+)
+
+# Update a vault list
+vault_lists.update_vault_vault_lists(
+    client,
+    list_id=123,
+    body={"name": "Premium Content"},
+)
+
+# Delete a vault list
+vault_lists.delete_vault_vault_lists(client, list_id=123)
+
+# Add media to a vault list
+vault_lists.create_vault_vault_lists_media(
+    client,
+    list_id=123,
+    body={"mediaIds": [456, 789]},
+)
+```
+
+```go Go
+// List vault lists
+lists, err := client.ListAccessVaultLists(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+
+// Create a vault list
+newList, err := client.CreateAccessVaultLists(ctx, struct {
+    Name string `json:"name"`
+}{Name: "Exclusive Content"})
+
+// Update a vault list
+_, err = client.UpdateAccessVaultLists(ctx, "123", struct {
+    Name string `json:"name"`
+}{Name: "Premium Content"})
+
+// Delete a vault list
+_, err = client.DeleteAccessVaultLists(ctx, "123")
+
+// Add media to a vault list
+_, err = client.CreateAccessVaultListsMedia(ctx, "123", struct {
+    MediaIds []int `json:"mediaIds"`
+}{MediaIds: []int{456, 789}})
+```
+
+```csharp C#
+// List vault lists
+var lists = await client.GetAsync<VaultListsResponse>(
+    "/v2/access/vault/lists",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+
+// Create a vault list
+var newList = await client.PostAsync<VaultListResponse>(
+    "/v2/access/vault/lists",
+    body: new { name = "Exclusive Content" }
+);
+
+// Update a vault list
+await client.PatchAsync<VaultListResponse>(
+    "/v2/access/vault/lists/123",
+    body: new { name = "Premium Content" }
+);
+
+// Delete a vault list
+await client.DeleteAsync<object>("/v2/access/vault/lists/123");
+
+// Add media to a vault list
+await client.PostAsync<object>(
+    "/v2/access/vault/lists/123/media",
+    body: new { mediaIds = new[] { 456, 789 } }
+);
+```
+</CodeGroup>
+
+---
+
+## Media Upload
+
+The SDK handles the entire upload flow automatically: initializing the upload, chunking large files into parts, uploading each part, and finalizing. Progress callbacks let you track upload progress in real time.
+
+<Note>
+  **Automatic chunking**: Large files are automatically split into parts. Small files use a single-part upload that completes in one request.
+</Note>
+
+### Upload with Progress Tracking
+
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+// Step 1: Initialize the upload
+const init = await client.access.uploads.init({
+  body: {
+    filename: 'video.mp4',
+    filesize: file.size,
+    mimeType: 'video/mp4',
+  },
+});
+
+console.log('Upload session:', init.mediaUploadId);
+
+// Step 2: Upload the file (single-part for small files)
+const result = await client.access.uploads.replace({
+  mediaUploadId: init.mediaUploadId,
+  body: file,
+});
+
+console.log('Upload complete! Media:', result);
+
+// For large files, use multi-part upload:
+// await client.access.uploads.replaceParts({ mediaUploadId, partNumber: 1, body: chunk1 });
+// await client.access.uploads.replaceParts({ mediaUploadId, partNumber: 2, body: chunk2 });
+// await client.access.uploads.complete({ body: { mediaUploadId } });
+```
+
+```python Python
+from onlyfans_sdk import OFAuthClient
+
+client = OFAuthClient(api_key="your-api-key")
+
+def on_progress(uploaded, total):
+    percent = round((uploaded / total) * 100)
+    print(f"Upload progress: {percent}%")
+
+with open("video.mp4", "rb") as f:
+    result = client.upload_media(
+        connection_id="conn_xxx",
+        filename="video.mp4",
+        file=f,
+        mime_type="video/mp4",
+        on_progress=on_progress,
+    )
+
+print("Upload complete! Media ID:", result["mediaId"])
+```
+
+```go Go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key")
+
+data, err := os.ReadFile("video.mp4")
+if err != nil {
+    log.Fatal(err)
+}
+
+file := bytes.NewReader(data)
+filesize := int64(len(data))
+
+result, err := client.UploadMedia(ctx, file, filesize, &ofauth.UploadConfig{
+    ConnectionID: "conn_xxx",
+    Filename:     "video.mp4",
+    MimeType:     "video/mp4",
+    OnProgress: func(uploaded, total int64) {
+        percent := float64(uploaded) / float64(total) * 100
+        fmt.Printf("Upload progress: %.1f%%\n", percent)
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Upload complete! Media: %v\n", result.Media)
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
+
+// Step 1: Initialize the upload
+var init = await client.PostAsync<UploadInitResponse>(
+    "/v2/access/uploads/init",
+    body: new
+    {
+        filename = "video.mp4",
+        filesize = fileBytes.Length,
+        mimeType = "video/mp4"
+    }
+);
+
+// Step 2: Upload the file (single-part for small files)
+using var content = new ByteArrayContent(fileBytes);
+content.Headers.ContentType = new MediaTypeHeaderValue("video/mp4");
+
+await client.PutAsync<object>(
+    $"/v2/access/uploads/{init.MediaUploadId}",
+    body: content
+);
+
+Console.WriteLine("Upload complete!");
+```
+</CodeGroup>
+
+### Upload Flow Details
+
+The upload process works in three stages:
+
+1. **Initialize** — `POST /v2/access/uploads/init` returns a `mediaUploadId` and part information
+2. **Upload parts** — For single-part uploads, `PUT /v2/access/uploads/{id}` sends the whole file. For multi-part, `PUT /v2/access/uploads/{id}/parts/{partNumber}` sends each chunk
+3. **Complete** — For multi-part uploads, `POST /v2/access/uploads/complete` finalizes the upload
+
+<Tip>
+  The TypeScript, Python, and Go SDKs handle this entire flow automatically via their high-level upload methods. You only need to call one function.
+</Tip>
+
+---
+
+## Content Workflow Example
+
+A common pattern is uploading media first, then attaching it to a post:
+
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient, OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+try {
+  // 1. Upload media (init + replace for single-part)
+  const init = await client.access.uploads.init({
+    body: {
+      filename: 'video.mp4',
+      filesize: videoFile.size,
+      mimeType: 'video/mp4',
+    },
   });
-  
-  if (vaultResult.data) {
-    // Filter old unused media
-    const oldMedia = vaultResult.data.filter(item => {
-      const uploadDate = new Date(item.createdAt);
-      const monthsOld = (Date.now() - uploadDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
-      return monthsOld > 6;
-    });
-    
-    // Clean up old media
-    for (const media of oldMedia) {
-      await sdk.vault.delete(media.id, {
-        connectionId: "conn_abc123"
-      });
-    }
+
+  const upload = await client.access.uploads.replace({
+    mediaUploadId: init.mediaUploadId,
+    body: videoFile,
+  });
+
+  // 2. Create post with uploaded media
+  const post = await client.access.createPosts({
+    body: {
+      text: 'New exclusive content!',
+      price: 9.99,
+      mediaIds: [upload.mediaId],
+    },
+  });
+
+  console.log('Post published:', post.id);
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('Failed:', error.status, error.message);
+  } else {
+    throw error;
   }
 }
 ```
+
+```python Python
+from onlyfans_sdk import OFAuthClient, posts, OFAuthError
+
+client = OFAuthClient(api_key="your-api-key", connection_id="conn_xxx")
+
+try:
+    # 1. Upload media
+    with open("video.mp4", "rb") as f:
+        upload = client.upload_media(
+            connection_id="conn_xxx",
+            filename="video.mp4",
+            file=f,
+            mime_type="video/mp4",
+            on_progress=lambda u, t: print(f"Uploading: {round(u/t*100)}%"),
+        )
+
+    # 2. Create post with uploaded media
+    post = posts.create_posts(
+        client,
+        body={
+            "text": "New exclusive content!",
+            "price": 9.99,
+            "mediaIds": [upload["mediaId"]],
+        },
+    )
+
+    print("Post published:", post["id"])
+
+except OFAuthError as e:
+    print(f"Failed: {e.status} - {e}")
+```
+</CodeGroup>
+
+---
 
 ## Error Handling
 
-Content management operations can fail for various reasons. Always handle errors appropriately:
+<CodeGroup>
+```typescript TypeScript
+import { OFAuthAPIError } from '@ofauth/onlyfans-sdk';
 
-```typescript
-const result = await sdk.posts.create(postData, options);
-
-if (result.error) {
-  switch (result.error.type) {
-    case 'bad_request':
-      console.error("Invalid post data:", result.error.details);
-      break;
-    case 'unauthorized':
-      console.error("Authentication required");
-      break;
-    case 'forbidden':
-      console.error("Insufficient permissions");
-      break;
-    default:
-      console.error("Unexpected error:", result.error.message);
+try {
+  await client.access.createPosts({
+    body: { text: 'Hello world!' },
+  });
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('API Error:', error.status, error.message);
+    console.error('Error code:', error.code);
+    console.error('Details:', error.details);
+  } else {
+    throw error;
   }
 }
 ```
 
-## Best Practices
+```python Python
+from onlyfans_sdk import OFAuthError
 
-### File Upload Optimization
+try:
+    posts.create_posts(client, body={"text": "Hello world!"})
+except OFAuthError as e:
+    print(f"API Error {e.status}: {e}")
+    print(f"Error code: {e.code}")
+    print(f"Details: {e.details}")
+```
 
-- **Compress images** before upload to reduce file size
-- **Validate file types** and sizes before uploading
-- **Use progress tracking** for large files
-- **Implement retry logic** for failed uploads
+```go Go
+_, err := client.CreateAccessPosts(ctx, struct {
+    Text string `json:"text"`
+}{Text: "Hello world!"})
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+    } else {
+        log.Fatal(err)
+    }
+}
+```
 
-### Content Organization
-
-- **Tag content** appropriately for easy discovery
-- **Use descriptive filenames** for vault organization
-- **Regular cleanup** of unused media to save storage
-- **Batch operations** when possible to improve performance
-
-### Performance Tips
-
-- **Paginate large content lists** to avoid memory issues
-- **Cache frequently accessed media** locally
-- **Use appropriate image sizes** for different contexts
-- **Implement lazy loading** for media-heavy interfaces 
+```csharp C#
+try
+{
+    await client.PostAsync<PostResponse>(
+        "/v2/access/posts",
+        body: new { text = "Hello world!" }
+    );
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"API Error {ex.Status}: {ex.Message}");
+    Console.WriteLine($"Error code: {ex.Code}");
+}
+```
+</CodeGroup>

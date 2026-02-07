@@ -1,698 +1,559 @@
 ---
 title: "Connection Management"
-description: "API reference for managing OnlyFans connections through the SDK"
+description: "List, monitor, import, and manage OnlyFans connections"
 ---
 
 ## Overview
 
-The Connections module (`sdk.link.connections`) provides methods to manage active OnlyFans connections established through OFAuth Link. These connections represent authenticated relationships between your application and OnlyFans accounts.
+Connections represent authenticated OnlyFans accounts linked to your organization. After a user completes the [Link flow](/sdk/modules/authentication/link-authentication), you receive a connection ID (`conn_xxx`) that you use for all Access API calls. This page covers managing those connections.
 
-<Info>
-  **Link vs Access**: OFAuth Link handles the OAuth-style authentication flow where users securely connect their accounts. Once connected, you use OFAuth Access with these connection IDs to make API calls to OnlyFans endpoints.
-</Info>
+## List Connections
 
-<Info>
-  **Connection Lifecycle**: Connections are created when users complete the OFAuth Link authentication flow and can be managed through these SDK methods.
-</Info>
+Retrieve all connections with optional filters for status, import type, and pagination.
 
-## Get All Connections
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-### `getAll(options)`
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
 
-Retrieve a list of connections with optional filtering and pagination.
+// List all connections
+const connections = await client.account.connections.list({});
+for (const conn of connections.list) {
+  console.log(`${conn.id}: ${conn.userData.username} (${conn.status})`);
+}
 
-<ParamField path="options" type="GetConnectionsOptions">
-  Optional filtering and pagination parameters.
-</ParamField>
+// Filter by status
+const active = await client.account.connections.list({
+  status: 'active',
+  limit: 10,
+});
 
-<ParamField path="options.status" type="'active' | 'expired' | 'awaiting_2fa'">
-  Filter connections by their current status.
-</ParamField>
+// Filter by imported flag
+const imported = await client.account.connections.list({
+  imported: 'true',
+});
+```
 
-<ParamField path="options.platformUserId" type="number">
-  Filter connections for a specific OnlyFans user ID.
-</ParamField>
+```python Python
+from onlyfans_sdk import OFAuthClient, account
 
-<ParamField path="options.limit" type="number" default="20">
-  Maximum number of connections to return (1-100).
-</ParamField>
+client = OFAuthClient(api_key="your-api-key")
 
-<ParamField path="options.offset" type="number" default="0">
-  Number of connections to skip for pagination.
-</ParamField>
+# List all connections
+connections = account.list_connections(client)
+for conn in connections["list"]:
+    print(f"{conn['id']}: {conn['userData']['username']} ({conn['status']})")
 
-<ResponseField name="list" type="Connection[]" required>
-  Array of connection objects.
-  
-  <Expandable title="Connection Object">
-    <ResponseField name="id" type="string" required>
-      Unique connection identifier (e.g., "conn_123456789").
-    </ResponseField>
-    
-    <ResponseField name="platformUserId" type="string" required>
-      The OnlyFans user ID associated with this connection.
-    </ResponseField>
-    
-    <ResponseField name="status" type="'active' | 'expired' | 'awaiting_2fa'" required>
-      Current status of the connection.
-    </ResponseField>
-    
-    <ResponseField name="createdAt" type="string" required>
-      ISO 8601 timestamp when the connection was created.
-    </ResponseField>
-    
-    <ResponseField name="updatedAt" type="string" required>
-      ISO 8601 timestamp when the connection was last updated.
-    </ResponseField>
-    
-    <ResponseField name="expiresAt" type="string">
-      ISO 8601 timestamp when the connection expires (if applicable).
-    </ResponseField>
-    
-    <ResponseField name="metadata" type="object">
-      Additional connection metadata.
-      
-      <Expandable title="Metadata Fields">
-        <ResponseField name="username" type="string">
-          OnlyFans username for this connection.
-        </ResponseField>
-        
-        <ResponseField name="displayName" type="string">
-          Display name of the connected user.
-        </ResponseField>
-        
-        <ResponseField name="lastActivity" type="string">
-          ISO 8601 timestamp of last activity.
-        </ResponseField>
-      </Expandable>
-    </ResponseField>
-  </Expandable>
-</ResponseField>
+# Filter by status
+active = account.list_connections(client, status="active", limit=10)
 
-<ResponseField name="total" type="number" required>
-  Total number of connections matching the criteria.
-</ResponseField>
+# Filter by imported flag
+imported = account.list_connections(client, imported="true")
+```
 
-<ResponseField name="hasMore" type="boolean" required>
-  Whether there are more connections beyond the current page.
-</ResponseField>
+```go Go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key")
 
-<RequestExample>
-```typescript Get All Active Connections
-const { data: connections, error } = await sdk.link.connections.getAll({
-  status: "active",
-  limit: 50,
-  offset: 0
+// List all connections
+connections, err := client.ListAccountConnections(ctx, nil)
+if err != nil {
+    log.Fatal(err)
+}
+for _, conn := range connections.List {
+    fmt.Printf("%s: %s (%s)\n", conn.Id, conn.UserData.Username, conn.Status)
+}
+
+// Filter by status
+active, err := client.ListAccountConnections(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "status": []string{"active"},
+        "limit":  []string{"10"},
+    },
 })
-
-if (error) {
-  console.error("Failed to get connections:", error.message)
-} else {
-  console.log(`Found ${connections.total} total connections`)
-  console.log(`Showing ${connections.list.length} connections`)
-  
-  connections.list.forEach(connection => {
-    console.log(`Connection ${connection.id}:`)
-    console.log(`  User: ${connection.metadata?.username}`)
-    console.log(`  Status: ${connection.status}`)
-    console.log(`  Created: ${connection.createdAt}`)
-  })
-  
-  if (connections.hasMore) {
-    console.log("More connections available")
-  }
-}
 ```
-</RequestExample>
 
-<RequestExample>
-```typescript Get Connections for Specific User
-const { data: userConnections, error } = await sdk.link.connections.getAll({
-  platformUserId: 123456789,
-  status: "active"
-})
+```csharp C#
+using OFAuth;
 
-if (data) {
-  if (userConnections.list.length > 0) {
-    console.log("User has active connections:")
-    userConnections.list.forEach(conn => {
-      console.log(`  ${conn.id} - ${conn.status}`)
-    })
-  } else {
-    console.log("No active connections for this user")
-  }
-}
-```
-</RequestExample>
+var client = new OFAuthClient("your-api-key");
 
-<ResponseExample>
-```json Success Response
+// List all connections
+var connections = await client.GetAsync<ConnectionsListResponse>(
+    "/v2/account/connections"
+);
+foreach (var conn in connections.List)
 {
-  "data": {
-    "list": [
-      {
-        "id": "conn_123456789",
-        "platformUserId": "123456789",
-        "status": "active",
-        "createdAt": "2024-01-15T10:30:00Z",
-        "updatedAt": "2024-01-15T10:30:00Z",
-        "expiresAt": "2024-02-15T10:30:00Z",
-        "metadata": {
-          "username": "example_user",
-          "displayName": "Example User",
-          "lastActivity": "2024-01-20T15:45:00Z"
-        }
-      }
-    ],
-    "total": 1,
-    "hasMore": false
-  },
-  "error": undefined
+    Console.WriteLine($"{conn.Id}: {conn.UserData.Username} ({conn.Status})");
 }
-```
-</ResponseExample>
 
-## Get Connection by ID
-
-### `getById(connectionId)`
-
-Retrieve details for a specific connection.
-
-<ParamField path="connectionId" type="string" required>
-  The unique connection identifier.
-</ParamField>
-
-<ResponseField name="connection" type="Connection" required>
-  The connection object with full details.
-</ResponseField>
-
-<RequestExample>
-```typescript Get Specific Connection
-const { data: connection, error } = await sdk.link.connections.getById(
-  "conn_123456789"
-)
-
-if (error) {
-  if (error.type === "not_found") {
-    console.log("Connection not found")
-  } else {
-    console.error("Error getting connection:", error.message)
-  }
-} else {
-  console.log("Connection details:")
-  console.log(`  ID: ${connection.id}`)
-  console.log(`  Status: ${connection.status}`)
-  console.log(`  User: ${connection.metadata?.username}`)
-  console.log(`  Created: ${connection.createdAt}`)
-  
-  if (connection.status === "active") {
-    // Use this connection for API calls
-    const { data: profile } = await sdk.self.getMe({
-      authentication: { connectionId: connection.id }
-    })
-    console.log("Profile:", profile?.username)
-  }
-}
-```
-</RequestExample>
-
-<ResponseExample>
-```json Success Response
-{
-  "data": {
-    "id": "conn_123456789",
-    "platformUserId": "123456789",
-    "status": "active",
-    "createdAt": "2024-01-15T10:30:00Z",
-    "updatedAt": "2024-01-20T15:45:00Z",
-    "expiresAt": "2024-02-15T10:30:00Z",
-    "metadata": {
-      "username": "example_user",
-      "displayName": "Example User",
-      "lastActivity": "2024-01-20T15:45:00Z"
+// Filter by status
+var active = await client.GetAsync<ConnectionsListResponse>(
+    "/v2/account/connections",
+    query: new Dictionary<string, string?>
+    {
+        ["status"] = "active",
+        ["limit"] = "10"
     }
-  },
-  "error": undefined
+);
+```
+</CodeGroup>
+
+### Query Parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `status` | `"active"` \| `"expired"` \| `"awaiting_2fa"` | Filter by connection status |
+| `imported` | `"true"` \| `"false"` | Filter by whether connection was imported |
+| `limit` | `number` | Items per page (default 20) |
+| `offset` | `number` | Number of items to skip |
+
+## Pagination
+
+### Automatic Iteration (TypeScript)
+
+The TypeScript SDK provides an async iterator that handles pagination automatically:
+
+```typescript
+// Iterate over ALL connections, across all pages
+for await (const connection of client.account.connections.iterate()) {
+  console.log(connection.id, connection.userData.username);
+}
+
+// With options
+for await (const connection of client.account.connections.iterate({
+  status: 'active',
+  maxItems: 100,
+  pageSize: 20,
+})) {
+  console.log(connection.id);
 }
 ```
-</ResponseExample>
+
+### Generator Iteration (Python)
+
+Python uses generators for automatic pagination:
+
+```python
+# Iterate over ALL connections, across all pages
+for connection in account.iter_connections(client):
+    print(connection["id"], connection["userData"]["username"])
+
+# With options
+for connection in account.iter_connections(
+    client,
+    status="active",
+    max_items=100,
+    page_size=20,
+):
+    print(connection["id"])
+```
+
+### Manual Pagination (Go, C#)
+
+<CodeGroup>
+```go Go
+offset := 0
+limit := 20
+
+for {
+    connections, err := client.ListAccountConnections(ctx, &ofauth.RequestOptions{
+        Query: url.Values{
+            "limit":  []string{fmt.Sprintf("%d", limit)},
+            "offset": []string{fmt.Sprintf("%d", offset)},
+        },
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, conn := range connections.List {
+        fmt.Printf("%s: %s\n", conn.Id, conn.UserData.Username)
+    }
+
+    if !connections.HasMore {
+        break
+    }
+    offset += len(connections.List)
+}
+```
+
+```csharp C#
+var offset = 0;
+var limit = 20;
+
+while (true)
+{
+    var page = await client.GetAsync<ConnectionsListResponse>(
+        "/v2/account/connections",
+        query: new Dictionary<string, string?>
+        {
+            ["limit"] = limit.ToString(),
+            ["offset"] = offset.ToString()
+        }
+    );
+
+    foreach (var conn in page.List)
+    {
+        Console.WriteLine($"{conn.Id}: {conn.UserData.Username}");
+    }
+
+    if (!page.HasMore) break;
+    offset += page.List.Count;
+}
+```
+</CodeGroup>
+
+## Connection Settings
+
+Each connection has settings you can read and update, including vault cache configuration.
+
+### Get Settings
+
+<CodeGroup>
+```typescript TypeScript
+const settings = await client.account.connections.getSettings({
+  connectionId: 'conn_xxx',
+});
+
+console.log('Connection:', settings.connectionId);
+console.log('Vault cache enabled:', settings.vaultCache.enabled);
+console.log('Storage used:', settings.vaultCache.stats.totalStorageBytes);
+```
+
+```python Python
+settings = account.get_connection_settings(client, connection_id="conn_xxx")
+
+print("Connection:", settings["connectionId"])
+print("Vault cache enabled:", settings["vaultCache"]["enabled"])
+```
+
+```go Go
+settings, err := client.GetAccountConnectionsSettings(ctx, "conn_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Vault cache enabled:", settings.VaultCache.Enabled)
+```
+
+```csharp C#
+var settings = await client.GetAsync<ConnectionSettingsResponse>(
+    "/v2/account/connections/conn_xxx/settings"
+);
+
+Console.WriteLine($"Vault cache enabled: {settings.VaultCache.Enabled}");
+```
+</CodeGroup>
+
+### Update Settings
+
+<CodeGroup>
+```typescript TypeScript
+const updated = await client.account.connections.updateSettings({
+  connectionId: 'conn_xxx',
+  body: {
+    vaultCache: {
+      enabled: true,
+      settings: {
+        autoCacheVault: true,
+        cacheImages: true,
+        cacheVideos: true,
+      },
+    },
+  },
+});
+```
+
+```python Python
+updated = account.update_connection_settings(
+    client,
+    connection_id="conn_xxx",
+    body={
+        "vaultCache": {
+            "enabled": True,
+            "settings": {
+                "autoCacheVault": True,
+                "cacheImages": True,
+                "cacheVideos": True,
+            },
+        },
+    },
+)
+```
+
+```go Go
+updated, err := client.UpdateAccountConnectionsSettings(ctx, "conn_xxx", struct {
+    VaultCache *struct {
+        Enabled  *bool       `json:"enabled,omitempty"`
+        Settings interface{} `json:"settings,omitempty"`
+    } `json:"vaultCache,omitempty"`
+}{
+    VaultCache: &struct {
+        Enabled  *bool       `json:"enabled,omitempty"`
+        Settings interface{} `json:"settings,omitempty"`
+    }{
+        Enabled: boolPtr(true),
+        Settings: map[string]interface{}{
+            "autoCacheVault": true,
+            "cacheImages":    true,
+            "cacheVideos":    true,
+        },
+    },
+})
+```
+
+```csharp C#
+var updated = await client.PatchAsync<ConnectionSettingsUpdateResponse>(
+    "/v2/account/connections/conn_xxx/settings",
+    body: new
+    {
+        vaultCache = new
+        {
+            enabled = true,
+            settings = new
+            {
+                autoCacheVault = true,
+                cacheImages = true,
+                cacheVideos = true
+            }
+        }
+    }
+);
+```
+</CodeGroup>
 
 ## Delete Connection
 
-### `delete(connectionId)`
+Permanently disconnect an account. This logs the user out and stops billing for the connection.
 
-Delete a specific connection, revoking access to the associated OnlyFans account.
-
-<ParamField path="connectionId" type="string" required>
-  The unique connection identifier to delete.
-</ParamField>
-
-<ResponseField name="success" type="boolean" required>
-  Whether the deletion was successful.
-</ResponseField>
-
-<ResponseField name="message" type="string" required>
-  Confirmation message about the deletion.
-</ResponseField>
-
-<RequestExample>
-```typescript Delete Connection
-const { data: result, error } = await sdk.link.connections.delete(
-  "conn_123456789"
-)
-
-if (error) {
-  if (error.type === "not_found") {
-    console.log("Connection was already deleted or doesn't exist")
-  } else {
-    console.error("Failed to delete connection:", error.message)
-  }
-} else {
-  console.log("Connection deleted:", result.message)
-  
-  // Remove connection from your local storage/database
-  await removeStoredConnection("conn_123456789")
+<CodeGroup>
+```typescript TypeScript
+try {
+  await client.account.connections.delete({
+    connectionId: 'conn_xxx',
+  });
+  console.log('Connection deleted');
+} catch (error) {
+  console.error('Failed to delete:', error);
 }
 ```
-</RequestExample>
 
-<ResponseExample>
-```json Success Response
-{
-  "data": {
-    "success": true,
-    "message": "Connection conn_123456789 has been successfully deleted"
-  },
-  "error": undefined
-}
+```python Python
+try:
+    account.delete_connections(client, connection_id="conn_xxx")
+    print("Connection deleted")
+except Exception as e:
+    print("Failed to delete:", e)
 ```
-</ResponseExample>
+
+```go Go
+_, err := client.DeleteAccountConnections(ctx, "conn_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Connection deleted")
+```
+
+```csharp C#
+await client.DeleteAsync<object>("/v2/account/connections/conn_xxx");
+Console.WriteLine("Connection deleted");
+```
+</CodeGroup>
 
 <Warning>
-  **Permanent Action**: Deleting a connection permanently revokes access to the OnlyFans account. The user would need to re-authenticate through the Link flow to restore access.
+  Deleting a connection is permanent. The user must re-authenticate through Link to restore access.
 </Warning>
 
 ## Invalidate Connection
 
-### `invalidate(connectionId)`
+Mark a connection as expired without deleting it. The connection record is preserved, allowing the user to reconnect with updated permissions.
 
-Invalidate a connection, marking it as expired while preserving the connection record. Use this when you need users to reconnect with updated permissions.
+<CodeGroup>
+```typescript TypeScript
+await client.account.connections.invalidate({
+  connectionId: 'conn_xxx',
+});
+console.log('Connection invalidated — user must re-authenticate');
+```
 
-<ParamField path="connectionId" type="string" required>
-  The unique connection identifier to invalidate.
-</ParamField>
+```python Python
+account.invalidate_connections(client, connection_id="conn_xxx")
+print("Connection invalidated — user must re-authenticate")
+```
 
-<ResponseField name="success" type="boolean" required>
-  Whether the invalidation was successful.
-</ResponseField>
+```go Go
+_, err := client.AccountConnectionsInvalidate(ctx, "conn_xxx")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Connection invalidated — user must re-authenticate")
+```
 
-<RequestExample>
-```typescript Invalidate Connection
-const { data: result, error } = await sdk.link.connections.invalidate(
-  "conn_123456789"
+```csharp C#
+await client.PostAsync<object>(
+    "/v2/account/connections/conn_xxx/invalidate"
+);
+Console.WriteLine("Connection invalidated — user must re-authenticate");
+```
+</CodeGroup>
+
+### Invalidate vs Delete
+
+| | Invalidate | Delete |
+| --- | --- | --- |
+| Connection record | Preserved | Removed |
+| User can reconnect | Yes, with same connection ID | Must create new connection |
+| Use case | Force re-auth, update permissions | Full disconnect, stop billing |
+
+## Import Connection
+
+Import an externally managed OnlyFans session. Imported connections are not billed monthly and are not health-checked. They can be used through the Access API immediately.
+
+<CodeGroup>
+```typescript TypeScript
+const imported = await client.account.connections.createImport({
+  body: {
+    cookie: 'sess=your_session; auth_id=12345; auth_uid_12345=xxx',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    permissions: ['profile:read', 'posts:read', 'messages:read'],
+    clientReferenceId: 'my-ref-123',
+  },
+});
+
+console.log('Imported connection:', imported.id);
+console.log('Status:', imported.status);
+console.log('User:', imported.userData.username);
+```
+
+```python Python
+imported = account.create_connections_connections_import(
+    client,
+    body={
+        "cookie": "sess=your_session; auth_id=12345; auth_uid_12345=xxx",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "permissions": ["profile:read", "posts:read", "messages:read"],
+        "clientReferenceId": "my-ref-123",
+    },
 )
 
-if (error) {
-  if (error.type === "not_found") {
-    console.log("Connection not found")
-  } else {
-    console.error("Failed to invalidate connection:", error.message)
-  }
-} else {
-  console.log("Connection invalidated successfully")
-  
-  // Notify user to reconnect with updated permissions
-  await notifyUserToReconnect("conn_123456789")
-}
+print("Imported connection:", imported["id"])
+print("Status:", imported["status"])
+print("User:", imported["userData"]["username"])
 ```
-</RequestExample>
 
-<ResponseExample>
-```json Success Response
-{
-  "data": {
-    "success": true
+```go Go
+cookie := "sess=your_session; auth_id=12345; auth_uid_12345=xxx"
+userAgent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+imported, err := client.CreateAccountConnectionsImport(ctx, struct {
+    Cookie            string   `json:"cookie"`
+    UserAgent         string   `json:"userAgent"`
+    Permissions       []string `json:"permissions,omitempty"`
+    ClientReferenceId *string  `json:"clientReferenceId,omitempty"`
+}{
+    Cookie:      cookie,
+    UserAgent:   userAgent,
+    Permissions: []string{"profile:read", "posts:read", "messages:read"},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Imported connection:", imported.Id)
+fmt.Println("Status:", imported.Status)
+fmt.Println("User:", imported.UserData.Username)
+```
+
+```csharp C#
+var imported = await client.PostAsync<ConnectionImportResponse>(
+    "/v2/account/connections/import",
+    body: new
+    {
+        cookie = "sess=your_session; auth_id=12345; auth_uid_12345=xxx",
+        userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        permissions = new[] { "profile:read", "posts:read", "messages:read" },
+        clientReferenceId = "my-ref-123"
+    }
+);
+
+Console.WriteLine($"Imported connection: {imported.Id}");
+Console.WriteLine($"Status: {imported.Status}");
+Console.WriteLine($"User: {imported.UserData.Username}");
+```
+</CodeGroup>
+
+### Update Imported Session
+
+Refresh an imported connection's session data without deleting and re-importing:
+
+<CodeGroup>
+```typescript TypeScript
+const updated = await client.account.connections.updateImport({
+  connectionId: 'conn_xxx',
+  body: {
+    cookie: 'sess=new_session; auth_id=12345; auth_uid_12345=yyy',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
   },
-  "error": undefined
-}
-```
-</ResponseExample>
+});
 
-<Info>
-  **Preserves Connection Record**: Unlike `delete()`, invalidating a connection keeps the connection record intact. The user can reconnect using the same connection ID, and their profile data will be preserved.
-</Info>
-
-### When to Use Invalidate vs Delete
-
-| Method | Use Case |
-|--------|----------|
-| `invalidate()` | Update permissions, force re-authentication, security rotation |
-| `delete()` | User requests disconnection, stop billing, remove all data |
-
-### Updating Permissions Flow
-
-When your platform's required permissions change, use invalidate to prompt users to reconnect:
-
-```typescript
-async function updateUserPermissions(connectionId: string) {
-  // 1. Invalidate the existing connection
-  const { error: invalidateError } = await sdk.link.connections.invalidate(
-    connectionId
-  )
-  
-  if (invalidateError) {
-    console.error("Failed to invalidate:", invalidateError.message)
-    return
-  }
-  
-  // 2. Initialize a new Link session with the same connectionId
-  const { data: linkSession, error: linkError } = await sdk.link.init({
-    connectionId: connectionId,
-    redirectUrl: "https://yourapp.com/callback"
-  })
-  
-  if (linkSession) {
-    // 3. Redirect user to reconnect with new permissions
-    console.log("Redirect user to:", linkSession.url)
-  }
-}
+console.log('Session updated:', updated.id, updated.status);
 ```
 
-## Connection Status Management
+```python Python
+updated = account.update_connections_connections_import(
+    client,
+    connection_id="conn_xxx",
+    body={
+        "cookie": "sess=new_session; auth_id=12345; auth_uid_12345=yyy",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    },
+)
 
-### Understanding Connection Status
-
-Connections can have different statuses that affect their usability:
-
-<Tabs>
-  <Tab title="Active">
-    **Status**: `active`
-    
-    Connection is valid and can be used for API calls.
-    
-    ```typescript
-    if (connection.status === "active") {
-      // Safe to use for API calls
-      const { data } = await sdk.self.getMe({
-        authentication: { connectionId: connection.id }
-      })
-    }
-    ```
-  </Tab>
-  
-  <Tab title="Expired">
-    **Status**: `expired`
-    
-    Connection has expired and cannot be used for API calls.
-    
-    ```typescript
-    if (connection.status === "expired") {
-      console.log("Connection expired, user needs to re-authenticate")
-      // Redirect user to re-authentication flow
-      await initiateReAuthentication(connection.platformUserId)
-    }
-    ```
-  </Tab>
-  
-  <Tab title="Awaiting 2FA">
-    **Status**: `awaiting_2fa`
-    
-    Connection is waiting for two-factor authentication to complete.
-    
-    ```typescript
-    if (connection.status === "awaiting_2fa") {
-      console.log("Connection awaiting 2FA, user needs to complete verification")
-      // Prompt user to complete 2FA verification
-      await promptUser2FA(connection.id)
-    }
-    ```
-  </Tab>
-</Tabs>
-
-### Monitoring Connection Health
-
-```typescript
-async function checkConnectionHealth(connectionId: string): Promise<boolean> {
-  const { data: connection, error } = await sdk.link.connections.getById(
-    connectionId
-  )
-  
-  if (error) {
-    console.error("Failed to check connection:", error.message)
-    return false
-  }
-  
-  switch (connection.status) {
-    case "active":
-      // Additional verification with a simple API call
-      const { error: apiError } = await sdk.self.getMe({
-        authentication: { connectionId }
-      })
-      
-      if (apiError && apiError.type === "unauthorized") {
-        console.log("Connection appears active but API calls fail")
-        return false
-      }
-      
-      return true
-      
-    case "expired":
-      console.log("Connection expired")
-      return false
-      
-    case "awaiting_2fa":
-      console.log("Connection awaiting 2FA")
-      return false
-      
-    default:
-      console.log("Unknown connection status:", connection.status)
-      return false
-  }
-}
-
-// Usage
-const isHealthy = await checkConnectionHealth("conn_123456789")
-if (!isHealthy) {
-  // Handle unhealthy connection
-  await handleConnectionIssue("conn_123456789")
-}
+print("Session updated:", updated["id"], updated["status"])
 ```
 
-## Bulk Connection Management
-
-### Managing Multiple Connections
-
-```typescript
-async function getActiveConnectionsForUsers(
-  userIds: number[]
-): Promise<Map<number, string>> {
-  const activeConnections = new Map<number, string>()
-  
-  // Get all active connections
-  const { data: connections, error } = await sdk.link.connections.getAll({
-    status: "active",
-    limit: 100
-  })
-  
-  if (error) {
-    console.error("Failed to get connections:", error.message)
-    return activeConnections
-  }
-  
-  // Map user IDs to connection IDs
-  connections.list.forEach(connection => {
-    const userId = parseInt(connection.platformUserId)
-    if (userIds.includes(userId)) {
-      activeConnections.set(userId, connection.id)
-    }
-  })
-  
-  return activeConnections
-}
-
-// Usage
-const userIds = [123456, 789012, 345678]
-const connectionMap = await getActiveConnectionsForUsers(userIds)
-
-console.log(`Found connections for ${connectionMap.size} users`)
-connectionMap.forEach((connectionId, userId) => {
-  console.log(`User ${userId}: ${connectionId}`)
+```go Go
+updated, err := client.UpdateAccountConnectionsImport(ctx, "conn_xxx", struct {
+    Cookie    string `json:"cookie"`
+    UserAgent string `json:"userAgent"`
+}{
+    Cookie:    "sess=new_session; auth_id=12345; auth_uid_12345=yyy",
+    UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
 })
 ```
 
-### Cleanup Expired Connections
-
-```typescript
-async function cleanupExpiredConnections(): Promise<number> {
-  let deletedCount = 0
-  let offset = 0
-  const limit = 50
-  
-  while (true) {
-    const { data: connections, error } = await sdk.link.connections.getAll({
-      status: "expired",
-      limit,
-      offset
-    })
-    
-    if (error) {
-      console.error("Failed to get expired connections:", error.message)
-      break
+```csharp C#
+var updated = await client.PatchAsync<ConnectionImportResponse>(
+    "/v2/account/connections/import/conn_xxx",
+    body: new
+    {
+        cookie = "sess=new_session; auth_id=12345; auth_uid_12345=yyy",
+        userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
-    
-    if (connections.list.length === 0) {
-      break // No more expired connections
-    }
-    
-    // Delete expired connections
-    const deletePromises = connections.list.map(async connection => {
-      const { error: deleteError } = await sdk.link.connections.delete(
-        connection.id
-      )
-      
-      if (!deleteError) {
-        deletedCount++
-        console.log(`Deleted expired connection: ${connection.id}`)
-      } else {
-        console.error(`Failed to delete ${connection.id}:`, deleteError.message)
-      }
-    })
-    
-    await Promise.all(deletePromises)
-    
-    if (!connections.hasMore) {
-      break
-    }
-    
-    offset += limit
-  }
-  
-  return deletedCount
-}
-
-// Run cleanup
-const deleted = await cleanupExpiredConnections()
-console.log(`Cleaned up ${deleted} expired connections`)
+);
 ```
-
-## Error Handling
-
-Common error scenarios when working with connections:
-
-### Connection Not Found
-
-```typescript
-const { data, error } = await sdk.link.connections.getById("conn_invalid")
-
-if (error && error.type === "not_found") {
-  console.log("Connection doesn't exist or was already deleted")
-  // Remove from local storage if needed
-  await removeLocalConnection("conn_invalid")
-}
-```
-
-### Permission Errors
-
-```typescript
-const { data, error } = await sdk.link.connections.delete("conn_123456789")
-
-if (error && error.type === "forbidden") {
-  console.log("You don't have permission to delete this connection")
-  // This connection might belong to another application
-}
-```
-
-### Rate Limiting
-
-```typescript
-const { data, error } = await sdk.link.connections.getAll({ limit: 100 })
-
-if (error && error.type === "too_many_requests") {
-  console.log("Rate limited, waiting before retry...")
-  await new Promise(resolve => setTimeout(resolve, 5000))
-  // Retry the request
-}
-```
-
-## Integration Patterns
-
-### Connection-Based User Management
-
-```typescript
-class UserConnectionManager {
-  private connectionCache = new Map<string, any>()
-  
-  async getUserConnection(userId: string): Promise<string | null> {
-    // Check cache first
-    if (this.connectionCache.has(userId)) {
-      const cached = this.connectionCache.get(userId)
-      if (Date.now() - cached.timestamp < 300000) { // 5 min cache
-        return cached.connectionId
-      }
-    }
-    
-    // Find active connection for user
-    const { data: connections, error } = await sdk.link.connections.getAll({
-      platformUserId: parseInt(userId),
-      status: "active",
-      limit: 1
-    })
-    
-    if (error || connections.list.length === 0) {
-      return null
-    }
-    
-    const connectionId = connections.list[0].id
-    
-    // Cache the result
-    this.connectionCache.set(userId, {
-      connectionId,
-      timestamp: Date.now()
-    })
-    
-    return connectionId
-  }
-  
-  async clearUserCache(userId: string): void {
-    this.connectionCache.delete(userId)
-  }
-}
-
-// Usage
-const connectionManager = new UserConnectionManager()
-
-const connectionId = await connectionManager.getUserConnection("123456")
-if (connectionId) {
-  const { data: profile } = await sdk.self.getMe({
-    authentication: { connectionId }
-  })
-  console.log("User profile:", profile)
-} else {
-  console.log("No active connection for user")
-}
-```
-
-## Best Practices
-
-<Tip>
-  **Caching**: Cache connection lookups to avoid repeated API calls, but implement proper cache invalidation.
-</Tip>
-
-<Warning>
-  **Status Monitoring**: Regularly check connection status, especially for long-running applications.
-</Warning>
+</CodeGroup>
 
 <Info>
-  **Graceful Degradation**: Handle connection failures gracefully and provide clear feedback to users.
+  The new session must belong to the **same OnlyFans user** (matched by user ID from the cookie). This preserves the connection ID across session refreshes.
 </Info>
+
+## Connection Statuses
+
+| Status | Description |
+| --- | --- |
+| `active` | Connection is valid and can be used for API calls |
+| `expired` | Session has expired — user needs to re-authenticate via Link |
+| `awaiting_2fa` | Waiting for 2FA verification to complete |
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="User Management" icon="user" href="/sdk/modules/user-management">
-    Learn how to manage user profiles and data using active connections
+  <Card title="Access API" icon="database" href="/sdk/modules/posts">
+    Use connection IDs to fetch OnlyFans data
   </Card>
-  <Card title="Messaging" icon="message-circle" href="/sdk/modules/messaging">
-    Start sending messages and managing conversations
+  <Card title="Webhooks" icon="webhook" href="/reference/webhooks">
+    Get notified when connections expire or change status
   </Card>
-</CardGroup> 
+</CardGroup>

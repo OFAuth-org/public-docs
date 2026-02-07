@@ -1,310 +1,659 @@
 ---
-title: "User Management" 
-description: "Manage user profiles, authentication, and user operations with the OnlyFans SDK"
+title: "Users & Profile"
+description: "Manage your creator profile, look up users, handle restrictions, and organize user lists through the OFAuth SDK"
 ---
 
 ## Overview
 
-The User Management modules (`sdk.self` and `sdk.user`) handle user profiles, interactions, and settings. The `self` module manages your own profile, while the `user` module handles operations with other users.
+The Users & Profile modules cover your own creator profile, user lookups, restrictions/blocking, and user list management.
 
 <CardGroup cols={2}>
-  <Card title="Self Module" icon="user-circle">
-    **sdk.self** - Current user profile, notifications, settings
+  <Card title="Self Profile" icon="user-circle">
+    Get and update your creator profile
   </Card>
-  <Card title="User Module" icon="users">
-    **sdk.user** - Other users, profiles, search, interactions
+  <Card title="Users" icon="users">
+    Look up users, search, and manage restrictions
   </Card>
 </CardGroup>
 
-## Self Module (sdk.self)
+---
 
-### Get Current User Profile
+## Self Profile
 
-Retrieve the authenticated user's profile information.
+### Get Creator Profile
 
-```typescript
-const { data: profile, error } = await sdk.self.getMe({
-  authentication: { connectionId: "conn_123" }
-})
+Retrieve the authenticated creator's profile information.
 
-console.log(`${profile.name} (@${profile.username})`)
-console.log(`Subscribers: ${profile.subscribersCount}`)
-console.log(`Posts: ${profile.postsCount}`)
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
+
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
+
+const profile = await client.access.self.get();
+console.log(`${profile.name} (@${profile.username})`);
+console.log(`Subscribers: ${profile.subscribersCount}`);
 ```
 
-<ParamField path="authentication" type="AuthenticationOptions" required>
-  Either `{ connectionId: string }` or `{ session: object }`
-</ParamField>
+```python Python
+from onlyfans_sdk import OFAuthClient
+from onlyfans_sdk import self as self_module  # 'self' is a Python keyword
 
-**Returns:** User profile with ID, username, name, email, bio, subscriber/post counts, verification status, and avatar/cover URLs.
+client = OFAuthClient(api_key="your-api-key", connection_id="conn_xxx")
 
-### Update Profile
-
-Update the authenticated user's profile information.
-
-```typescript
-const { data: result, error } = await sdk.self.updateProfile({
-  authentication: { session: userData },
-  data: {
-    name: "New Display Name",
-    about: "Updated bio with new information! ✨"
-  }
-})
+profile = self_module.list_selfs(client)
+print(f"{profile['name']} (@{profile['username']})")
+print(f"Subscribers: {profile['subscribersCount']}")
 ```
 
-<ParamField path="data.name" type="string">
-  New display name for the user
-</ParamField>
+```go Go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
 
-<ParamField path="data.about" type="string">
-  New bio/about text
-</ParamField>
+profile, err := client.GetAccessSelf(ctx)
+if err != nil {
+    log.Fatal(err)
+}
 
-### Get Notifications
-
-Retrieve notifications for the authenticated user.
-
-```typescript
-const { data: notifications, error } = await sdk.self.getNotifications({
-  authentication: { connectionId: "conn_123" },
-  params: {
-    limit: 50,
-    filter: "unread" // "all", "unread", "tips", "messages"
-  }
-})
-
-console.log(`${notifications.list.length} notifications`)
+fmt.Printf("%s (@%s)\n", (*profile)["name"], (*profile)["username"])
 ```
 
-<ParamField path="params.limit" type="number" default="20">
-  Maximum notifications to return (1-100)
-</ParamField>
+```csharp C#
+using OFAuth;
 
-<ParamField path="params.filter" type="string" default="all">
-  Filter by type: "all", "unread", "tips", "messages", "subscribers"
-</ParamField>
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
 
-### Mark Notifications as Read
+var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+Console.WriteLine($"{profile.Name} (@{profile.Username})");
+Console.WriteLine($"Subscribers: {profile.SubscribersCount}");
+```
+</CodeGroup>
 
-Mark specific notifications as read.
+### Update Creator Profile
 
-```typescript
-const { data: result, error } = await sdk.self.markNotificationsRead({
-  authentication: { session: userData },
-  notificationIds: ["notif_123", "notif_456"]
-})
+Update your profile information such as display name and bio.
+
+<CodeGroup>
+```typescript TypeScript
+await client.access.self.update({
+  body: {
+    name: 'New Display Name',
+    about: 'Updated bio information',
+  },
+});
 ```
 
-## User Module (sdk.user)
+```python Python
+self_module.update_self(
+    client,
+    body={
+        "name": "New Display Name",
+        "about": "Updated bio information",
+    },
+)
+```
+
+```go Go
+_, err := client.UpdateAccessSelf(ctx, struct {
+    Name  string `json:"name"`
+    About string `json:"about"`
+}{
+    Name:  "New Display Name",
+    About: "Updated bio information",
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+```csharp C#
+await client.PatchAsync<SelfResponse>(
+    "/v2/access/self",
+    body: new
+    {
+        name = "New Display Name",
+        about = "Updated bio information"
+    }
+);
+```
+</CodeGroup>
+
+**Permissions:** `profile:read` for get, `profile:write` for update.
+
+---
+
+## Users
 
 ### Get User by ID
 
-Retrieve another user's public profile information.
+Retrieve another user's profile by their ID.
 
-```typescript
-const { data: user, error } = await sdk.user.getById({
-  authentication: { connectionId: "conn_123" },
-  userId: 987654321
-})
-
-console.log(`${user.name} (@${user.username})`)
-console.log(`Verified: ${user.isVerified}`)
-console.log(`Posts: ${user.postsCount}`)
+<CodeGroup>
+```typescript TypeScript
+const user = await client.access.users.get({ userId: '987654321' });
+console.log(`${user.name} (@${user.username})`);
 ```
 
-<ParamField path="userId" type="number" required>
-  OnlyFans user ID to retrieve
-</ParamField>
+```python Python
+from onlyfans_sdk import users
 
-**Returns:** Public profile information including username, name, bio, post count, verification status, and avatar.
+user = users.get_users(client, user_id="987654321")
+print(f"{user['name']} (@{user['username']})")
+```
+
+```go Go
+user, err := client.GetAccessUsers(ctx, "987654321")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("%s\n", (*user)["username"])
+```
+
+```csharp C#
+var user = await client.GetAsync<UserResponse>("/v2/access/users/987654321");
+Console.WriteLine($"{user.Name} (@{user.Username})");
+```
+</CodeGroup>
+
+**Permission required:** `profile:read`
+
+### List Users by IDs
+
+Look up multiple user profiles in a single request (up to 10 IDs).
+
+<CodeGroup>
+```typescript TypeScript
+const result = await client.access.users.getList({
+  userIds: '123,456,789',
+});
+
+for (const user of result) {
+  console.log(user.id, user.username);
+}
+```
+
+```python Python
+result = users.list_lists(client, user_ids="123,456,789")
+
+for user in result:
+    print(user["id"], user["username"])
+```
+
+```go Go
+result, err := client.GetAccessUsersList(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "userIds": []string{"123,456,789"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+```csharp C#
+var result = await client.GetAsync<List<UserResponse>>(
+    "/v2/access/users/list",
+    query: new Dictionary<string, string?> { ["userIds"] = "123,456,789" }
+);
+
+foreach (var user in result)
+{
+    Console.WriteLine($"{user.Id}: {user.Username}");
+}
+```
+</CodeGroup>
 
 ### Search Users
 
-Search for users by username or name.
+Search for performers/users by name or username.
 
-```typescript
-const { data: results, error } = await sdk.user.search({
-  authentication: { connectionId: "conn_123" },
-  params: {
-    query: "example",
-    limit: 20
-  }
-})
+<CodeGroup>
+```typescript TypeScript
+const results = await client.access.users.search({
+  query: 'example',
+  limit: 20,
+});
 
-console.log(`Found ${results.users.length} users`)
-```
-
-<ParamField path="params.query" type="string" required>
-  Search term (username or display name)
-</ParamField>
-
-<ParamField path="params.limit" type="number" default="10">
-  Maximum results to return (1-50)
-</ParamField>
-
-### Subscribe to User
-
-Subscribe to another user's content.
-
-```typescript
-const { data: subscription, error } = await sdk.user.subscribe({
-  authentication: { session: userData },
-  userId: 987654321,
-  params: {
-    paymentMethod: "card_123",
-    promocode: "WELCOME10" // Optional
-  }
-})
-```
-
-<ParamField path="params.paymentMethod" type="string" required>
-  Payment method ID for subscription
-</ParamField>
-
-<ParamField path="params.promocode" type="string">
-  Optional promotional code
-</ParamField>
-
-### Unsubscribe from User
-
-Cancel subscription to a user.
-
-```typescript
-const { data: result, error } = await sdk.user.unsubscribe({
-  authentication: { session: userData },
-  userId: 987654321
-})
-```
-
-### Check Subscription Status
-
-Check if you're subscribed to a user.
-
-```typescript
-const { data: status, error } = await sdk.user.getSubscriptionStatus({
-  authentication: { connectionId: "conn_123" },
-  userId: 987654321
-})
-
-console.log(`Subscribed: ${status.isSubscribed}`)
-if (status.isSubscribed) {
-  console.log(`Expires: ${status.expiresAt}`)
+for (const user of results.list) {
+  console.log(user.username);
 }
 ```
 
-### Block/Unblock User
+```python Python
+results = users.list_searchs(client, query="example", limit=20)
 
-Block or unblock another user.
+for user in results["list"]:
+    print(user["username"])
+```
 
-```typescript
-// Block user
-const { data: blockResult, error } = await sdk.user.block({
-  authentication: { session: userData },
-  userId: 987654321
+```go Go
+results, err := client.AccessUsersSearch(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "query": []string{"example"},
+        "limit": []string{"20"},
+    },
 })
+if err != nil {
+    log.Fatal(err)
+}
+```
 
-// Unblock user
-const { data: unblockResult, error } = await sdk.user.unblock({
-  authentication: { session: userData },
-  userId: 987654321
+```csharp C#
+var results = await client.GetAsync<UsersSearchResponse>(
+    "/v2/access/users/search",
+    query: new Dictionary<string, string?>
+    {
+        ["query"] = "example",
+        ["limit"] = "20"
+    }
+);
+
+foreach (var user in results.List)
+{
+    Console.WriteLine(user.Username);
+}
+```
+</CodeGroup>
+
+**Permission required:** `profile:read`
+
+---
+
+## Restrictions
+
+### Restrict / Unrestrict a User
+
+Restricted users can still see your profile but cannot interact with your content.
+
+<CodeGroup>
+```typescript TypeScript
+// Restrict a user
+await client.access.users.restrict({ userId: '987654321' });
+
+// Unrestrict a user
+await client.access.users.restrict2({ userId: '987654321' });
+```
+
+```python Python
+# Restrict a user
+users.create_restrict(client, user_id="987654321")
+
+# Unrestrict a user
+users.delete_restrict(client, user_id="987654321")
+```
+
+```go Go
+// Restrict a user
+_, err := client.CreateAccessUsersRestrict(ctx, "987654321")
+
+// Unrestrict a user
+_, err = client.DeleteAccessUsersRestrict(ctx, "987654321")
+```
+
+```csharp C#
+// Restrict a user
+await client.PostAsync<object>("/v2/access/users/987654321/restrict");
+
+// Unrestrict a user
+await client.DeleteAsync<object>("/v2/access/users/987654321/restrict");
+```
+</CodeGroup>
+
+**Permission required:** `users:write`
+
+### List Restricted Users
+
+<CodeGroup>
+```typescript TypeScript
+const restricted = await client.access.users.getRestrict({
+  limit: 20,
+});
+
+for (const user of restricted.list) {
+  console.log(user.username);
+}
+```
+
+```python Python
+restricted = users.list_restricts(client, limit=20)
+
+for user in restricted["list"]:
+    print(user["username"])
+```
+
+```go Go
+restricted, err := client.GetAccessUsersRestrict(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
 })
-```
-
-## Response Types
-
-### User Profile Object
-
-```typescript
-interface UserProfile {
-  id: string
-  username: string
-  name: string
-  email?: string // Only for self
-  about?: string
-  subscribersCount: number
-  postsCount: number
-  isVerified: boolean
-  avatar?: string
-  cover?: string
-  subscriptionPrice?: number // For other users
+if err != nil {
+    log.Fatal(err)
 }
 ```
 
-### Notification Object
+```csharp C#
+var restricted = await client.GetAsync<UsersRestrictResponse>(
+    "/v2/access/users/restrict",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+</CodeGroup>
 
-```typescript
-interface Notification {
-  id: string
-  type: "tip" | "message" | "subscriber" | "like" | "comment"
-  title: string
-  message: string
-  createdAt: string
-  isRead: boolean
-  userId?: string
-  username?: string
-  amount?: number // For tips
+### List Blocked Users
+
+<CodeGroup>
+```typescript TypeScript
+const blocked = await client.access.users.getBlocked({
+  limit: 20,
+});
+
+for (const user of blocked.list) {
+  console.log(user.username);
 }
 ```
 
-### Subscription Status Object
+```python Python
+blocked = users.list_blockeds(client, limit=20)
 
-```typescript
-interface SubscriptionStatus {
-  isSubscribed: boolean
-  subscribedAt?: string
-  expiresAt?: string
-  isExpired: boolean
-  renewalPrice?: number
-  isFree: boolean
+for user in blocked["list"]:
+    print(user["username"])
+```
+
+```go Go
+blocked, err := client.GetAccessUsersBlocked(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
 }
 ```
+
+```csharp C#
+var blocked = await client.GetAsync<UsersBlockedResponse>(
+    "/v2/access/users/blocked",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+</CodeGroup>
+
+---
+
+## User Lists
+
+User lists let you organize your fans into groups for targeted messaging and management.
+
+### List User Lists
+
+<CodeGroup>
+```typescript TypeScript
+const lists = await client.access.users.lists.list({
+  limit: 20,
+});
+
+for (const list of lists.list) {
+  console.log(list.id, list.name);
+}
+```
+
+```python Python
+from onlyfans_sdk import user_lists
+
+lists = user_lists.list_users_users_lists(client, limit=20)
+
+for lst in lists["list"]:
+    print(lst["id"], lst["name"])
+```
+
+```go Go
+lists, err := client.ListAccessUsersLists(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, list := range lists.List {
+    fmt.Println(list.Id, list.Name)
+}
+```
+
+```csharp C#
+var lists = await client.GetAsync<UsersListsResponse>(
+    "/v2/access/users/lists",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+
+foreach (var list in lists.List)
+{
+    Console.WriteLine($"{list.Id}: {list.Name}");
+}
+```
+</CodeGroup>
+
+### Create, Update, and Delete User Lists
+
+<CodeGroup>
+```typescript TypeScript
+// Create a list
+const newList = await client.access.users.lists.create({
+  body: { name: 'VIP Fans' },
+});
+console.log('Created list:', newList.id);
+
+// Update a list
+await client.access.users.lists.update({
+  listId: '123',
+  body: { name: 'Super VIP Fans' },
+});
+
+// Delete a list
+await client.access.users.lists.delete({ listId: '123' });
+```
+
+```python Python
+# Create a list
+new_list = user_lists.create_users_users_lists(
+    client,
+    body={"name": "VIP Fans"},
+)
+print("Created list:", new_list["id"])
+
+# Update a list
+user_lists.update_users_users_lists(
+    client,
+    list_id="123",
+    body={"name": "Super VIP Fans"},
+)
+
+# Delete a list
+user_lists.delete_users_users_lists(client, list_id="123")
+```
+
+```go Go
+// Create a list
+newList, err := client.CreateAccessUsersLists(ctx, struct {
+    Name string `json:"name"`
+}{Name: "VIP Fans"})
+
+// Update a list
+_, err = client.UpdateAccessUsersLists(ctx, "123", struct {
+    Name string `json:"name"`
+}{Name: "Super VIP Fans"})
+
+// Delete a list
+_, err = client.DeleteAccessUsersLists(ctx, "123")
+```
+
+```csharp C#
+// Create a list
+var newList = await client.PostAsync<UserListResponse>(
+    "/v2/access/users/lists",
+    body: new { name = "VIP Fans" }
+);
+Console.WriteLine($"Created list: {newList.Id}");
+
+// Update a list
+await client.PatchAsync<UserListResponse>(
+    "/v2/access/users/lists/123",
+    body: new { name = "Super VIP Fans" }
+);
+
+// Delete a list
+await client.DeleteAsync<object>("/v2/access/users/lists/123");
+```
+</CodeGroup>
+
+**Permissions:** `lists:read` for listing, `lists:write` for create/update/delete.
+
+### Add and Remove Users from Lists
+
+<CodeGroup>
+```typescript TypeScript
+// Add a user to a list
+await client.access.users.lists.createUsers({
+  listId: '123',
+  userId: '987654321',
+});
+
+// Remove a user from a list
+await client.access.users.lists.deleteUsers({
+  listId: '123',
+  userId: '987654321',
+});
+```
+
+```python Python
+# Add a user to a list
+user_lists.create_users_lists_users(
+    client,
+    list_id="123",
+    user_id="987654321",
+)
+
+# Remove a user from a list
+user_lists.delete_users_lists_users(
+    client,
+    list_id="123",
+    user_id="987654321",
+)
+```
+
+```go Go
+// Add a user to a list
+_, err := client.CreateAccessUsersListsUsers(ctx, "123", "987654321")
+
+// Remove a user from a list
+_, err = client.DeleteAccessUsersListsUsers(ctx, "123", "987654321")
+```
+
+```csharp C#
+// Add a user to a list
+await client.PostAsync<object>("/v2/access/users/lists/123/users/987654321");
+
+// Remove a user from a list
+await client.DeleteAsync<object>("/v2/access/users/lists/123/users/987654321");
+```
+</CodeGroup>
+
+### List Users in a List
+
+<CodeGroup>
+```typescript TypeScript
+const listUsers = await client.access.users.lists.listUsers({
+  listId: '123',
+  limit: 20,
+});
+
+for (const user of listUsers.list) {
+  console.log(user.username);
+}
+```
+
+```python Python
+list_users = user_lists.list_users_lists_users(
+    client,
+    list_id="123",
+    limit=20,
+)
+
+for user in list_users["list"]:
+    print(user["username"])
+```
+
+```go Go
+listUsers, err := client.ListAccessUsersListsUsers(ctx, "123", &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
+})
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+```csharp C#
+var listUsers = await client.GetAsync<UsersListUsersResponse>(
+    "/v2/access/users/lists/123/users",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+</CodeGroup>
+
+---
 
 ## Error Handling
 
-Common error scenarios for user operations:
+All SDKs throw exceptions on API errors. Use try/catch to handle them:
 
-```typescript
-const { data, error } = await sdk.user.subscribe(params)
+<CodeGroup>
+```typescript TypeScript
+import { OFAuthAPIError } from '@ofauth/onlyfans-sdk';
 
-if (error) {
-  switch (error.type) {
-    case "unauthorized":
-      console.log("Please login to subscribe")
-      break
-    case "forbidden":
-      console.log("Cannot subscribe to this user")
-      break
-    case "bad_request":
-      if (error.details?.paymentMethod) {
-        console.log("Invalid payment method")
-      }
-      break
-    case "not_found":
-      console.log("User not found")
-      break
+try {
+  const user = await client.access.users.get({ userId: '999' });
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error('API Error:', error.status, error.message);
+    console.error('Error code:', error.code);
+  } else {
+    throw error;
   }
 }
 ```
 
-## Best Practices
+```python Python
+from onlyfans_sdk import OFAuthError
 
-<CardGroup cols={2}>
-  <Card title="Profile Updates" icon="edit">
-    **Update efficiently**
-    
-    - Only send changed fields
-    - Validate data client-side
-    - Handle validation errors gracefully
-  </Card>
-  <Card title="User Interactions" icon="heart">
-    **Respect user privacy**
-    
-    - Check subscription status before actions
-    - Handle blocking/privacy settings
-    - Cache user data appropriately
-  </Card>
-</CardGroup>
+try:
+    user = users.get_users(client, user_id="999")
+except OFAuthError as e:
+    print(f"API Error {e.status}: {e}")
+    print(f"Error code: {e.code}")
+```
 
-<Warning>
-  **Privacy & Permissions**: Always respect user privacy settings and subscription requirements. Some user information is only available to subscribers.
-</Warning> 
+```go Go
+user, err := client.GetAccessUsers(ctx, "999")
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        fmt.Printf("API Error %d: %s\n", apiErr.Status, apiErr.Message)
+    } else {
+        log.Fatal(err)
+    }
+}
+```
+
+```csharp C#
+try
+{
+    var user = await client.GetAsync<UserResponse>("/v2/access/users/999");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"API Error {ex.Status}: {ex.Message}");
+    Console.WriteLine($"Error code: {ex.Code}");
+}
+```
+</CodeGroup>

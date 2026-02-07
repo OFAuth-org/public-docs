@@ -1,141 +1,261 @@
 ---
 title: "Stories"
-description: "Manage OnlyFans stories with the SDK"
+description: "Access OnlyFans story data and analytics through the SDK"
 ---
 
 ## Overview
 
-The Stories module (`sdk.stories`) provides functionality for managing OnlyFans stories. Currently, the SDK has limited story functionality with only deletion capabilities implemented.
+The OFAuth SDK does not expose dedicated story CRUD endpoints. OnlyFans stories are ephemeral content that auto-expire, and the platform's API surface for stories is limited. However, you can access **story analytics** through the analytics namespace, and reach any story endpoint directly via the **proxy method**.
 
-<Card title="Stories Module" icon="clock">
-  **sdk.stories** - Basic story management operations
-</Card>
+## Story Analytics
 
-## Delete Story
+The SDK includes analytics endpoints that return story performance data: view counts, tips, likes, and top-performing stories.
 
-Delete a story from your profile.
+### Story Analytics Chart
 
-```typescript
-const { data, error } = await sdk.stories.deleteStory({
-  authentication: { session: userData },
-  storyId: 123456
-})
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-if (error) {
-  console.error("Failed to delete story:", error.message)
-} else {
-  console.log("Story deleted successfully")
-}
-```
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',
+});
 
-<ParamField path="storyId" type="number" required>
-  The ID of the story to delete
-</ParamField>
+try {
+  const chart = await client.access.analytics.stories.getChart({
+    startDate: '2024-01-01',
+    endDate: '2024-01-31',
+    by: 'viewers',
+  });
 
-<ParamField path="authentication" type="object" required>
-  Authentication session data for the operation
-</ParamField>
-
-## Response Format
-
-All story operations return the standard SDK response format:
-
-```typescript
-type StoryResponse = {
-  data: any | undefined;
-  error: ErrorMessage | undefined;
-}
-```
-
-## Error Handling
-
-Story operations may return these error types:
-
-- `unauthorized` (401): Session is invalid or expired
-- `forbidden` (403): No permission to delete the story
-- `not_found` (404): Story does not exist
-- `bad_request` (400): Invalid story ID or parameters
-
-Example error handling:
-
-```typescript
-const result = await sdk.stories.deleteStory({
-  authentication: { session: userData },
-  storyId: 123456
-})
-
-if (result.error) {
-  switch (result.error.type) {
-    case "not_found":
-      console.error("Story not found")
-      break
-    case "forbidden":
-      console.error("No permission to delete this story")
-      break
-    case "unauthorized":
-      console.error("Session expired, please login again")
-      break
-    default:
-      console.error("Error deleting story:", result.error.message)
+  console.log('Total views:', chart.total);
+  console.log('Change:', chart.delta);
+  for (const point of chart.chart) {
+    console.log(`${point.date}: ${point.count}`);
   }
-} else {
-  console.log("Story deleted successfully")
+} catch (error) {
+  console.error('Failed to get story analytics:', error);
 }
 ```
 
-## Limitations
+```python Python
+from onlyfans_sdk import OFAuthClient, analytics
 
-<Warning>
-  **Limited Functionality**: The current SDK implementation only supports story deletion. Other story operations like creation, editing, viewing, and retrieval are not yet implemented.
-</Warning>
+client = OFAuthClient(
+    api_key="your-api-key",
+    connection_id="conn_xxx",
+)
 
-<Note>
-  **Future Development**: Additional story functionality may be added in future SDK releases. Check the latest SDK documentation for updates.
-</Note>
+try:
+    chart = analytics.list_stories_charts(
+        client,
+        start_date="2024-01-01",
+        end_date="2024-01-31",
+        by="viewers",
+    )
 
-## Best Practices
+    print("Total views:", chart["total"])
+    print("Change:", chart["delta"])
+    for point in chart["chart"]:
+        print(f"{point['date']}: {point['count']}")
+except Exception as e:
+    print("Failed to get story analytics:", e)
+```
+
+```go Go
+ctx := context.Background()
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+chart, err := client.GetAccessAnalyticsStoriesChart(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"viewers"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Total views: %d\n", chart.Total)
+fmt.Printf("Change: %d\n", chart.Delta)
+for _, point := range chart.Chart {
+    fmt.Printf("%s: %d\n", point.Date, point.Count)
+}
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
+
+try
+{
+    var chart = await client.GetAsync<StoriesChartResponse>(
+        "/v2/access/analytics/stories/chart",
+        query: new Dictionary<string, string?>
+        {
+            ["startDate"] = "2024-01-01",
+            ["endDate"] = "2024-01-31",
+            ["by"] = "viewers"
+        }
+    );
+
+    Console.WriteLine($"Total views: {chart.Total}");
+    Console.WriteLine($"Change: {chart.Delta}");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"Error: {ex.Status} {ex.Message}");
+}
+```
+</CodeGroup>
+
+### Top Stories
+
+Retrieve your highest-performing stories by a given metric:
+
+<CodeGroup>
+```typescript TypeScript
+const topStories = await client.access.analytics.stories.getTop({
+  startDate: '2024-01-01',
+  endDate: '2024-01-31',
+  by: 'viewers',
+});
+
+for (const story of topStories.items) {
+  console.log(`Story ${story.id}: ${story.viewersCount} viewers, ${story.likesCount} likes`);
+}
+```
+
+```python Python
+top_stories = analytics.list_stories_tops(
+    client,
+    start_date="2024-01-01",
+    end_date="2024-01-31",
+    by="viewers",
+)
+
+for story in top_stories["items"]:
+    print(f"Story {story['id']}: {story['viewersCount']} viewers, {story['likesCount']} likes")
+```
+
+```go Go
+topStories, err := client.GetAccessAnalyticsStoriesTop(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "startDate": []string{"2024-01-01"},
+        "endDate":   []string{"2024-01-31"},
+        "by":        []string{"viewers"},
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, story := range topStories.Items {
+    fmt.Printf("Story %d: %d viewers\n", story.Id, story.ViewersCount)
+}
+```
+
+```csharp C#
+var topStories = await client.GetAsync<StoriesTopResponse>(
+    "/v2/access/analytics/stories/top",
+    query: new Dictionary<string, string?>
+    {
+        ["startDate"] = "2024-01-01",
+        ["endDate"] = "2024-01-31",
+        ["by"] = "viewers"
+    }
+);
+
+foreach (var story in topStories.Items)
+{
+    Console.WriteLine($"Story {story.Id}: {story.ViewersCount} viewers");
+}
+```
+</CodeGroup>
+
+## Accessing Story Endpoints via Proxy
+
+For any OnlyFans story endpoint not covered by the SDK's typed methods, use the proxy to call the API directly:
+
+<CodeGroup>
+```typescript TypeScript
+// Fetch stories for the authenticated user
+const stories = await client.proxy({
+  path: '/stories',
+  method: 'GET',
+  connectionId: 'conn_xxx',
+});
+
+console.log('Stories:', stories);
+
+// Delete a story
+await client.proxy({
+  path: '/stories/123456',
+  method: 'DELETE',
+  connectionId: 'conn_xxx',
+});
+```
+
+```python Python
+# Fetch stories for the authenticated user
+stories = client.proxy(
+    "/stories",
+    connection_id="conn_xxx",
+)
+
+print("Stories:", stories)
+
+# Delete a story
+client.proxy(
+    "/stories/123456",
+    method="DELETE",
+    connection_id="conn_xxx",
+)
+```
+
+```go Go
+// Fetch stories for the authenticated user
+body, err := client.Request(ctx, "GET", "/v2/access/proxy/stories", &ofauth.RequestOptions{
+    ConnectionID: "conn_xxx",
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Stories:", string(body))
+
+// Delete a story
+_, err = client.Request(ctx, "DELETE", "/v2/access/proxy/stories/123456", &ofauth.RequestOptions{
+    ConnectionID: "conn_xxx",
+})
+```
+
+```csharp C#
+// Fetch stories for the authenticated user
+var stories = await client.GetAsync<List<Dictionary<string, object>>>(
+    "/v2/access/proxy/stories"
+);
+
+// Delete a story
+await client.DeleteAsync<object>("/v2/access/proxy/stories/123456");
+```
+</CodeGroup>
+
+<Tip>
+  The proxy method lets you call **any** OnlyFans API endpoint. This is the recommended approach for story creation, deletion, and other operations not yet exposed as typed SDK methods.
+</Tip>
+
+## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Error Handling" icon="shield-check">
-    **Always handle errors**
-    
-    - Check for authentication errors
-    - Validate story existence before deletion
-    - Implement proper error logging
+  <Card title="Posts" icon="images" href="/sdk/modules/posts">
+    Manage OnlyFans posts with full CRUD support
   </Card>
-  <Card title="User Experience" icon="user-check">
-    **Confirm before deletion**
-    
-    - Ask for user confirmation
-    - Provide clear feedback
-    - Handle edge cases gracefully
+  <Card title="Analytics" icon="chart-line" href="/sdk/modules/analytics">
+    Explore the complete analytics suite
   </Card>
 </CardGroup>
-
-## Integration Example
-
-```typescript
-// Example story management with confirmation
-async function deleteStoryWithConfirmation(storyId: number) {
-  const confirmDelete = confirm("Are you sure you want to delete this story?")
-  
-  if (!confirmDelete) {
-    return
-  }
-
-  const result = await sdk.stories.deleteStory({
-    authentication: { session: userData },
-    storyId
-  })
-
-  if (result.error) {
-    alert(`Failed to delete story: ${result.error.message}`)
-  } else {
-    alert("Story deleted successfully!")
-    // Refresh the stories list or update UI
-  }
-}
-
-// Usage
-deleteStoryWithConfirmation(123456)
-``` 

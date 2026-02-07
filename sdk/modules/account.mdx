@@ -1,148 +1,558 @@
 ---
 title: "Account & Webhooks"
-description: "Account information and webhook event handling with the OnlyFans SDK"
+description: "Manage your OFAuth account, connections, settings, and handle webhook events"
 ---
 
-## Overview
+## Account Info
 
-The Account module (`sdk.account`) provides access to account information. Webhook configuration is managed through the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks), not via API.
+Retrieve organization details for the authenticated API key.
 
-<Card title="Account Module" icon="cog">
-  **sdk.account** - Account information
-</Card>
+<CodeGroup>
+```typescript TypeScript
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-## Webhook Configuration
+const client = createOFAuthClient({ apiKey: 'your-api-key' });
 
-Webhooks are configured exclusively through the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks). From the Settings page you can:
+const account = await client.account.whoami();
+console.log(account.id, account.permissions);
+```
 
-- Set your webhook endpoint URL (HTTPS required)
-- Select which events to subscribe to
-- View delivery history and retry failed events
-- Rotate webhook secrets
+```python Python
+from onlyfans_sdk import OFAuthClient, account
 
-## Webhook Events
+client = OFAuthClient(api_key="your-api-key")
+
+info = account.whoami(client)
+print(info["id"], info["permissions"])
+```
+
+```go Go
+client := ofauth.NewClient("your-api-key")
+
+account, err := client.Whoami(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Account: %s\n", account.Id)
+```
+
+```csharp C#
+using OFAuth;
+
+var client = new OFAuthClient("your-api-key");
+
+var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+Console.WriteLine($"Account: {account.Id}");
+```
+</CodeGroup>
+
+## Connection Management
+
+### List Connections
+
+List all connections for your organization, optionally filtering by status.
+
+<CodeGroup>
+```typescript TypeScript
+const connections = await client.account.connections.list({
+  status: 'active',
+  limit: 10,
+});
+
+for (const conn of connections.list) {
+  console.log(conn.id, conn.status, conn.userData.username);
+}
+
+// Auto-paginate through all connections
+for await (const conn of client.account.connections.iterate()) {
+  console.log(conn.id);
+}
+```
+
+```python Python
+from onlyfans_sdk import OFAuthClient, account
+
+client = OFAuthClient(api_key="your-api-key")
+
+# List with filters
+connections = account.list_connections(client, status="active", limit=10)
+for conn in connections["list"]:
+    print(conn["id"], conn["status"], conn["userData"]["username"])
+
+# Auto-paginate through all connections
+for conn in account.iter_connections(client, status="active"):
+    print(conn["id"])
+```
+
+```go Go
+// List all connections
+connections, err := client.ListAccountConnections(ctx, nil)
+if err != nil {
+    log.Fatal(err)
+}
+for _, conn := range connections.List {
+    fmt.Printf("%s: %s (%s)\n", conn.Id, conn.UserData.Username, conn.Status)
+}
+
+// List with filters
+connections, err = client.ListAccountConnections(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "status": []string{"active"},
+        "limit":  []string{"10"},
+    },
+})
+```
+
+```csharp C#
+// List all connections
+var connections = await client.GetAsync<ConnectionsListResponse>(
+    "/v2/account/connections"
+);
+foreach (var conn in connections.List)
+{
+    Console.WriteLine($"{conn.Id}: {conn.UserData.Username} ({conn.Status})");
+}
+
+// List with filters
+var activeConnections = await client.GetAsync<ConnectionsListResponse>(
+    "/v2/account/connections",
+    query: new Dictionary<string, string?>
+    {
+        ["status"] = "active",
+        ["limit"] = "10"
+    }
+);
+```
+</CodeGroup>
+
+### Delete Connection
+
+Disconnect a connection and log out the user. This stops billing for the connection.
+
+<CodeGroup>
+```typescript TypeScript
+await client.account.connections.delete({ connectionId: 'conn_xxx' });
+```
+
+```python Python
+account.delete_connections(client, connection_id="conn_xxx")
+```
+
+```go Go
+_, err := client.DeleteAccountConnections(ctx, "conn_xxx")
+```
+
+```csharp C#
+await client.DeleteAsync<object>("/v2/account/connections/conn_xxx");
+```
+</CodeGroup>
+
+### Invalidate Connection
+
+Mark a connection as expired and log out the user. The connection record is preserved, allowing the user to reconnect.
+
+<CodeGroup>
+```typescript TypeScript
+await client.account.connections.invalidate({ connectionId: 'conn_xxx' });
+```
+
+```python Python
+account.invalidate_connections(client, connection_id="conn_xxx")
+```
+
+```go Go
+_, err := client.AccountConnectionsInvalidate(ctx, "conn_xxx")
+```
+
+```csharp C#
+await client.PostAsync<object>("/v2/account/connections/conn_xxx/invalidate");
+```
+</CodeGroup>
+
+## Connection Settings
+
+Get and update settings for individual connections, including vault cache configuration.
+
+<CodeGroup>
+```typescript TypeScript
+// Get connection settings
+const settings = await client.account.connections.getSettings({
+  connectionId: 'conn_xxx',
+});
+
+// Update connection settings
+await client.account.connections.updateSettings({
+  connectionId: 'conn_xxx',
+  body: {
+    vaultCache: { enabled: true },
+  },
+});
+```
+
+```python Python
+# Get connection settings
+settings = account.get_connection_settings(client, connection_id="conn_xxx")
+
+# Update connection settings
+account.update_connection_settings(client, connection_id="conn_xxx", body={
+    "vaultCache": {"enabled": True},
+})
+```
+
+```go Go
+// Get connection settings
+settings, err := client.GetAccountConnectionsSettings(ctx, "conn_xxx")
+
+// Update connection settings (use Request for simpler call)
+_, err = client.Request(ctx, "PATCH", "/v2/account/connections/conn_xxx/settings", &ofauth.RequestOptions{
+    Body: map[string]interface{}{
+        "vaultPlus": map[string]interface{}{"enabled": true},
+    },
+})
+```
+
+```csharp C#
+// Get connection settings
+var settings = await client.GetAsync<ConnectionSettingsResponse>(
+    "/v2/account/connections/conn_xxx/settings"
+);
+
+// Update connection settings
+await client.PatchAsync<object>(
+    "/v2/account/connections/conn_xxx/settings",
+    body: new { vaultCache = new { enabled = true } }
+);
+```
+</CodeGroup>
+
+## Organization Settings
+
+Get and update organization-level settings, including default vault cache configuration.
+
+<CodeGroup>
+```typescript TypeScript
+// Get org settings
+const orgSettings = await client.account.getSettings();
+
+// Update org settings
+await client.account.updateSettings({
+  body: {
+    vaultCache: { enabled: true },
+    applyToExistingConnections: true,
+  },
+});
+```
+
+```python Python
+# Get org settings
+org_settings = account.get_org_settings(client)
+
+# Update org settings
+account.update_org_settings(client, body={
+    "vaultCache": {"enabled": True},
+    "applyToExistingConnections": True,
+})
+```
+
+```go Go
+// Get org settings
+orgSettings, err := client.GetAccountSettings(ctx)
+
+// Update org settings (use Request for simpler call)
+_, err = client.Request(ctx, "PATCH", "/v2/account/settings", &ofauth.RequestOptions{
+    Body: map[string]interface{}{
+        "vaultPlus":                  map[string]interface{}{"enabled": true},
+        "applyToExistingConnections": true,
+    },
+})
+```
+
+```csharp C#
+// Get org settings
+var orgSettings = await client.GetAsync<AccountSettingsResponse>(
+    "/v2/account/settings"
+);
+
+// Update org settings
+await client.PatchAsync<AccountSettingsResponse>(
+    "/v2/account/settings",
+    body: new {
+        vaultCache = new { enabled = true },
+        applyToExistingConnections = true
+    }
+);
+```
+</CodeGroup>
+
+---
+
+## Webhook Verification
+
+OFAuth sends webhook events using the [Svix](https://www.svix.com/) protocol with HMAC-SHA256 signatures. All SDKs include built-in verification and routing.
+
+<Info>
+  Webhooks are configured in the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks). From there you can set your endpoint URL, select event types, view delivery history, and rotate secrets.
+</Info>
 
 ### Event Types
 
 <CardGroup cols={2}>
   <Card title="Connection Events" icon="link">
-    **connection.created** - New user connection
-    **connection.updated** - Connection status change
-    **connection.expired** - Connection expired
+    **connection.created** — New connection established
+
+    **connection.updated** — Connection status or data changed
+
+    **connection.expired** — Connection session expired
   </Card>
-  <Card title="System Events" icon="refresh">
-    **rules.updated** - API rules updated
+  <Card title="System Events" icon="gear">
+    **rules.updated** — Dynamic rules configuration changed
   </Card>
 </CardGroup>
 
 ### Event Payload Structure
 
-All webhook events follow this structure:
+All webhook events follow the Svix format with these fields:
 
-```typescript
+```json
 {
-  event: string;           // Event type
-  timestamp: string;       // ISO timestamp
-  data: {
-    connectionId?: string; // For connection events
-    userId?: string;       // OnlyFans user ID
-    status?: string;       // Connection status
-    // ... other event-specific data
-  };
-  signature: string;       // HMAC signature for verification
+  "eventType": "connection.created",
+  "live": true,
+  "data": {
+    "connection": {
+      "id": "conn_xxx",
+      "platformUserId": "12345",
+      "status": "active",
+      "userData": {
+        "userId": "12345",
+        "name": "Display Name",
+        "username": "creator",
+        "avatar": "https://..."
+      },
+      "permissions": ["earnings:read", "subscribers:read"]
+    },
+    "clientReferenceId": "your-ref-id"
+  }
 }
 ```
 
-### Webhook Security
+### Verifying Signatures
 
 <Warning>
-  **Verify Signatures**: Always verify webhook signatures to ensure authenticity. Use your API key to validate the HMAC signature included in each webhook.
+  Always verify webhook signatures before processing events. The signing secret starts with `whsec_` and is available in your dashboard.
 </Warning>
 
-```typescript
-import crypto from 'crypto';
+<CodeGroup>
+```typescript TypeScript
+import { verifyWebhookPayload } from '@ofauth/onlyfans-sdk';
 
-function verifyWebhookSignature(payload: string, signature: string, apiKey: string): boolean {
-  const expectedSignature = crypto
-    .createHmac('sha256', apiKey)
-    .update(payload)
-    .digest('hex');
-    
-  return crypto.timingSafeEqual(
-    Buffer.from(signature, 'hex'),
-    Buffer.from(expectedSignature, 'hex')
-  );
-}
-
-// Express.js webhook handler example
+// Express.js example — use express.raw() for the webhook route
 app.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['x-signature'] as string;
-  const payload = req.body.toString();
-  
-  if (!verifyWebhookSignature(payload, signature, process.env.OFAUTH_API_KEY)) {
-    return res.status(401).json({ error: 'Invalid signature' });
+  try {
+    const event = verifyWebhookPayload(
+      req.body,
+      req.headers,
+      'whsec_your_signing_secret'
+    );
+    console.log(event.eventType, event.data);
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Webhook verification failed:', error);
+    res.status(401).json({ error: 'Invalid signature' });
   }
-  
-  const event = JSON.parse(payload);
-  handleWebhookEvent(event);
-  
-  res.status(200).json({ received: true });
 });
 ```
 
-## Integration Examples
+```python Python
+from onlyfans_sdk.webhooks import verify_webhook_payload
 
-### Event Handler
+# Flask / FastAPI — pass raw body and headers
+event = verify_webhook_payload(
+    payload=request_body,
+    headers=request_headers,
+    secret="whsec_your_signing_secret",
+)
+print(event["eventType"], event["data"])
+```
 
-```typescript
-function handleWebhookEvent(event: any) {
-  switch (event.event) {
-    case "connection.created":
-      console.log(`New connection: ${event.data.connectionId}`);
-      onNewConnection(event.data);
-      break;
-      
-    case "connection.updated":
-      console.log(`Connection updated: ${event.data.connectionId}`);
-      onConnectionUpdate(event.data);
-      break;
-      
-    case "connection.expired":
-      console.log(`Connection expired: ${event.data.connectionId}`);
-      onConnectionExpired(event.data);
-      break;
-      
-    case "rules.updated":
-      console.log("API rules updated");
-      onRulesUpdate(event.data);
-      break;
-      
-    default:
-      console.log(`Unknown event: ${event.event}`);
-  }
+```go Go
+import onlyfans_sdk "github.com/ofauth-org/onlyfans-sdk-go"
+
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+    headers, err := ofauth.ExtractWebhookHeaders(r)
+    if err != nil {
+        http.Error(w, "Missing headers", http.StatusUnauthorized)
+        return
+    }
+
+    body, _ := io.ReadAll(r.Body)
+    event, err := ofauth.VerifyWebhookPayload(body, headers, "whsec_your_signing_secret", 0)
+    if err != nil {
+        http.Error(w, "Invalid signature", http.StatusUnauthorized)
+        return
+    }
+
+    fmt.Printf("Event: %s\n", event.EventType)
+    w.WriteHeader(http.StatusOK)
 }
 ```
+
+```csharp C#
+using OFAuth.Webhooks;
+
+// ASP.NET Core example
+var payload = await new StreamReader(Request.Body).ReadToEndAsync();
+var headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
+
+try
+{
+    var webhookEvent = WebhookVerifier.VerifyPayload(
+        payload, headers, "whsec_your_signing_secret"
+    );
+    Console.WriteLine($"Event: {webhookEvent.EventType}");
+    return Ok();
+}
+catch (WebhookVerificationException ex)
+{
+    return Unauthorized(new { error = ex.Message, code = ex.Code });
+}
+```
+</CodeGroup>
+
+### Webhook Router
+
+All SDKs provide a router that verifies signatures and dispatches events to typed handlers.
+
+<CodeGroup>
+```typescript TypeScript
+import { createWebhookRouter, createExpressWebhookMiddleware } from '@ofauth/onlyfans-sdk';
+
+const router = createWebhookRouter({
+  secret: 'whsec_your_signing_secret',
+});
+
+router.on('connection.created', async (event) => {
+  const conn = event.data.connection;
+  console.log(`New connection: ${conn.id} (${conn.userData?.username})`);
+});
+
+router.on('connection.expired', async (event) => {
+  console.log(`Connection expired: ${event.data.connection.id}`);
+});
+
+router.on('rules.updated', async (event) => {
+  console.log(`Rules updated: revision ${event.data.revision}`);
+});
+
+// Express.js — use express.raw() middleware
+app.post('/webhooks', express.raw({ type: 'application/json' }),
+  createExpressWebhookMiddleware(router)
+);
+
+// Cloudflare Workers / Deno / Bun
+import { createFetchWebhookHandler } from '@ofauth/onlyfans-sdk';
+const handler = createFetchWebhookHandler(router);
+// export default { fetch: handler };
+```
+
+```python Python
+from onlyfans_sdk.webhooks import create_webhook_router
+
+router = create_webhook_router(secret="whsec_your_signing_secret")
+
+def handle_connection_created(event):
+    conn = event["data"]["connection"]
+    print(f"New connection: {conn['id']} ({conn['userData']['username']})")
+
+def handle_connection_expired(event):
+    print(f"Connection expired: {event['data']['connection']['id']}")
+
+router.on("connection.created", handle_connection_created)
+router.on("connection.expired", handle_connection_expired)
+
+# Flask integration
+from onlyfans_sdk.webhooks import create_flask_webhook_handler
+handler = create_flask_webhook_handler(router)
+app.add_url_rule("/webhooks", view_func=handler, methods=["POST"])
+
+# FastAPI integration
+from onlyfans_sdk.webhooks import create_fastapi_webhook_handler
+handle_webhook = create_fastapi_webhook_handler(router)
+
+@app.post("/webhooks")
+async def webhook(request: Request):
+    return await handle_webhook(request)
+```
+
+```go Go
+import onlyfans_sdk "github.com/ofauth-org/onlyfans-sdk-go"
+
+router := ofauth.NewWebhookRouter("whsec_your_signing_secret")
+
+router.On("connection.created", func(event *ofauth.WebhookEvent) error {
+    var data ofauth.ConnectionCreatedEventData
+    if err := ofauth.ParseEventData(event, &data); err != nil {
+        return err
+    }
+    fmt.Printf("New connection: %s (%s)\n", data.Connection.ID, data.Connection.UserData.Username)
+    return nil
+})
+
+router.On("connection.expired", func(event *ofauth.WebhookEvent) error {
+    var data ofauth.ConnectionExpiredEventData
+    ofauth.ParseEventData(event, &data)
+    fmt.Printf("Connection expired: %s\n", data.Connection.ID)
+    return nil
+})
+
+// Use as http.Handler
+http.Handle("/webhooks", router)
+```
+
+```csharp C#
+using OFAuth.Webhooks;
+
+var router = new WebhookRouter("whsec_your_signing_secret");
+
+router.On("connection.created", evt =>
+{
+    var data = WebhookVerifier.ParseEventData<ConnectionCreatedEventData>(evt);
+    Console.WriteLine($"New connection: {data.Connection.Id} ({data.Connection.UserData?.Username})");
+});
+
+router.On("connection.expired", evt =>
+{
+    var data = WebhookVerifier.ParseEventData<ConnectionExpiredEventData>(evt);
+    Console.WriteLine($"Connection expired: {data.Connection.Id}");
+});
+
+// ASP.NET Core endpoint
+app.MapPost("/webhooks", async (HttpContext context) =>
+{
+    var payload = await new StreamReader(context.Request.Body).ReadToEndAsync();
+    var headers = context.Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
+    await router.HandlePayloadAsync(payload, headers);
+    return Results.Ok();
+});
+```
+</CodeGroup>
 
 ## Best Practices
 
 <CardGroup cols={2}>
-  <Card title="Security" icon="shield-check">
-    **Secure webhooks**
-    
-    - Always verify HMAC signatures
+  <Card title="Webhook Security" icon="shield-check">
+    - Always verify HMAC signatures before processing
     - Use HTTPS endpoints only
-    - Implement rate limiting
-    - Log webhook events for debugging
+    - Rotate secrets periodically via the dashboard
+    - Log events for debugging delivery issues
   </Card>
-  <Card title="Reliability" icon="refresh">
-    **Handle failures gracefully**
-    
-    - Implement idempotent event processing
-    - Monitor webhook delivery in the Dashboard
-    - Have fallback polling mechanisms
+  <Card title="Reliability" icon="rotate">
+    - Process events idempotently (you may receive duplicates)
+    - Respond with `200` quickly, then process async
+    - Monitor delivery history in the dashboard
+    - Use the router's `onError` handler for graceful failures
   </Card>
 </CardGroup>
 
 <Note>
-  For more details on webhook delivery behavior and retry policies, see the [Webhooks guide](/reference/webhooks).
+  For webhook delivery behavior and retry policies, see the [Webhooks reference](/reference/webhooks).
 </Note>

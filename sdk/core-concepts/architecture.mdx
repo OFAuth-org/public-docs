@@ -1,403 +1,312 @@
 ---
-title: "SDK Architecture"
-sidebarTitle: "Architecture"
-description: "Understanding the OnlyFans SDK's modular design, type safety, and developer experience principles"
+title: "Architecture"
+description: "How the OFAuth SDKs are structured across TypeScript, Python, Go, and C#"
 ---
 
-## Design Philosophy
+## Overview
 
-The OnlyFans SDK is built around **developer experience**, **type safety**, and **reliability**. Every design decision prioritizes making the OnlyFans API accessible, predictable, and safe to use.
+The OFAuth SDKs provide type-safe access to the OFAuth API. Each SDK follows the conventions of its language while maintaining a consistent mental model:
 
-<CardGroup cols={2}>
-  <Card title="Type Safety First" icon="shield">
-    **Full TypeScript support** with compile-time validation, IntelliSense, and structured error handling
-  </Card>
-  <Card title="Modular Architecture" icon="boxes">
-    **Organized by functionality** - each module handles a specific aspect of the OnlyFans platform
-  </Card>
-</CardGroup>
+1. **Create a client** with your API key
+2. **Call methods** organized by API namespace
+3. **Handle errors** via language-native exceptions
 
-## Core Architecture
+All SDKs are generated from the same OpenAPI specification, ensuring consistent behavior and type safety across languages.
 
-### SDK Instance
+## Two API Namespaces
 
-The SDK is initialized as a single instance that provides access to all modules:
+The OFAuth API is organized into two namespaces:
+
+| Namespace | Purpose | Connection ID | Examples |
+|-----------|---------|---------------|----------|
+| **Account** | Manage your OFAuth organization | Not required | `whoami`, `connections.list`, `settings` |
+| **Access** | Read/write OnlyFans data | Required | `self`, `posts`, `chats`, `earnings` |
+
+**Account API** operations manage your OFAuth organization — listing connections, reading settings, and checking account info. These only require your API key.
+
+**Access API** operations interact with OnlyFans data through a specific connection. These require both your API key and a connection ID identifying which OnlyFans account to act on.
+
+## Client Patterns by Language
+
+Each SDK uses the idiomatic pattern for its language:
+
+### TypeScript — Factory Function + Nested Namespaces
+
+The TypeScript SDK uses a factory function that returns a client with nested namespaces mirroring the API structure:
 
 ```typescript
-import OFSDK from "@ofauth/onlyfans-sdk"
+import { createOFAuthClient } from '@ofauth/onlyfans-sdk';
 
-// Single SDK instance with global configuration
-const sdk = new OFSDK({
-  mode: "access",           // ✅ Validated mode options
-  ofauthApiKey: "your-key", // ✅ Required for managed access
-  debugLog: false           // ✅ Optional debugging
-})
+const client = createOFAuthClient({
+  apiKey: 'your-api-key',
+  connectionId: 'conn_xxx',  // optional default
+});
 
-// Access modules through the instance
-sdk.messages    // 💬 Messaging operations
-sdk.posts       // 📝 Content management
-sdk.user        // 👤 User operations
-sdk.vault       // 🗃️ Media management
-// ... all other modules
+// Account namespace — no connection ID needed
+const account = await client.account.whoami();
+const connections = await client.account.connections.list();
+
+// Access namespace — uses connection ID
+const profile = await client.access.self.get();
+const posts = await client.access.listPosts({ limit: 20 });
 ```
 
-### Module Structure
+### Python — Class Constructor + Module Functions
 
-Each module is **self-contained** and focused on a specific domain:
+The Python SDK uses a client class paired with standalone module functions. You pass the client as the first argument:
 
-```typescript
-// Each module has consistent method signatures
-interface ModulePattern {
-  // All methods follow the same pattern
-  async operation({
-    authentication: AuthOptions,    // ✅ Required auth context
-    ...specificParams              // ✅ Operation-specific parameters
-  }): Promise<ApiResponse<T>>      // ✅ Typed response
-}
+```python
+from onlyfans_sdk import OFAuthClient, account, posts
 
-// Example: Messages module
-const result = await sdk.messages.getChatsList({
-  authentication: { connectionId: "conn_123" },
-  params: { limit: 20, offset: 0 }
+client = OFAuthClient(
+    api_key="your-api-key",
+    connection_id="conn_xxx",  # optional default
+)
+
+# Account namespace
+result = account.whoami(client)
+connections = account.list_connections(client, status="active")
+
+# Access namespace
+post_list = posts.list_posts(client, limit=20)
+```
+
+### Go — Builder Pattern + Flat Methods
+
+The Go SDK uses a builder pattern for configuration and flat, typed methods with context:
+
+```go
+import "github.com/ofauth-org/onlyfans-sdk-go"
+
+client := ofauth.NewClient("your-api-key").
+    WithConnectionID("conn_xxx")
+
+ctx := context.Background()
+
+// Account namespace
+account, err := client.Whoami(ctx)
+connections, err := client.ListAccountConnections(ctx, nil)
+
+// Access namespace
+profile, err := client.GetAccessSelf(ctx, nil)
+posts, err := client.ListAccessPosts(ctx, &ofauth.RequestOptions{
+    Query: url.Values{"limit": []string{"20"}},
 })
 ```
 
-## Type Safety System
+### C# — Class Constructor + Generic HTTP Methods
 
-### Automatic Parameter Validation
+The C# SDK uses a class with generic HTTP methods and path-based routing:
 
-The SDK validates **all parameters** at compile time and runtime:
+```csharp
+using OFAuth;
 
-```typescript
-// ✅ TypeScript catches invalid parameters before runtime
-const result = await sdk.statistics.getStats({
-  authentication: { connectionId: "conn_123" },
-  statType: "posts",              // ✅ Validates against allowed enum values
-  params: {
-    by: "purchases",              // ✅ Context-aware validation (valid for "posts")
-    startDate: new Date("2024-01-01"), // ✅ Date object validation
-    limit: 20                     // ✅ Number type enforcement
+var client = new OFAuthClient("your-api-key")
+    .WithConnectionId("conn_xxx");
+
+// Account namespace
+var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+var connections = await client.GetAsync<ConnectionsListResponse>("/v2/account/connections");
+
+// Access namespace
+var profile = await client.GetAsync<SelfResponse>("/v2/access/self");
+var posts = await client.GetAsync<PostsListResponse>(
+    "/v2/access/posts",
+    query: new Dictionary<string, string?> { ["limit"] = "20" }
+);
+```
+
+## Client Structure
+
+The following diagram shows how the client is organized in each language:
+
+```
+OFAuth Client
+|
+|-- API Key (sent as `apiKey` header)
+|-- Connection ID (sent as `x-connection-id` header)
+|-- Base URL
+|
+|-- Account Namespace (/v2/account/*)
+|   |-- whoami
+|   |-- connections (list, delete, invalidate, settings)
+|   |-- settings (get, update)
+|
+|-- Access Namespace (/v2/access/*) — requires connection ID
+|   |-- self (creator profile)
+|   |-- posts (list, create)
+|   |-- chats (messages, conversations)
+|   |-- subscribers (list, data)
+|   |-- earnings (chart, analytics)
+|   |-- vault (media storage)
+|   |-- promotions (links, campaigns)
+|   |-- uploads (media upload with chunking)
+|
+|-- Proxy (/v2/access/proxy/*) — call any OnlyFans endpoint
+```
+
+## Type Safety
+
+Each SDK provides type safety using the idioms of its language:
+
+<CodeGroup>
+```typescript TypeScript
+import type {
+  AccountWhoamiResponse,
+  AccountConnectionsListResponse,
+  AccessSelfGetResponse,
+} from '@ofauth/onlyfans-sdk';
+
+// Response types are automatically inferred
+const account = await client.account.whoami();
+account.id;          // string
+account.name;        // string | null
+account.permissions; // string[]
+```
+
+```python Python
+from onlyfans_sdk import models
+
+# Pydantic v2 models generated from OpenAPI spec
+# models.V2AccountWhoamiGetResponse
+# models.V2AccessPostsGetResponse
+result = account.whoami(client)
+```
+
+```go Go
+// Response structs generated from OpenAPI spec
+account, _ := client.Whoami(ctx)
+// account is *ofauth.WhoamiResponse
+
+account.Id          // string
+account.Name        // string
+account.Permissions // []string
+```
+
+```csharp C#
+// Model classes with JsonPropertyName attributes
+// 473 generated types in Models.cs
+var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+
+account.Id;          // string
+account.Name;        // string?
+account.Permissions; // List<string>
+```
+</CodeGroup>
+
+## Error Handling
+
+All SDKs throw language-native exceptions rather than returning result objects. Each SDK provides a typed error class with status code, message, error code, and details:
+
+<CodeGroup>
+```typescript TypeScript
+import { OFAuthAPIError } from '@ofauth/onlyfans-sdk';
+
+try {
+  const account = await client.account.whoami();
+} catch (error) {
+  if (error instanceof OFAuthAPIError) {
+    console.error(error.status, error.message, error.code);
   }
-})
-
-// ❌ TypeScript prevents invalid combinations at compile time
-const invalid = await sdk.statistics.getStats({
-  statType: "posts",
-  params: {
-    by: "revenue"                 // ❌ Not valid for "posts" statType
-  }
-})
-```
-
-### Response Type Safety
-
-All API responses are **fully typed** with IntelliSense support:
-
-```typescript
-const result = await sdk.messages.getChatsList({ 
-  authentication: { connectionId } 
-})
-
-if (result.data) {
-  // ✅ TypeScript knows the exact structure
-  result.data.list.forEach(chat => {
-    console.log(chat.user.username)    // ✅ IntelliSense available
-    console.log(chat.lastMessage.text) // ✅ Nested properties typed
-    console.log(chat.unreadCount)      // ✅ Number types enforced
-  })
 }
 ```
 
-## Authentication Architecture
+```python Python
+from onlyfans_sdk import OFAuthError
 
-### Flexible Authentication Options
+try:
+    result = account.whoami(client)
+except OFAuthError as e:
+    print(e.status, e.message, e.code)
+```
 
-The SDK supports **multiple authentication modes** with automatic validation:
-
-```typescript
-// Connection-based authentication (recommended)
-const connectionAuth = {
-  authentication: { connectionId: "conn_123" }
-}
-
-// Session-based authentication (for direct access)
-const sessionAuth = {
-  authentication: { 
-    session: {
-      "user-id": "123456789",
-      "user-agent": "...",
-      "cookie": "..."
+```go Go
+account, err := client.Whoami(ctx)
+if err != nil {
+    if apiErr, ok := err.(*ofauth.APIError); ok {
+        fmt.Println(apiErr.Status, apiErr.Message, apiErr.Code)
     }
-  }
+}
+```
+
+```csharp C#
+try
+{
+    var account = await client.GetAsync<WhoamiResponse>("/v2/account/whoami");
+}
+catch (OFAuthException ex)
+{
+    Console.WriteLine($"{ex.Status} {ex.Message} {ex.Code}");
+}
+```
+</CodeGroup>
+
+## Pagination
+
+TypeScript and Python SDKs include iterator helpers that handle pagination automatically:
+
+<CodeGroup>
+```typescript TypeScript
+// Async iterator — yields items one at a time
+for await (const connection of client.account.connections.iterate()) {
+  console.log(connection.id);
 }
 
-// The SDK automatically validates which auth method is required
-// ✅ Some operations require sessions, others accept connections
-await sdk.subscriptions.subscribeToUser({
-  authentication: { session: userData }, // ✅ Session required for user actions
-  userId: 123456789
+// With options
+for await (const connection of client.account.connections.iterate({
+  maxItems: 100,
+  pageSize: 20,
+})) {
+  console.log(connection.id);
+}
+```
+
+```python Python
+from onlyfans_sdk import account
+
+# Generator — yields items one at a time
+for connection in account.iter_connections(client):
+    print(connection["id"])
+```
+
+```go Go
+// Manual pagination with typed responses
+connections, err := client.ListAccountConnections(ctx, &ofauth.RequestOptions{
+    Query: url.Values{
+        "limit":  []string{"20"},
+        "offset": []string{"0"},
+    },
 })
-```
-
-### Mode-Based Operation
-
-The SDK adapts its behavior based on the configured mode:
-
-<AccordionGroup>
-  <Accordion title="Access Mode (Recommended)">
-    ```typescript
-    // Uses OFAuth's managed service
-    const sdk = new OFSDK({
-      mode: "access",
-      ofauthApiKey: "your-api-key"
-    })
-    
-    // ✅ Simplified authentication
-    // ✅ Automatic request signing
-    // ✅ Rate limiting handled
-    // ✅ No manual session management
-    ```
-  </Accordion>
-  
-  <Accordion title="Direct Mode">
-    ```typescript
-    // Direct OnlyFans API access
-    const sdk = new OFSDK({
-      mode: "direct",
-      ofauthApiKey: "your-api-key" // For dynamic rules
-    })
-    
-    // ✅ Full control over requests
-    // ✅ Custom session management
-    // ⚠️ Manual rate limiting required
-    // ⚠️ Complex request signing
-    ```
-  </Accordion>
-  
-  <Accordion title="Custom Mode">
-    ```typescript
-    // Custom proxy/middleware
-    const sdk = new OFSDK({
-      mode: "custom",
-      customOptions: {
-        baseUrl: "https://your-proxy.com",
-        signRequests: true,
-        beforeRequest: (url, request) => {
-          // Custom request modification
-          return request
-        }
-      }
-    })
-    ```
-  </Accordion>
-</AccordionGroup>
-
-## Error Handling Architecture
-
-### Structured Error Types
-
-All errors follow a **consistent structure** with type safety:
-
-```typescript
-interface ErrorResponse<T = any> {
-  error: {
-    statusCode: number          // ✅ HTTP status
-    type: ErrorType            // ✅ Categorized error types
-    message: string            // ✅ Human-readable message
-    retry: boolean             // ✅ Whether operation can be retried
-    details?: T                // ✅ Context-specific error data
-  }
-}
-
-// Usage with type safety
-const result = await sdk.user.getUserInfo(params)
-
-if (result.error) {
-  switch (result.error.type) {
-    case "unauthorized":
-      // Handle session expiry
-      break
-    case "forbidden":
-      // Handle permission issues
-      break
-    case "bad_request":
-      // result.error.details is typed based on the operation
-      console.log("Validation errors:", result.error.details)
-      break
-  }
+for _, conn := range connections.List {
+    fmt.Println(conn.Id)
 }
 ```
 
-## Module Organization
-
-The SDK is organized into **10 focused modules**:
-
-<CardGroup cols={2}>
-  <Card title="Communication" icon="comments">
-    **Messages** - Chat, mass messaging, queued messages
-  </Card>
-  <Card title="Media" icon="folder">
-    **Vault** - File management, media organization, downloads
-  </Card>
-  <Card title="Content" icon="file-text">
-    **Posts** - Content creation, management, scheduling
-  </Card>
-  <Card title="Users" icon="user">
-    **User** - Profile data, user interactions, search
-  </Card>
-  <Card title="Authentication" icon="link">
-    **Link** - Connection management, authentication flows
-  </Card>
-  <Card title="Account" icon="cog">
-    **Account** - Webhooks, account settings
-  </Card>
-  <Card title="Profile" icon="user-circle">
-    **Self** - Own profile management, settings, notifications
-  </Card>
-  <Card title="Subscriptions" icon="users">
-    **Subscriptions** - Subscriber management, lists
-  </Card>
-  <Card title="Analytics" icon="chart-bar">
-    **Statistics** - Performance metrics, earnings data
-  </Card>
-  <Card title="Upload" icon="upload">
-    **Upload** - File uploads, progress tracking
-  </Card>
-</CardGroup>
-
-## How It Works
-
-The SDK handles complexity so you can focus on building:
-
-- **Parameter validation**: TypeScript catches errors at compile time
-- **Authentication**: Automatically included with each request
-- **Error handling**: Structured errors with actionable information
-- **Type safety**: Full IntelliSense for all responses
-
-```typescript
-// Simple, type-safe API calls
-const result = await sdk.posts.createPost({
-  authentication: { connectionId: "conn_123" },
-  params: {
-    text: "Hello world!",
-    price: 5.00
-  }
-})
-
-if (result.error) {
-  // Handle error with typed error information
-  console.error(result.error.message)
-} else {
-  // Use typed response data
-  console.log(result.data)
+```csharp C#
+// Manual pagination with query parameters
+var connections = await client.GetAsync<ConnectionsListResponse>(
+    "/v2/account/connections",
+    query: new Dictionary<string, string?> { ["limit"] = "20", ["offset"] = "0" }
+);
+foreach (var conn in connections.List)
+{
+    Console.WriteLine(conn.Id);
 }
 ```
+</CodeGroup>
 
-## Development Experience
+## SDK Comparison
 
-### IntelliSense and Autocomplete
-
-The SDK provides **comprehensive IDE support**:
-
-```typescript
-// ✅ Autocomplete shows all available modules
-sdk. // → messages, posts, user, vault, etc.
-
-// ✅ Method signatures with parameter descriptions
-sdk.messages.createQueuedMessage({
-  authentication: { connectionId: "..." },
-  params: {
-    // ✅ IntelliSense shows all valid parameters
-    text: "...",        // String - Message content
-    price: 5.00,        // Number - Message price
-    lockedText: "...",  // String - Preview text
-    // ... more parameters with descriptions
-  }
-})
-```
-
-### Runtime Validation
-
-Beyond TypeScript, the SDK provides **runtime safety**:
-
-```typescript
-// Even with TypeScript disabled, the SDK validates:
-// ✅ Required parameters are present
-// ✅ Parameter types are correct
-// ✅ Enum values are valid
-// ✅ Authentication context is appropriate
-// ✅ Date formats are valid
-// ✅ Array elements are correctly typed
-
-const result = await sdk.statistics.getStats({
-  // Runtime validation ensures this is safe
-  statType: userInput,  // Validated against allowed values
-  params: {
-    startDate: new Date(userDateInput)  // Date validation
-  }
-})
-```
-
-## Performance Architecture
-
-### Optimized for Scale
-
-The SDK is designed for **high-performance applications**:
-
-```typescript
-// ✅ Efficient batch operations
-const [messages, posts, stats] = await Promise.all([
-  sdk.messages.getChatsList({ authentication: { connectionId } }),
-  sdk.posts.getMyPosts({ authentication: { connectionId } }),
-  sdk.statistics.getStats({ 
-    authentication: { connectionId },
-    statType: "posts" 
-  })
-])
-
-// ✅ Built-in pagination support
-async function getAllChats(connectionId: string) {
-  let allChats = []
-  let offset = 0
-  const limit = 50  // SDK validates pagination parameters
-  
-  while (true) {
-    const result = await sdk.messages.getChatsList({
-      authentication: { connectionId },
-      params: { limit, offset }
-    })
-    
-    if (!result.data?.list.length) break
-    
-    allChats.push(...result.data.list)
-    offset += limit
-  }
-  
-  return allChats
-}
-```
-
-## Best Practices
-
-<CardGroup cols={2}>
-  <Card title="Module Focus" icon="bullseye">
-    **Use the Right Module**
-    
-    - Each module has a specific purpose
-    - Don't mix concerns between modules
-    - Leverage module-specific optimizations
-    - Follow TypeScript guidance for parameter validation
-  </Card>
-  <Card title="Error Recovery" icon="refresh">
-    **Handle Errors Gracefully**
-    
-    - Check `result.error` before using `result.data`
-    - Use error types for appropriate responses
-    - Implement retry logic for retriable errors
-    - Log errors with sufficient context
-  </Card>
-</CardGroup>
+| Feature | TypeScript | Python | Go | C# |
+|---------|-----------|--------|----|----|
+| Package | `@ofauth/onlyfans-sdk` | `onlyfans-sdk` | `onlyfans-sdk-go` | `OnlyFans.SDK` |
+| Repository | [onlyfans-sdk-typescript](https://github.com/OFAuth-org/onlyfans-sdk-typescript) | [onlyfans-sdk-python](https://github.com/OFAuth-org/onlyfans-sdk-python) | [onlyfans-sdk-go](https://github.com/OFAuth-org/onlyfans-sdk-go) | [onlyfans-sdk-csharp](https://github.com/OFAuth-org/onlyfans-sdk-csharp) |
+| Client pattern | Factory function | Class + module functions | Builder pattern | Class + generic methods |
+| Type generation | Inline from OpenAPI | Pydantic v2 models | Response structs | Model classes |
+| Pagination | Async iterators | Generators | Manual | Manual |
+| HTTP client | Custom `fetch` | `httpx` | `net/http` (stdlib) | `HttpClient` |
+| Error type | `OFAuthAPIError` | `OFAuthError` | `*APIError` | `OFAuthException` |
 
 <Info>
-  **Next Steps**: Now that you understand the architecture, explore individual modules in the API Reference section to see how these principles apply to specific operations.
-</Info> 
+  All SDKs are generated from the same OpenAPI specification and provide identical API coverage. Choose the one that matches your stack.
+</Info>
