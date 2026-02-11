@@ -346,7 +346,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages/MAS
 | `mediaItems`        | (number\|string)\[] | Media references (see [`mediaItems` reference](/guides/media-items))  |
 | `price`             | number              | PPV price ($3-$200)                                                   |
 | `isLockedText`      | boolean             | Lock text behind paywall                                              |
-| `previewMediaCount` | number              | Number of preview media items                                         |
+| `previewMediaCount` | number              | How many of the `mediaItems` should be "previews"                     |
 | `isMarkdown`        | boolean             | Parse text as markdown (default: true)                                |
 | `userTags`          | number\[]           | Tag users in message                                                  |
 | `releaseForms`      | object              | Release form attachments                                              |

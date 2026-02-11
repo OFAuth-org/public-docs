@@ -120,7 +120,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/posts", {
 | Option | Type | Description |
 |--------|------|-------------|
 | `price` | number | PPV price in USD ($3 min, $200 max) |
-| `previewMediaCount` | number | Number of media items visible before unlock |
+| `previewMediaCount` | number | How many of the `mediaItems` should be "previews" |
 | `isLockedText` | boolean | Also hide the caption until purchased |
 
 ---
@@ -338,7 +338,7 @@ createPostWithMedia(imageBuffer, "New photo! 📸")
 | `mediaItems` | number[] | Array of media IDs from vault |
 | `price` | number | PPV price ($3-$200) |
 | `isLockedText` | boolean | Lock caption behind paywall |
-| `previewMediaCount` | number | Preview items before paywall |
+| `previewMediaCount` | number | How many of the `mediaItems` should be "previews" |
 | `scheduledDate` | string | ISO date for scheduled posting |
 | `expireAfter` | number | Days until auto-delete (1-30) |
 | `fundRaisingTargetAmount` | number | Fundraising goal (min $10) |

@@ -198,7 +198,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/posts/POST_ID", {
 | `mediaItems`              | (number\|string)\[] | Media references (see [`mediaItems` reference](/guides/media-items)) |
 | `price`                   | number              | PPV price ($3-$200, optional)    |
 | `isLockedText`            | boolean             | Lock text behind paywall         |
-| `previewMediaCount`       | number              | Number of preview media items    |
+| `previewMediaCount`       | number              | How many of the `mediaItems` should be "previews" |
 | `scheduledDate`           | string              | ISO date for scheduled posting   |
 | `expireAfter`             | number              | Days until post expires (1-30)   |
 | `fundRaisingTargetAmount` | number              | Fundraising goal (min \$10)      |

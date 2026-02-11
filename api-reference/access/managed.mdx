@@ -238,7 +238,7 @@ POST /v2/access/chats/{userId}/messages
 | `text` | string | No | Message content (supports [markdown](/guides/how-to/text-formatting)) |
 | `mediaItems` | array | No | Media IDs, upload references, or URLs (see [`mediaItems`](/guides/media-items)) |
 | `price` | number | No | PPV price ($3-$200) |
-| `previewMediaCount` | number | No | Preview items before paywall |
+| `previewMediaCount` | number | No | How many of the `mediaItems` should be "previews" |
 | `isMarkdown` | boolean | No | Parse as markdown (default: true). See [Text Formatting Guide](/guides/how-to/text-formatting). |
 
 ### Get Chat Media
