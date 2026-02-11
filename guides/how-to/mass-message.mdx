@@ -170,7 +170,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
     text: "Exclusive content you don't want to miss! 🔒",
     mediaItems: [12345, 12346],   // Media IDs from vault
     price: 14.99,                 // PPV price ($3-$200)
-    previewMediaCount: 1,         // Preview items
+    previewMediaCount: 1,         // First 1 item in mediaItems (left to right) is preview
     userLists: [1]
   })
 })
@@ -373,7 +373,7 @@ sendPromoToActiveSubscribers()
 | `text`                | string    | Message content (supports [markdown](/guides/how-to/text-formatting)) |
 | `mediaItems`          | (number\|string)\[] | Media IDs, upload references, or URLs (see [`mediaItems` reference](/guides/media-items)) |
 | `price`               | number    | PPV price ($3-$200)                     |
-| `previewMediaCount`   | number    | How many of the `mediaItems` should be "previews" |
+| `previewMediaCount`   | number    | How many `mediaItems` are previews. Uses the first N items from left to right. |
 | `isLockedText`        | boolean   | Lock text behind paywall                |
 | `userIds`             | number\[] | Specific user IDs to target             |
 | `userLists`           | number\[] | User list IDs to target                 |
