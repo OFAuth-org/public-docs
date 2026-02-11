@@ -244,7 +244,6 @@
                 "pages": [
                   "GET /v2/access/subscriptions",
                   "GET /v2/access/subscriptions/count",
-                  "GET /v2/access/subscriptions/:subscriptionId",
                   {
                     "group": "History",
                     "pages": [
@@ -452,14 +451,13 @@
                     "icon": "gift",
                     "pages": [
                       "GET /v2/access/promotions",
-                      "GET /v2/access/promotions/:promotionId",
                       "POST /v2/access/promotions",
                       "PUT /v2/access/promotions/:promotionId",
                       "DELETE /v2/access/promotions/:promotionId",
                       {
-                        "group": "Finish",
+                        "group": "Stop",
                         "pages": [
-                          "POST /v2/access/promotions/:promotionId/finish"
+                          "POST /v2/access/promotions/:promotionId/stop"
                         ]
                       }
                     ]
