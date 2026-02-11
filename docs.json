@@ -112,6 +112,7 @@
             "icon": "photo-film",
             "pages": [
               "guides/media",
+              "guides/media-items",
               "guides/how-to/upload-media",
               "guides/media-storage"
             ]

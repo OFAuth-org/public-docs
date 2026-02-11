@@ -314,7 +314,7 @@ await fetch("https://api.ofauth.com/v2/access/posts", {
   headers,
   body: JSON.stringify({
     text: "New content! 📸",
-    mediaItems: [mediaUploadId]  // "ofauth_upload_abc123..."
+    mediaItems: [mediaUploadId]  // e.g. "upload:550e8400-e29b-41d4-a716-446655440000"
   })
 })
 ```
@@ -344,12 +344,7 @@ await fetch("https://api.ofauth.com/v2/access/posts", {
 
 ### What `mediaItems` Accepts
 
-| Format | Example | Description |
-|--------|---------|-------------|
-| **Vault Media ID** | `12345` | Direct OnlyFans vault media ID |
-| **Vault Media ID (string)** | `"12345"` | Auto-converted to number |
-| **Upload Reference** | `"ofauth_upload_abc123..."` | Resolved automatically |
-| **URL** | `"https://example.com/img.jpg"` | External HTTP/HTTPS URL |
+See the [`mediaItems` reference](/guides/media-items).
 
 <Warning>
   **Single-use**: Upload references are consumed when used. Once you include a `mediaUploadId` in a post or message, it cannot be reused. If you need to use the same media multiple times, store the vault media ID instead.
@@ -443,4 +438,3 @@ try {
     Send media in direct messages
   </Card>
 </CardGroup>
-

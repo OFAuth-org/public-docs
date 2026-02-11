@@ -149,10 +149,10 @@ POST /v2/access/posts
 |-------|------|----------|-------------|
 | `text` | string | No | Post content (supports [markdown](/guides/how-to/text-formatting)) |
 | `price` | number | No | PPV price ($3-$200) |
-| `mediaItems` | array | No | Media IDs or upload references |
+| `mediaItems` | array | No | Media IDs, upload references, or URLs (see [`mediaItems`](/guides/media-items)) |
 | `isPinned` | boolean | No | Pin to profile |
 | `scheduledDate` | string | No | ISO date for scheduled posting |
-| `isMarkdown` | boolean | No | Parse text as markdown (default: true) |
+| `isMarkdown` | boolean | No | Parse text as markdown (default: true). See [Text Formatting Guide](/guides/how-to/text-formatting). |
 
 **Response**
 
@@ -235,11 +235,11 @@ POST /v2/access/chats/{userId}/messages
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `text` | string | No | Message content |
-| `mediaItems` | array | No | Media IDs or upload references |
+| `text` | string | No | Message content (supports [markdown](/guides/how-to/text-formatting)) |
+| `mediaItems` | array | No | Media IDs, upload references, or URLs (see [`mediaItems`](/guides/media-items)) |
 | `price` | number | No | PPV price ($3-$200) |
 | `previewMediaCount` | number | No | Preview items before paywall |
-| `isMarkdown` | boolean | No | Parse as markdown (default: true) |
+| `isMarkdown` | boolean | No | Parse as markdown (default: true). See [Text Formatting Guide](/guides/how-to/text-formatting). |
 
 ### Get Chat Media
 
@@ -376,13 +376,14 @@ POST /v2/access/mass-messages
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `text` | string | Message content |
-| `mediaItems` | array | Media IDs |
+| `text` | string | Message content (supports [markdown](/guides/how-to/text-formatting)) |
+| `mediaItems` | array | Media IDs, upload references, or URLs (see [`mediaItems`](/guides/media-items)) |
 | `price` | number | PPV price |
 | `userIds` | array | Target user IDs |
 | `userLists` | array | Target list IDs |
 | `excludeUserLists` | array | Exclude list IDs |
 | `scheduledDate` | string | ISO date for scheduling |
+| `isMarkdown` | boolean | Parse as markdown (default: true). See [Text Formatting Guide](/guides/how-to/text-formatting). |
 
 ### Get/Update/Delete Mass Message
 

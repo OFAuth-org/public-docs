@@ -1,0 +1,84 @@
+---
+title: "mediaItems Reference"
+description: "Exactly what you can pass in the mediaItems array when attaching media to posts and messages"
+---
+
+`mediaItems` is an array used by endpoints like:
+
+* Create Post (`POST /v2/access/posts`)
+* Send Message (`POST /v2/access/chats/{userId}/messages`)
+* Create Mass Message (`POST /v2/access/mass-messages`)
+
+This page only covers **what values you can put inside** the `mediaItems` array.
+
+---
+
+## Accepted Item Formats
+
+Each element in `mediaItems` can be one of the following:
+
+| Format | Example | When to use |
+|--------|---------|-------------|
+| **Vault media ID (number)** | `12345` | You already have a vault media ID and want to reuse it |
+| **Vault media ID (numeric string)** | `"12345"` | Same as above, but your ID is a string |
+| **Upload reference (`mediaUploadId`)** | `"upload:550e8400-e29b-41d4-a716-446655440000"` | You just uploaded media via `/v2/access/uploads/*` and want OFAuth to resolve it to a vault ID for you |
+| **External URL (HTTP/HTTPS)** | `"https://example.com/image.jpg"` | You want to attach a remotely hosted file by URL |
+
+You can mix formats in the same array. Order is preserved.
+
+---
+
+## Upload References Are Single-Use
+
+If you pass a `mediaUploadId` (the value returned by `POST /v2/access/uploads/init`) inside `mediaItems`, OFAuth resolves it and then **consumes** the upload reference.
+
+<Warning>
+  Upload references are single-use. Once a `mediaUploadId` is used in a post or message, it cannot be reused.
+</Warning>
+
+If you need to attach the same media multiple times, store and reuse the **vault media ID** instead.
+
+---
+
+## Examples
+
+### Use a vault media ID
+
+```json
+{
+  "text": "New content!",
+  "mediaItems": [12345, 67890]
+}
+```
+
+### Use an upload reference
+
+```json
+{
+  "text": "Just uploaded this",
+  "mediaItems": ["upload:550e8400-e29b-41d4-a716-446655440000"]
+}
+```
+
+### Mix formats
+
+```json
+{
+  "text": "Bundle drop",
+  "mediaItems": [
+    12345,
+    "67890",
+    "upload:550e8400-e29b-41d4-a716-446655440000",
+    "https://example.com/extra.jpg"
+  ]
+}
+```
+
+---
+
+## Validation Rules (Quick)
+
+* Non-numeric strings that are not an `upload:` reference and not an `http(s)://` URL are rejected.
+* Only `http://` and `https://` URLs are accepted.
+* If an upload reference is invalid/expired/unused (not ready), the request fails with `400`.
+

@@ -90,14 +90,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/posts", {
 
 ### What You Can Pass in `mediaItems`
 
-The `mediaItems` array accepts several formats:
-
-| Format | Example | Description |
-|--------|---------|-------------|
-| **Vault Media ID** | `12345` | Direct OnlyFans vault media ID (number) |
-| **Vault Media ID (string)** | `"12345"` | Same as above, auto-converted to number |
-| **Upload Reference** | `"ofauth_upload_abc123..."` | The `mediaUploadId` from upload flow |
-| **URL** | `"https://example.com/image.jpg"` | External HTTP/HTTPS URL |
+See the [`mediaItems` reference](/guides/media-items) for the complete list of accepted formats and edge cases.
 
 <Tip>
   **Recommended**: Use the upload reference (`mediaUploadId`) directly! After completing an upload, pass the `mediaUploadId` string to `mediaItems` - the system resolves it to the vault ID automatically.
@@ -111,7 +104,7 @@ await completeUpload({ mediaUploadId })
 
 body: JSON.stringify({
   text: "New post!",
-  mediaItems: [mediaUploadId]  // "ofauth_upload_abc123..."
+  mediaItems: [mediaUploadId]  // e.g. "upload:550e8400-e29b-41d4-a716-446655440000"
 })
 
 // Option 2: Use vault IDs if you already have them
@@ -234,6 +227,10 @@ const response = await fetch("https://api.ofauth.com/v2/access/posts", {
 ## Text Formatting
 
 Posts support markdown formatting:
+
+<Tip>
+  See [Text Formatting Guide](/guides/how-to/text-formatting) for the full formatting reference.
+</Tip>
 
 ```javascript
 {
@@ -363,7 +360,7 @@ createPostWithMedia(imageBuffer, "New photo! 📸")
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `text` | string | Post caption (supports markdown) |
+| `text` | string | Post caption (supports [markdown](/guides/how-to/text-formatting)) |
 | `mediaItems` | number[] | Array of media IDs from vault |
 | `price` | number | PPV price ($3-$200) |
 | `isLockedText` | boolean | Lock caption behind paywall |
@@ -388,4 +385,3 @@ createPostWithMedia(imageBuffer, "New photo! 📸")
     Share content via DM
   </Card>
 </CardGroup>
-
