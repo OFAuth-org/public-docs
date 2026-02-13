@@ -13,7 +13,12 @@
     "dark": "#4F46E5"
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
   },
   "navbar": {
     "links": [
@@ -654,7 +659,6 @@
       "display": "interactive"
     }
   },
-  "openapi": "https://api-next.ofauth.com/openapi.json",
   "background": {
     "decoration": "gradient"
   },
