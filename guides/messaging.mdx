@@ -245,14 +245,15 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages", {
 })
 ```
 
-### List Mass Messages
+### List Sent Mass Messages
 
-View mass message history:
+View sent mass message stats:
 
 ```javascript
-const response = await fetch("https://api.ofauth.com/v2/access/mass-messages?" + new URLSearchParams({
+const response = await fetch("https://api.ofauth.com/v2/access/analytics/mass-messages/sent?" + new URLSearchParams({
   limit: "20",
-  offset: "0"
+  startDate: "2024-01-01",
+  endDate: "2024-12-31"
 }), {
   headers: {
     apikey: "YOUR_API_KEY",
@@ -303,7 +304,7 @@ const response = await fetch("https://api.ofauth.com/v2/access/mass-messages/MAS
 | `/v2/access/chats/{userId}/messages`             | POST   | Send a message           |
 | `/v2/access/chats/{userId}/messages/{messageId}` | DELETE | Unsend a message         |
 | `/v2/access/chats/{userId}/media`                | GET    | Get media from a chat    |
-| `/v2/access/mass-messages`                       | GET    | List mass messages       |
+| `/v2/access/analytics/mass-messages/sent`        | GET    | List sent mass messages  |
 | `/v2/access/mass-messages`                       | POST   | Create mass message      |
 | `/v2/access/mass-messages/{massMessageId}`       | GET    | Get mass message details |
 | `/v2/access/mass-messages/{massMessageId}`       | PUT    | Update mass message      |

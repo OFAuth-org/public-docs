@@ -219,7 +219,6 @@
                     "group": "Mass Messages",
                     "icon": "comments",
                     "pages": [
-                      "GET /v2/access/mass-messages",
                       "GET /v2/access/mass-messages/:massMessageId",
                       "POST /v2/access/mass-messages",
                       "PUT /v2/access/mass-messages/:massMessageId",
@@ -374,6 +373,7 @@
                     "icon": "comments",
                     "pages": [
                       "GET /v2/access/analytics/mass-messages/chart",
+                      "GET /v2/access/analytics/mass-messages/sent",
                       "GET /v2/access/analytics/mass-messages/purchased",
                       "GET /v2/access/analytics/mass-messages/:massMessageId/buyers"
                     ]

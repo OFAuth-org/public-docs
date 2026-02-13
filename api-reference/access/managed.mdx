@@ -348,22 +348,6 @@ PUT /v2/access/subscribers/{userId}/custom-name
 
 Send messages to multiple fans at once.
 
-### List Mass Messages
-
-```http
-GET /v2/access/mass-messages
-```
-
-**Required Permission:** `messages:read`
-
-**Query Parameters**
-
-| Name | Type | Description |
-|------|------|-------------|
-| `type` | string | `sent`, `unsent`, `scheduled` |
-| `limit` | number | Results per page |
-| `offset` | number | Pagination offset |
-
 ### Create Mass Message
 
 ```http
