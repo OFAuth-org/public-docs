@@ -379,7 +379,6 @@
                     "pages": [
                       "GET /v2/access/analytics/mass-messages/chart",
                       "GET /v2/access/analytics/mass-messages/sent",
-                      "GET /v2/access/analytics/mass-messages/purchased",
                       "GET /v2/access/analytics/mass-messages/:massMessageId/buyers"
                     ]
                   },
