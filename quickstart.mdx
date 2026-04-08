@@ -12,15 +12,19 @@ description: "Get your first OFAuth API call working in under 2 minutes"
   **Use Sandbox for testing!** Before testing with real OnlyFans accounts, use the [Sandbox environment](/setup/sandbox) with test credentials. Too many login attempts on production accounts can trigger OnlyFans "suspicious activity" detection, which may cause account resets.
 </Warning>
 
-## Step 1: Get Your API Key
+## Step 1: Set Up Your Account
 
 <Steps>
-  <Step title="Go to your dashboard">
-    Open [app.ofauth.com/platform/developers/keys](https://app.ofauth.com/platform/developers/keys)
+  <Step title="Complete platform profile">
+    Open [app.ofauth.com/platform/apps](https://app.ofauth.com/platform/apps) and complete the setup wizard with your app name, description, website, and privacy policy.
   </Step>
 
-  <Step title="Copy your API key">
-    Your API key looks like `sk_live_...` (production) or `sk_sandbox_...` (testing). Keep it secure—don't commit it to version control.
+  <Step title="Create a client app">
+    Choose your integration type (Redirect, Embed, or Whitelabel) and configure your allowed redirect URIs or origins. Copy your `clientAppId`.
+  </Step>
+
+  <Step title="Get your API key">
+    Go to [API Keys](https://app.ofauth.com/platform/developers/keys). Your API key looks like `sk_live_...` (production) or `sk_sandbox_...` (testing). Keep it secure—don't commit it to version control.
   </Step>
 </Steps>
 

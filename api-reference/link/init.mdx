@@ -19,7 +19,8 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 | ----- | ---- | -------- | ----------- |
-| `redirectUrl` | `string` | No | URL to redirect to after completion. If omitted, uses the first Allowed Redirect URI from your dashboard. |
+| `clientAppId` | `string` | Recommended | Your client app ID (e.g., `app_abc123`). If omitted, the first matching client app for your environment is used automatically. |
+| `redirectUrl` | `string` | No | URL to redirect to after completion. Must be registered in your client app's Allowed Redirect URIs. If omitted, uses the first allowed URI from your client app. |
 | `clientReferenceId` | `string` | No | Your own internal ID for this user. Returned in webhooks and query params. |
 | `connectionId` | `string` | No | Provide an existing connection ID to reconnect/re-authenticate that specific connection. |
 | `geolocation` | `object` | No | Override the proxy location for this session. |
@@ -27,7 +28,7 @@ Content-Type: application/json
 | `geolocation.state` | `string` | No | State/region code (e.g., `"CA"` for California). |
 
 <Info>
-The `redirectUrl` must be pre-registered in your [OFAuth dashboard](https://app.ofauth.com) under Developers → API → Allowed Redirect URIs.
+The `redirectUrl` must be registered in your client app's Allowed Redirect URIs. Create and configure client apps in your [OFAuth dashboard](https://app.ofauth.com/platform/apps).
 </Info>
 
 ## Response
@@ -91,6 +92,7 @@ curl -X POST https://api.ofauth.com/v2/link/init \
   -H "apikey: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
+    "clientAppId": "app_your_client_app_id",
     "redirectUrl": "https://myapp.com/callback",
     "clientReferenceId": "user_123"
   }'

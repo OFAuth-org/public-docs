@@ -41,15 +41,15 @@ Whitelabel mode is designed for enterprise partners who need:
 
 ## API Reference
 
-Enterprise whitelabel endpoints are available at `/v2/enterprise/link`:
+Whitelabel endpoints require a client app with type `whitelabel`. Initialize a session with `/v2/link/init` using your whitelabel client app ID, then use the whitelabel-specific endpoints:
 
 | Endpoint | Method | Purpose |
 | -------- | ------ | ------- |
-| `/v2/enterprise/link/init` | `POST` | Initialize with whitelabel mode and raw session options |
-| `/v2/enterprise/link/{clientSecret}` | `POST` | Start programmatic login |
-| `/v2/enterprise/link/{clientSecret}` | `GET` | Poll session status |
-| `/v2/enterprise/link/{clientSecret}/2fa/code` | `POST` | Submit 2FA code |
-| `/v2/enterprise/link/{clientSecret}/2fa/sms` | `PATCH` | Request SMS 2FA code |
+| `/v2/link/init` | `POST` | Initialize with your whitelabel `clientAppId` |
+| `/v2/link/{clientSecret}/whitelabel/login` | `POST` | Start programmatic login |
+| `/v2/link/{clientSecret}/whitelabel/status` | `GET` | Poll session status |
+| `/v2/link/{clientSecret}/whitelabel/2fa/code` | `POST` | Submit 2FA code |
+| `/v2/link/{clientSecret}/whitelabel/2fa/sms` | `PATCH` | Request SMS 2FA code |
 
 ## Security Requirements
 

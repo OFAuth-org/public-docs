@@ -12,24 +12,28 @@ Use this checklist to ensure your OFAuth integration is complete and production-
     Sign up at [app.ofauth.com](https://app.ofauth.com) if you haven't already.
   </Step>
 
+  <Step title="Complete Platform Profile">
+    Set up your platform profile (app name, description, website, privacy policy) via the setup wizard in [Dashboard > Client Apps](https://app.ofauth.com/platform/apps).
+  </Step>
+
+  <Step title="Create a Client App">
+    Create a client app and choose your integration type (Redirect, Embed, or Whitelabel). Configure allowed redirect URIs or origins for your app. Copy your `clientAppId`.
+  </Step>
+
   <Step title="Generate API Key">
-    Go to [Developers > API Keys](https://app.ofauth.com/platform/developers/keys) and create your API key.
+    Go to [API Keys](https://app.ofauth.com/platform/developers/keys) and create your API key.
 
     <Warning>
       Keep your API key secure. Never commit it to version control or expose it client-side.
     </Warning>
   </Step>
 
-  <Step title="Configure Webhook Endpoint">
-    Set up your webhook URL at [Developers > Webhooks](https://app.ofauth.com/platform/developers/webhooks) to receive connection events.
-  </Step>
-
-  <Step title="Set Redirect URIs">
-    Add your allowed redirect URIs for the Link authentication flow.
-  </Step>
-
   <Step title="Set Data Access Permissions">
-    Configure which OnlyFans data your integration needs access to (profile, posts, messages, etc.) in your platform settings.
+    Configure which OnlyFans data your integration needs access to (profile, posts, messages, etc.) in [Dashboard > Client Apps > Settings > Access Permissions](https://app.ofauth.com/platform/apps/settings).
+  </Step>
+
+  <Step title="Configure Webhook Endpoint">
+    Set up your webhook URL at [Webhooks](https://app.ofauth.com/platform/developers/webhooks) to receive connection events.
   </Step>
 </Steps>
 

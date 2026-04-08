@@ -50,16 +50,20 @@ sequenceDiagram
 ## Prerequisites
 
 <Steps>
-  <Step title="Get API Key">
-    Get your API key from [OFAuth Dashboard > Developers > API Keys](https://app.ofauth.com/platform/developers/keys)
+  <Step title="Complete Platform Profile">
+    Set up your platform profile (app name, description, website, privacy policy) in the [OFAuth Dashboard](https://app.ofauth.com/platform/apps).
   </Step>
 
-  <Step title="Configure Redirect URI">
-    Add your callback URL to Allowed Redirect URIs in Dashboard > Developers > API
+  <Step title="Create a Client App">
+    Create a client app in [Dashboard > Client Apps](https://app.ofauth.com/platform/apps). Choose your app type (Redirect, Embed, or Whitelabel) and configure allowed redirect URIs or origins. Copy your `clientAppId`.
+  </Step>
+
+  <Step title="Get API Key">
+    Get your API key from [Dashboard > API Keys](https://app.ofauth.com/platform/developers/keys).
   </Step>
 
   <Step title="Set Permissions">
-    Select which OnlyFans data your platform can access in Dashboard > Developers > API > User Data Permissions
+    Configure which OnlyFans data your platform can access in [Dashboard > Client Apps > Settings > Access Permissions](https://app.ofauth.com/platform/apps/settings).
   </Step>
 </Steps>
 
@@ -132,7 +136,8 @@ The simplest integration—redirect users to OFAuth's hosted authentication page
 
 | Option              | Type   | Description                                     |
 | ------------------- | ------ | ----------------------------------------------- |
-| `redirectUrl`       | string | Callback URL (must be in Allowed Redirect URIs) |
+| `clientAppId`       | string | Your client app ID (recommended)                |
+| `redirectUrl`       | string | Callback URL (must be in your client app's Allowed Redirect URIs) |
 | `clientReferenceId` | string | Your internal user ID for correlation           |
 | `connectionId`      | string | Existing connection ID to reconnect             |
 
@@ -353,7 +358,7 @@ The existing connection is updated with fresh session data—same Connection ID,
   </Accordion>
 
   <Accordion title="Invalid Redirect URL">
-    Add the URL to Allowed Redirect URIs in Dashboard > Developers > API.
+    Add the URL to your client app's Allowed Redirect URIs in Dashboard > Client Apps.
   </Accordion>
 
   <Accordion title="Popup Blocked">
@@ -361,7 +366,7 @@ The existing connection is updated with fresh session data—same Connection ID,
   </Accordion>
 
   <Accordion title="CSP/CORS Issues (Embed)">
-    Add your domain to Allowed Origins in the OFAuth dashboard.
+    Add your domain to your client app's Allowed Origins in Dashboard > Client Apps.
   </Accordion>
 </AccordionGroup>
 
