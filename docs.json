@@ -140,7 +140,7 @@
           {
             "group": "Account API",
             "icon": "building",
-            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               "api-reference/core/overview",
               "GET /v2/account/whoami",
@@ -168,8 +168,8 @@
           },
           {
             "group": "Link API",
-            "icon": "https://next.ofauth.com/link_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "icon": "https://ofauth.com/link_icon.png",
+            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               "api-reference/link/overview",
               "POST /v2/link/init",
@@ -179,8 +179,8 @@
           },
           {
             "group": "Access API",
-            "icon": "https://next.ofauth.com/access_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "icon": "https://ofauth.com/access_icon.png",
+            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               "api-reference/access/overview",
               "api-reference/access/proxy",
@@ -484,7 +484,7 @@
           {
             "group": "Vault+ API",
             "icon": "database",
-            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               {
                 "group": "Cache",
@@ -510,8 +510,8 @@
           },
           {
             "group": "Dynamic Rules API",
-            "icon": "https://next.ofauth.com/rules_icon.png",
-            "openapi": "https://api-next.ofauth.com/openapi.json",
+            "icon": "https://ofauth.com/rules_icon.png",
+            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               "api-reference/dynamic-rules/overview",
               "GET /v2/dynamic-rules",
@@ -652,7 +652,7 @@
   },
   "api": {
     "mdx": {
-      "server": "https://api-next.ofauth.com"
+      "server": "https://api.ofauth.com"
     },
     "playground": {
       "display": "interactive"
