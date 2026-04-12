@@ -45,8 +45,11 @@ POST /v2/dynamic-rules/sign
     "sign": "generated_signature_string",
     "time": "1698400000000",
     "user-id": "12345",
-    "app-token": "..."
-  }
+    "app-token": "...",
+    "x-of-rev": "revision_hash"
+  },
+  "is_public": false,
+  "is_early_access": true
 }
 ```
 
@@ -62,7 +65,12 @@ GET /v2/dynamic-rules/status
 
 ```json
 {
+  "revision": "revision_hash",
+  "early_access_revision": "revision_hash",
+  "public_revision": "revision_hash",
   "is_current": true,
+  "is_early_access": true,
+  "is_public": false,
   "access_granted": true
 }
 ```

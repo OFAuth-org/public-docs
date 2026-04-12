@@ -96,10 +96,25 @@ Response:
 
 ```json
 {
-  "mediaId": "12345",
-  "presignedUrl": "https://...",
-  "expiresAt": 1234567890,
-  "status": "stored"
+  "id": "12345",
+  "type": "image",
+  "duration": null,
+  "media": {
+    "full": {
+      "id": "variant_abc123",
+      "status": "stored",
+      "quality": "full",
+      "sizeBytes": 1024000,
+      "contentType": "image/jpeg",
+      "source": "vault",
+      "accessCount": 12,
+      "createdAt": 1715800000,
+      "expiresAt": 1715886400,
+      "storedAt": 1715800100,
+      "lastAccessedAt": 1715800500,
+      "url": "https://..."
+    }
+  }
 }
 ```
 
