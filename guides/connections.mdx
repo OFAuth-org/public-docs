@@ -36,6 +36,11 @@ const session = await fetch("https://api.ofauth.com/v2/link/init", {
     clientReferenceId: "user_abc123" // Your internal user ID
   })
 });
+
+const sessionData = await session.json();
+if (sessionData.mode !== "hosted") {
+  throw new Error(`Expected hosted Link session, received ${sessionData.mode}`);
+}
 ```
 
 ```javascript
@@ -213,8 +218,8 @@ This endpoint only works for imported connections (`imported: true`). Link-manag
 List only imported or Link-created connections:
 
 ```http
-GET /v2/connections?imported=true
-GET /v2/connections?imported=false
+GET /v2/account/connections?imported=true
+GET /v2/account/connections?imported=false
 ```
 
 ---
@@ -255,7 +260,7 @@ Set up [webhooks](/reference/webhooks) to receive `connection.expired` events.
 ### List Connections
 
 ```http
-GET /v2/connections
+GET /v2/account/connections
 ```
 
 | Parameter | Type | Description |
@@ -265,10 +270,37 @@ GET /v2/connections
 | `status` | string | Filter: `active`, `expired`, `awaiting_2fa` |
 | `imported` | string | Filter: `true` (imported only), `false` (Link-created only) |
 
+Response shape:
+
+```json
+{
+  "list": [
+    {
+      "id": "conn_abc123xyz",
+      "status": "active",
+      "permissions": ["profile:read"],
+      "expiredAt": null,
+      "createdAt": "2024-01-15T10:30:00.000Z",
+      "updatedAt": "2024-01-15T10:30:00.000Z",
+      "clientReferenceId": "user_abc123",
+      "imported": false,
+      "lastCheckedAt": "2024-01-15T10:35:00.000Z",
+      "userData": {
+        "id": "123456",
+        "name": "Jane Doe",
+        "username": "janedoe",
+        "avatar": "https://..."
+      }
+    }
+  ],
+  "hasMore": false
+}
+```
+
 ### Delete Connection
 
 ```http
-DELETE /v2/connections/{connectionId}
+DELETE /v2/account/connections/{connectionId}
 ```
 
 <Warning>
@@ -278,7 +310,7 @@ Deleting a connection logs the user out and stops billing. The connection record
 ### Invalidate Connection
 
 ```http
-POST /v2/connections/{connectionId}/invalidate
+POST /v2/account/connections/{connectionId}/invalidate
 ```
 
 Invalidates a connection by marking it as expired and logging out the user. Unlike deletion, the connection record is preserved, making it ideal for:
@@ -302,7 +334,7 @@ In your [OFAuth Dashboard](https://app.ofauth.com/platform/developer/api), updat
 ### Step 2: Invalidate Existing Connections
 
 ```bash
-curl -X POST https://api.ofauth.com/v2/connections/{connectionId}/invalidate \
+curl -X POST https://api.ofauth.com/v2/account/connections/{connectionId}/invalidate \
   -H "apikey: YOUR_API_KEY"
 ```
 
@@ -381,4 +413,3 @@ Use reconnection for expired connections to maintain consistent connection IDs i
     Monitor connection events
   </Card>
 </CardGroup>
-

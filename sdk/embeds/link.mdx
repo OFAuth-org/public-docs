@@ -42,16 +42,22 @@ const handler = OFAuthLinkEmbed.create({
   },
   async onInvalidSession() {
     const response = await fetch("/api/create-link-session");
-    const { url } = await response.json();
-    handler.open(url);
+    const session = await response.json();
+    if (session.mode !== "hosted") {
+      throw new Error(`Expected hosted Link session, received ${session.mode}`);
+    }
+    handler.open(session.url);
   }
 });
 
 // Open the authentication popup
 async function connectOnlyFans() {
   const response = await fetch("/api/create-link-session");
-  const { url } = await response.json();
-  handler.open(url);
+  const session = await response.json();
+  if (session.mode !== "hosted") {
+    throw new Error(`Expected hosted Link session, received ${session.mode}`);
+  }
+  handler.open(session.url);
 }
 ```
 
@@ -69,13 +75,14 @@ async function connectOnlyFans() {
 ```typescript
 interface SuccessMetadata {
   successUrl: string;
+  redirect: boolean;
   connection: {
     id: string;         // Connection ID to store
     userData: {
       id: string;
       name: string;
       username: string;
-      avatar: string;
+      avatar: string | null;
     };
   };
 }
@@ -112,7 +119,7 @@ For sites without a build step, use the global script with `data-` attributes:
 
 <CardGroup cols={2}>
   <Card title="Link Guide" icon="link" href="/guides/link">
-    Full guide covering hosted mode, redirect flow, and embed mode.
+    Full guide covering redirect and popup Link flows.
   </Card>
 
   <Card title="Link API" icon="terminal" href="/api-reference/link/overview">

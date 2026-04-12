@@ -89,8 +89,13 @@ The simplest integration—redirect users to OFAuth's hosted authentication page
     })
   })
 
-  const { url } = await response.json()
-  console.log("Send user to:", url)
+  const session = await response.json()
+
+  if (session.mode !== "hosted") {
+    throw new Error(`Expected hosted Link session, received ${session.mode}`)
+  }
+
+  console.log("Send user to:", session.url)
   ```
 
   ```python Python
@@ -109,6 +114,9 @@ The simplest integration—redirect users to OFAuth's hosted authentication page
   )
 
   data = response.json()
+  if data["mode"] != "hosted":
+      raise ValueError(f"Expected hosted Link session, received {data['mode']}")
+
   print("Send user to:", data["url"])
   ```
 
@@ -127,6 +135,7 @@ The simplest integration—redirect users to OFAuth's hosted authentication page
 
 ```json
 {
+  "mode": "hosted",
   "url": "https://link.ofauth.com/cs_abc123...",
   "expiresAt": "2024-01-15T10:30:00Z"
 }
@@ -134,17 +143,17 @@ The simplest integration—redirect users to OFAuth's hosted authentication page
 
 ### Session Options
 
-| Option              | Type   | Description                                     |
-| ------------------- | ------ | ----------------------------------------------- |
-| `clientAppId`       | string | Your client app ID (recommended)                |
-| `redirectUrl`       | string | Callback URL (must be in your client app's Allowed Redirect URIs) |
-| `clientReferenceId` | string | Your internal user ID for correlation           |
-| `connectionId`      | string | Existing connection ID to reconnect             |
+| Option              | Type   | Description                                                                          |
+| ------------------- | ------ | ------------------------------------------------------------------------------------ |
+| `clientAppId`       | string | Your client app ID. Recommended for production integrations.                         |
+| `redirectUrl`       | string | Callback URL. Must be in your client app's allowed redirect URIs for redirect apps. |
+| `clientReferenceId` | string | Your internal user ID for correlation                                                |
+| `connectionId`      | string | Existing connection ID to reconnect                                                  |
 
 ### Step 2: Redirect User
 
 ```javascript
-window.location.href = url
+window.location.href = session.url
 ```
 
 The user will enter their credentials, complete 2FA if enabled, and solve captchas—all handled automatically by OFAuth.
@@ -222,16 +231,22 @@ const handler = OFAuthLinkEmbed.create({
   async onInvalidSession() {
     // Session expired, create a new one
     const response = await fetch("/api/create-link-session");
-    const { url } = await response.json();
-    handler.open(url);
+    const session = await response.json();
+    if (session.mode !== 'hosted') {
+      throw new Error(`Expected hosted Link session, received ${session.mode}`);
+    }
+    handler.open(session.url);
   }
 });
 
 // Open the authentication popup
 async function connectOnlyFans() {
   const response = await fetch("/api/create-link-session");
-  const { url } = await response.json();
-  handler.open(url);
+  const session = await response.json();
+  if (session.mode !== 'hosted') {
+    throw new Error(`Expected hosted Link session, received ${session.mode}`);
+  }
+  handler.open(session.url);
 }
 ```
 

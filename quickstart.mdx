@@ -85,8 +85,11 @@ Create a Link session to authenticate a user:
     })
   })
 
-  const { url } = await response.json()
-  console.log("Redirect user to:", url)
+  const session = await response.json()
+  if (session.mode !== "hosted") {
+    throw new Error(`Expected hosted Link session, received ${session.mode}`)
+  }
+  console.log("Redirect user to:", session.url)
   ```
 
   ```python Python
@@ -101,13 +104,16 @@ Create a Link session to authenticate a user:
           "redirectUrl": "https://yourapp.com/callback"
       }
   )
-  print("Redirect user to:", response.json()["url"])
+  session = response.json()
+  if session["mode"] != "hosted":
+      raise ValueError(f"Expected hosted Link session, received {session['mode']}")
+  print("Redirect user to:", session["url"])
   ```
 </CodeGroup>
 
 **What happens:**
 
-1. You get a `url` in the response
+1. You get a hosted Link session response with `mode: "hosted"` and a `url`
 2. Redirect the user to that URL
 3. They authenticate on OFAuth's secure page
 4. On success, they're redirected to your `redirectUrl` with `connection_id` as a query parameter

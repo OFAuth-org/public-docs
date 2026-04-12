@@ -67,8 +67,11 @@ Use this checklist to ensure your OFAuth integration is complete and production-
       })
     });
 
-    const { url } = await response.json();
-    // Redirect user to `url`
+    const session = await response.json();
+    if (session.mode !== "hosted") {
+      throw new Error(`Expected hosted Link session, received ${session.mode}`);
+    }
+    // Redirect user to `session.url`
     ```
   </Step>
 
@@ -214,7 +217,7 @@ async function handleOFAuthRequest(endpoint, options) {
 | ---------------- | ---------------------------- |
 | Verify API key   | `GET /v2/account/whoami`     |
 | Start auth flow  | `POST /v2/link/init`         |
-| List connections | `GET /v2/connections`        |
+| List connections | `GET /v2/account/connections` |
 | Get user profile | `GET /v2/access/self`        |
 | List subscribers | `GET /v2/access/subscribers` |
 
