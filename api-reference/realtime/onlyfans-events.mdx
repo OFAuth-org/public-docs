@@ -66,28 +66,6 @@ Today, beta websocket relay deliveries use the Realtime event type below:
 
 If OFAuth cannot parse the upstream websocket body as structured JSON, the event may include raw text instead of `data.json`. During beta, your handler should be tolerant of both structured and unclassified payloads.
 
-## What OFAuth Is Classifying Today
-
-Internally, OFAuth is already grouping observed websocket payloads into a small taxonomy so we can document them incrementally. Current observed categories include:
-
-- Chat message payloads
-- Inbox count updates
-- Typing indicators
-- Structured payloads that are not yet fully documented
-- Unclassified payloads that still need dedicated documentation
-
-You do not need to hard-code every subtype yet. During beta, treat `type = of.websocket.event.received` as the stable routing key and inspect `data.json` based on the shapes you care about.
-
-## Svix Inspector
-
-OFAuth currently uses an internal Svix Inspector service to store representative deliveries, group unique payload shapes, and improve the event taxonomy over time. That internal inspector is how we determine which upstream websocket messages should become first-class documented event shapes later.
-
-For integrators, the important part is simpler:
-
-- Svix is the delivery and debugging layer for your endpoint
-- OFAuth is the relay and classification layer behind it
-- Your endpoint should store or inspect raw beta payloads defensively until the taxonomy is finalized
-
 ## Integration Notes
 
 - Return `2xx` quickly and process asynchronously when possible
