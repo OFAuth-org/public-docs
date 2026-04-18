@@ -1,0 +1,107 @@
+---
+title: "OnlyFans Events"
+sidebarTitle: "OnlyFans Events"
+description: "Beta overview of upstream OnlyFans websocket events delivered through Realtime"
+---
+
+OnlyFans Events is a beta Realtime surface that relays upstream OnlyFans websocket activity to your webhook endpoint. It is designed for teams that want to react to live upstream activity before every payload shape has a finalized first-class reference.
+
+<Info>
+  **Beta status:** The delivery path is usable now, but this event family is still being documented. Expect new payload shapes to appear over time, and expect the nested `data.json` body to evolve as we classify more upstream websocket traffic.
+</Info>
+
+## Quick Reference
+
+| Field | Value |
+|------|-------|
+| Delivery type | Svix webhook delivery |
+| Current top-level event type | `of.websocket.event.received` |
+| Source | Upstream OnlyFans websocket messages |
+| Destination | Your HTTPS webhook endpoint |
+| Status | Beta |
+
+## How It Works
+
+1. OFAuth listens to supported upstream OnlyFans websocket traffic for connected accounts.
+2. When a websocket message is received, OFAuth wraps it in a Realtime event envelope.
+3. OFAuth publishes that event through Svix, which handles delivery attempts and delivery logs.
+4. Svix sends the event to the webhook endpoint you configured for your organization.
+
+## Connect Your Endpoint
+
+Use the Svix dashboard as the delivery control plane for this beta flow:
+
+1. Create or select a webhook endpoint in Svix with your public HTTPS receiver URL.
+2. Enable delivery for the Realtime beta event family.
+3. Point your application handler at that endpoint and return `2xx` quickly after receipt.
+4. Use the Svix dashboard to inspect deliveries, retries, and failures while you validate your integration.
+
+This page is intentionally brief because the API Reference should describe the surface area, not walk through a full production setup.
+
+## Event Envelope
+
+Today, beta websocket relay deliveries use the Realtime event type below:
+
+```json
+{
+  "type": "of.websocket.event.received",
+  "timestamp": "2026-04-18T10:30:00Z",
+  "data": {
+    "receivedAt": "2026-04-18T10:30:00Z",
+    "environment": "production",
+    "messageType": "websocket",
+    "truncated": false,
+    "connection": {
+      "id": "conn_abc123",
+      "clientReferenceId": "user_456"
+    },
+    "json": {
+      "api2_chat_message": {
+        "...": "example upstream payload"
+      }
+    }
+  }
+}
+```
+
+If OFAuth cannot parse the upstream websocket body as structured JSON, the event may include raw text instead of `data.json`. During beta, your handler should be tolerant of both structured and unclassified payloads.
+
+## What OFAuth Is Classifying Today
+
+Internally, OFAuth is already grouping observed websocket payloads into a small taxonomy so we can document them incrementally. Current observed categories include:
+
+- Chat message payloads
+- Inbox count updates
+- Typing indicators
+- Structured payloads that are not yet fully documented
+- Unclassified payloads that still need dedicated documentation
+
+You do not need to hard-code every subtype yet. During beta, treat `type = of.websocket.event.received` as the stable routing key and inspect `data.json` based on the shapes you care about.
+
+## Svix Inspector
+
+OFAuth currently uses an internal Svix Inspector service to store representative deliveries, group unique payload shapes, and improve the event taxonomy over time. That internal inspector is how we determine which upstream websocket messages should become first-class documented event shapes later.
+
+For integrators, the important part is simpler:
+
+- Svix is the delivery and debugging layer for your endpoint
+- OFAuth is the relay and classification layer behind it
+- Your endpoint should store or inspect raw beta payloads defensively until the taxonomy is finalized
+
+## Integration Notes
+
+- Return `2xx` quickly and process asynchronously when possible
+- Keep a copy of raw payloads during beta so you can adapt to newly documented shapes
+- Use Svix delivery logs to debug retries and endpoint failures
+- Prefer defensive parsing of `data.json` rather than assuming every upstream payload is finalized
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Realtime Overview" icon="radio" href="/api-reference/realtime/overview">
+    Stable connection and system events
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/reference/error-handling">
+    Retry and delivery basics
+  </Card>
+</CardGroup>

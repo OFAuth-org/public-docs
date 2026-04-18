@@ -511,7 +511,14 @@
             "group": "Realtime",
             "icon": "https://ofauth.com/realtime_icon.png",
             "pages": [
-              "api-reference/realtime/overview"
+              "api-reference/realtime/overview",
+              {
+                "group": "Beta",
+                "icon": "flask",
+                "pages": [
+                  "api-reference/realtime/onlyfans-events"
+                ]
+              }
             ]
           },
           {

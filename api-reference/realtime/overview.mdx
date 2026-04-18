@@ -46,6 +46,16 @@ Configure Realtime in the [OFAuth Dashboard](https://app.ofauth.com/platform/dev
 |-------|---------|
 | `rules.updated` | Dynamic Rules signing requirements changed |
 
+### Beta
+
+| Event | Trigger |
+|-------|---------|
+| `of.websocket.event.received` | OFAuth relays an upstream OnlyFans websocket message through Realtime |
+
+<Info>
+OnlyFans Events are currently in beta. The top-level event type is stable, but the nested payload shapes may expand or be refined as we document more upstream websocket messages.
+</Info>
+
 ## Payload Format
 
 All connection events share the same general payload shape:
@@ -183,5 +193,8 @@ Verify requests by:
   </Card>
   <Card title="Access API" icon="shuffle" href="/api-reference/access/overview">
     Use connection IDs to read and write OnlyFans data
+  </Card>
+  <Card title="OnlyFans Events Beta" icon="flask" href="/api-reference/realtime/onlyfans-events">
+    Overview of the websocket relay and Svix delivery model
   </Card>
 </CardGroup>
