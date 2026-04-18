@@ -1,0 +1,187 @@
+---
+title: "Realtime"
+sidebarTitle: "Overview"
+description: "Receive real-time webhook notifications for connection and system events"
+---
+
+The Realtime API delivers webhook events to your server when connections change or system events occur. Use it to react immediately without polling.
+
+## Quick Reference
+
+| Type | Delivery | Purpose |
+|------|----------|---------|
+| Connection events | Webhook | Track connection creation, updates, and expiry |
+| System events | Webhook | Get notified when Dynamic Rules change |
+
+## Configuration
+
+Configure Realtime in the [OFAuth Dashboard](https://app.ofauth.com/platform/developers/webhooks):
+
+- Set your webhook endpoint URL
+- Choose which events to subscribe to
+- Review delivery history and failures
+
+<CardGroup cols={2}>
+  <Card title="Connections Guide" icon="plug" href="/guides/connections">
+    Learn how to store and manage connection IDs
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/reference/error-handling">
+    Handle delivery failures and retries
+  </Card>
+</CardGroup>
+
+## Event Types
+
+### Connection Events
+
+| Event | Trigger |
+|-------|---------|
+| `connection.created` | A new connection is established |
+| `connection.updated` | Connection details change, such as permissions after reconnection |
+| `connection.expired` | A connection expires naturally or is [invalidated via API](/guides/connections#invalidate-connection) |
+
+### System Events
+
+| Event | Trigger |
+|-------|---------|
+| `rules.updated` | Dynamic Rules signing requirements changed |
+
+## Payload Format
+
+All connection events share the same general payload shape:
+
+```json
+{
+  "type": "connection.created",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "clientReferenceId": "user_456",
+    "connection": {
+      "id": "conn_abc123",
+      "status": "active"
+    }
+  }
+}
+```
+
+### `connection.created`
+
+```json
+{
+  "type": "connection.created",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "clientReferenceId": "user_456",
+    "connection": {
+      "id": "conn_abc123",
+      "status": "active",
+      "permissions": ["profile:read", "posts:read"],
+      "userData": {
+        "id": "of_user_456",
+        "name": "Jane Doe",
+        "username": "janedoe",
+        "avatar": "https://cdn.onlyfans.com/avatar.jpg"
+      }
+    }
+  }
+}
+```
+
+### `connection.updated`
+
+```json
+{
+  "type": "connection.updated",
+  "timestamp": "2024-01-15T11:00:00Z",
+  "data": {
+    "clientReferenceId": "user_456",
+    "connection": {
+      "id": "conn_abc123",
+      "status": "active",
+      "permissions": ["profile:read", "posts:read", "messages:read"],
+      "userData": {
+        "id": "of_user_456",
+        "name": "Jane Doe",
+        "username": "janedoe",
+        "avatar": "https://cdn.onlyfans.com/avatar.jpg"
+      }
+    }
+  }
+}
+```
+
+### `connection.expired`
+
+```json
+{
+  "type": "connection.expired",
+  "timestamp": "2024-01-15T12:00:00Z",
+  "data": {
+    "clientReferenceId": "user_456",
+    "connection": {
+      "id": "conn_abc123",
+      "status": "expired"
+    }
+  }
+}
+```
+
+<Tip>
+The `connection.created` event is the recommended way to receive connection IDs. Use `data.clientReferenceId`, which you provided when [initializing Link](/api-reference/link/init), to map the connection to the correct user in your database.
+</Tip>
+
+## Delivery & Retries
+
+- Retry policy: exponential backoff with up to 5 attempts
+- Timeout: 10 seconds per request
+- Ordering: in-order delivery per connection ID
+
+Your endpoint should return a `2xx` response within 10 seconds.
+
+## Signature Verification
+
+Every Realtime delivery includes an `OFAuth-Signature` header:
+
+```http
+OFAuth-Signature: t=1234567890,v1=abc123...
+```
+
+Verify requests by:
+
+1. Extracting the timestamp (`t`) and signature (`v1`)
+2. Rejecting requests older than 5 minutes
+3. Computing an HMAC-SHA256 of `{timestamp}.{raw_body}` using your signing secret
+4. Comparing the expected signature with a constant-time comparison
+
+## Implementation Checklist
+
+1. Parse the `application/json` body
+2. Verify the signature before processing
+3. Route the event by `type`
+4. Return `2xx` within 10 seconds
+5. Make handlers idempotent by storing processed event IDs
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Delivery failed">
+    Ensure your endpoint is publicly reachable and returns a `2xx` response within 10 seconds.
+  </Accordion>
+  <Accordion title="Events are not arriving">
+    Verify the endpoint URL and selected subscriptions in the Dashboard.
+  </Accordion>
+  <Accordion title="Signature verification is failing">
+    Use the raw request body, not the parsed JSON body, and confirm the signing secret matches your Dashboard configuration.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Link API" icon="key" href="/api-reference/link/overview">
+    Create sessions that produce connection IDs
+  </Card>
+  <Card title="Access API" icon="shuffle" href="/api-reference/access/overview">
+    Use connection IDs to read and write OnlyFans data
+  </Card>
+</CardGroup>

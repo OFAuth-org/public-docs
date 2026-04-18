@@ -66,7 +66,6 @@
             "group": "Reference",
             "icon": "file-lines",
             "pages": [
-              "reference/webhooks",
               "reference/rate-limiting",
               "reference/error-handling",
               "reference/security"
@@ -509,6 +508,13 @@
             ]
           },
           {
+            "group": "Realtime",
+            "icon": "https://ofauth.com/realtime_icon.png",
+            "pages": [
+              "api-reference/realtime/overview"
+            ]
+          },
+          {
             "group": "Dynamic Rules API",
             "icon": "https://ofauth.com/rules_icon.png",
             "openapi": "https://api.ofauth.com/openapi.json",
@@ -642,6 +648,10 @@
     {
       "source": "/sdk/csharp/advanced/:slug*",
       "destination": "/sdk/csharp"
+    },
+    {
+      "source": "/reference/webhooks",
+      "destination": "/api-reference/realtime/overview"
     }
   ],
   "footer": {

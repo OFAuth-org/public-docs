@@ -48,14 +48,14 @@ sequenceDiagram
 |---|---|---|
 | Connect a user's OnlyFans account | [Link API](#link-api) | Core |
 | Read/write OnlyFans data (posts, messages, fans) | [Access API](#access-api) | Core |
-| Get notified when connections change | [Webhooks](#webhooks) | Recommended |
+| Get notified when connections change | [Realtime](#realtime) | Recommended |
 | Access OnlyFans media (images, videos) | [Media Proxy](#media-proxy) | Automatic |
 | Manage connections and org settings | [Account API](#account-api) | As needed |
 | Store media permanently beyond session expiry | [Vault+](#vault-plus) | Optional |
 | Sign requests for direct OnlyFans API calls | [Dynamic Rules](#dynamic-rules) | Advanced |
 
 <Info>
-Most integrations use **Link + Access + Webhooks**. Media Proxy is automatic (URLs in Access responses are already proxied). Everything else is opt-in.
+Most integrations use **Link + Access + Realtime**. Media Proxy is automatic (URLs in Access responses are already proxied). Everything else is opt-in.
 </Info>
 
 ---
@@ -91,11 +91,11 @@ Make OnlyFans API requests using Connection IDs. Handles request signing, proxy 
   </Card>
 </CardGroup>
 
-## Webhooks
+## Realtime
 
 Real-time push notifications when connections are created, updated, or expire. Eliminates polling.
 
-<Card title="Webhooks Reference" icon="webhook" href="/reference/webhooks">
+<Card title="Realtime Overview" icon="webhook" href="/api-reference/realtime/overview">
   Event types, payloads, and signature verification
 </Card>
 

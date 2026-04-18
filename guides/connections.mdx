@@ -18,7 +18,7 @@ After a user completes authentication through Link, you receive the connection I
 
 | Method | When to Use |
 |--------|-------------|
-| [`connection.created` webhook](/reference/webhooks) | **Recommended.** Server-side, reliable, includes full details |
+| [`connection.created` webhook](/api-reference/realtime/overview) | **Recommended.** Server-side, reliable, includes full details |
 | [Embed `onSuccess` callback](/guides/link#success-metadata) | Client-side, immediate feedback for embedded flows |
 | [Redirect query params](/guides/link#callback-parameters) | Hosted redirect flow, `connection_id` in URL |
 
@@ -252,7 +252,7 @@ Connections may expire due to:
 - Extended inactivity
 
 <Tip>
-Set up [webhooks](/reference/webhooks) to receive `connection.expired` events.
+Set up [Realtime webhooks](/api-reference/realtime/overview) to receive `connection.expired` events.
 </Tip>
 
 ## API Reference
@@ -409,7 +409,7 @@ Use reconnection for expired connections to maintain consistent connection IDs i
   <Card title="Access API" icon="key" href="/api-reference/access/overview">
     Use connections to access data
   </Card>
-  <Card title="Webhooks" icon="bell" href="/reference/webhooks">
+  <Card title="Realtime" icon="bell" href="/api-reference/realtime/overview">
     Monitor connection events
   </Card>
 </CardGroup>
