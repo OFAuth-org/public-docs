@@ -577,6 +577,34 @@
   },
   "redirects": [
     {
+      "source": "/guides/access",
+      "destination": "/api-reference/access/overview"
+    },
+    {
+      "source": "/guides/dynamic-rules",
+      "destination": "/advanced/dynamic-rules"
+    },
+    {
+      "source": "/guides/link/overview",
+      "destination": "/guides/link"
+    },
+    {
+      "source": "/reference/access",
+      "destination": "/api-reference/access/overview"
+    },
+    {
+      "source": "/sdk/modules/analytics",
+      "destination": "/guides/earnings"
+    },
+    {
+      "source": "/sdk/modules/content-management",
+      "destination": "/guides/content"
+    },
+    {
+      "source": "/sdk/modules/messaging",
+      "destination": "/guides/messaging"
+    },
+    {
       "source": "/sdk/quickstart",
       "destination": "/sdk/typescript"
     },
@@ -678,7 +706,7 @@
   "background": {
     "decoration": "gradient"
   },
-  "description": "OnlyFans API Integration",
+  "description": "Documentation for OFAuth's OnlyFans API, account linking, SDKs, webhooks, and integration guides.",
   "icons": {
     "library": "fontawesome"
   },
