@@ -510,13 +510,25 @@
           {
             "group": "Realtime",
             "icon": "https://ofauth.com/realtime_icon.png",
+            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               "api-reference/realtime/overview",
               {
                 "group": "Beta",
                 "icon": "flask",
                 "pages": [
-                  "api-reference/realtime/onlyfans-events"
+                  "api-reference/realtime/onlyfans-events",
+                  "api-reference/realtime/beta/typing",
+                  "api-reference/realtime/beta/chat-message",
+                  "api-reference/realtime/beta/inbox-counts",
+                  "api-reference/realtime/beta/stories",
+                  "api-reference/realtime/beta/system-messages",
+                  "api-reference/realtime/beta/system-new-message",
+                  "api-reference/realtime/beta/chat-message-like",
+                  "api-reference/realtime/beta/toasts",
+                  "api-reference/realtime/beta/post-fundraising-updated",
+                  "api-reference/realtime/beta/chat-message-unlike",
+                  "api-reference/realtime/beta/post-published"
                 ]
               }
             ]

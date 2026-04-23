@@ -1,85 +1,48 @@
 ---
 title: "OnlyFans Events"
 sidebarTitle: "OnlyFans Events"
-description: "Beta overview of upstream OnlyFans websocket events delivered through Realtime"
+description: "Beta webhook contract for upstream OnlyFans websocket activity relayed through Realtime"
+openapi: "https://api-staging2026sebhus.ofauth.com/openapi.json webhook onlyfansWebsocketEventReceived"
 ---
 
-OnlyFans Events is a beta Realtime surface that relays upstream OnlyFans websocket activity to your webhook endpoint. It is designed for teams that want to react to live upstream activity before every payload shape has a finalized first-class reference.
+OnlyFans Events is a beta Realtime surface that relays supported upstream OnlyFans websocket traffic to your Svix-managed webhook endpoint.
 
 <Info>
-  **Beta status:** The delivery path is usable now, but this event family is still being documented. Expect new payload shapes to appear over time, and expect the nested `data.json` body to evolve as we classify more upstream websocket traffic.
+  **Beta status:** The top-level webhook contract is now documented as a stable OpenAPI 3.1 webhook, but the nested upstream payload families may continue to expand as OFAuth classifies more websocket activity.
 </Info>
 
-## Quick Reference
+## What Is Stable
 
-| Field | Value |
-|------|-------|
-| Delivery type | Svix webhook delivery |
-| Current top-level event type | `of.websocket.event.received` |
-| Source | Upstream OnlyFans websocket messages |
-| Destination | Your HTTPS webhook endpoint |
-| Status | Beta |
+- The top-level event type is always `of.websocket.event.received`
+- The webhook is always delivered over HTTPS through Svix
+- `data.payloadKey` is the stable shape key you should use for filtering and routing
+- `data.shapeSubtype` is the curated subtype label when OFAuth has promoted that payload family
 
-## How It Works
+## How To Integrate
 
-1. OFAuth listens to supported upstream OnlyFans websocket traffic for connected accounts.
-2. When a websocket message is received, OFAuth wraps it in a Realtime event envelope.
-3. OFAuth publishes that event through Svix, which handles delivery attempts and delivery logs.
-4. Svix sends the event to the webhook endpoint you configured for your organization.
+1. Verify the Svix signature on the raw request body.
+2. Route incoming deliveries by `type`.
+3. For `of.websocket.event.received`, branch on `data.payloadKey`.
+4. Parse `data.json` defensively and tolerate new payload families appearing over time.
 
-## Connect Your Endpoint
+## Promoted Payload Families
 
-Use the Svix dashboard as the delivery control plane for this beta flow:
+The schema pages below are generated from the same OpenAPI spec as the webhook contract:
 
-1. Create or select a webhook endpoint in Svix with your public HTTPS receiver URL.
-2. Enable delivery for the Realtime beta event family.
-3. Point your application handler at that endpoint and return `2xx` quickly after receipt.
-4. Use the Svix dashboard to inspect deliveries, retries, and failures while you validate your integration.
+- [Typing indicator](/api-reference/realtime/beta/typing)
+- [Chat message](/api-reference/realtime/beta/chat-message)
+- [Inbox counts](/api-reference/realtime/beta/inbox-counts)
+- [Stories](/api-reference/realtime/beta/stories)
+- [System messages](/api-reference/realtime/beta/system-messages)
+- [System new message](/api-reference/realtime/beta/system-new-message)
+- [Chat message like](/api-reference/realtime/beta/chat-message-like)
+- [Toasts](/api-reference/realtime/beta/toasts)
+- [Post fundraising updated](/api-reference/realtime/beta/post-fundraising-updated)
+- [Chat message unlike](/api-reference/realtime/beta/chat-message-unlike)
+- [Post published](/api-reference/realtime/beta/post-published)
 
-This page is intentionally brief because the API Reference should describe the surface area, not walk through a full production setup.
+## Notes
 
-## Event Envelope
-
-Today, beta websocket relay deliveries use the Realtime event type below:
-
-```json
-{
-  "type": "of.websocket.event.received",
-  "timestamp": "2026-04-18T10:30:00Z",
-  "data": {
-    "receivedAt": "2026-04-18T10:30:00Z",
-    "environment": "production",
-    "messageType": "websocket",
-    "truncated": false,
-    "connection": {
-      "id": "conn_abc123",
-      "clientReferenceId": "user_456"
-    },
-    "json": {
-      "api2_chat_message": {
-        "...": "example upstream payload"
-      }
-    }
-  }
-}
-```
-
-If OFAuth cannot parse the upstream websocket body as structured JSON, the event may include raw text instead of `data.json`. During beta, your handler should be tolerant of both structured and unclassified payloads.
-
-## Integration Notes
-
-- Return `2xx` quickly and process asynchronously when possible
-- Keep a copy of raw payloads during beta so you can adapt to newly documented shapes
-- Use Svix delivery logs to debug retries and endpoint failures
-- Prefer defensive parsing of `data.json` rather than assuming every upstream payload is finalized
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Realtime Overview" icon="radio" href="/api-reference/realtime/overview">
-    Stable connection and system events
-  </Card>
-  <Card title="Error Handling" icon="triangle-exclamation" href="/reference/error-handling">
-    Retry and delivery basics
-  </Card>
-</CardGroup>
+- `data.rawText` and `data.rawBase64` are preserved for beta debugging and fallback parsing.
+- `data.truncated` tells you whether OFAuth had to truncate the upstream payload before delivery.
+- A single `payloadKey` can represent many individual events over time. The shape catalog is intentionally keyed by payload family, not by request-specific values like message text or timestamps.
