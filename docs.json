@@ -510,7 +510,6 @@
           {
             "group": "Realtime",
             "icon": "https://ofauth.com/realtime_icon.png",
-            "openapi": "https://api.ofauth.com/openapi.json",
             "pages": [
               "api-reference/realtime/overview",
               {
