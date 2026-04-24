@@ -10,7 +10,7 @@
     "schemas": {
       "RealtimeOnlyfansWebsocketConnection": {
         "type": "object",
-        "description": "Connection context for the source upstream websocket payload.",
+        "description": "Connection context for the event payload.",
         "properties": {
           "id": {
             "type": "string",
@@ -32,8 +32,8 @@
       },
       "RealtimeOnlyfansWebsocketEventEnvelope": {
         "type": "object",
-        "title": "OnlyFans websocket event webhook",
-        "description": "Webhook envelope for raw upstream OnlyFans websocket activity relayed through OFAuth Realtime.",
+        "title": "OnlyFans event webhook",
+        "description": "Webhook envelope for OnlyFans events delivered through OFAuth Realtime.",
         "properties": {
           "type": {
             "type": "string",
@@ -81,10 +81,7 @@
               {
                 "$ref": "#/components/schemas/RealtimeOnlyfansPostPublishedEventData"
               }
-            ],
-            "discriminator": {
-              "propertyName": "payloadKey"
-            }
+            ]
           }
         },
         "required": [
@@ -104,8 +101,6 @@
             "environment": "live",
             "receivedAt": "2026-04-23T14:30:13.435435299Z",
             "messageType": "text",
-            "payloadKey": "of.websocket.event.received|typing",
-            "shapeSubtype": "chat.typing.updated",
             "truncated": false,
             "json": {
               "typing": {
@@ -119,7 +114,7 @@
       "RealtimeOnlyfansTypingEventData": {
         "type": "object",
         "title": "Typing indicator updated",
-        "description": "A live typing indicator emitted from the upstream OnlyFans websocket stream.",
+        "description": "A typing indicator event.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -136,47 +131,29 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|typing"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "chat.typing.updated",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
@@ -212,7 +189,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -225,8 +201,6 @@
           "environment": "live",
           "receivedAt": "2026-04-23T14:30:13.435435299Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|typing",
-          "shapeSubtype": "chat.typing.updated",
           "truncated": false,
           "json": {
             "typing": {
@@ -239,7 +213,7 @@
       "RealtimeOnlyfansStoriesEventData": {
         "type": "object",
         "title": "Stories payload received",
-        "description": "A structured upstream websocket payload keyed by `stories`.",
+        "description": "A stories event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -256,56 +230,41 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|stories"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.stories",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
-            "description": "Structured upstream payload with a top-level `stories` key. Nested fields may expand during beta.",
+            "description": "Structured payload with a top-level `stories` key.",
             "properties": {
               "stories": {
-                "type": "object",
-                "description": "Upstream OnlyFans payload for `stories`. Nested fields may expand during beta.",
-                "additionalProperties": true
+                "type": "array",
+                "description": "Observed `stories` payload entries.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
               }
             },
             "required": [
@@ -313,7 +272,7 @@
             ],
             "additionalProperties": true,
             "example": {
-              "stories": {}
+              "stories": []
             }
           }
         },
@@ -322,7 +281,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -335,19 +293,17 @@
           "environment": "live",
           "receivedAt": "2026-04-19T06:28:28.89099047Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|stories",
-          "shapeSubtype": "websocket.structured.stories",
           "truncated": true,
           "json": {
-            "stories": {}
+            "stories": []
           },
-          "rawText": "{\"stories\":{}}"
+          "rawText": "{\"stories\":[]}"
         }
       },
       "RealtimeOnlyfansChatMessageEventData": {
         "type": "object",
         "title": "Chat message received",
-        "description": "A live upstream chat message envelope from the OnlyFans websocket stream.",
+        "description": "A chat message event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -364,54 +320,36 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|api2_chat_message"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "chat.message.created.live",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
             "properties": {
               "api2_chat_message": {
                 "type": "object",
-                "description": "Upstream chat message envelope. OFAuth preserves the upstream shape during beta.",
+                "description": "Chat message payload. Nested fields may expand during beta.",
                 "properties": {
                   "id": {
                     "type": "number",
@@ -577,7 +515,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -590,8 +527,6 @@
           "environment": "live",
           "receivedAt": "2026-04-23T14:30:15.143911227Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|api2_chat_message",
-          "shapeSubtype": "chat.message.created.live",
           "truncated": false,
           "json": {
             "api2_chat_message": {
@@ -626,7 +561,7 @@
       "RealtimeOnlyfansInboxCountsEventData": {
         "type": "object",
         "title": "Inbox counts updated",
-        "description": "A structured websocket payload with inbox and priority chat counters.",
+        "description": "An inbox counts event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -643,47 +578,29 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|chat_messages,count_priority_chat,unread_tips"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "chat.inbox.counts_updated",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
@@ -719,7 +636,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -732,8 +648,6 @@
           "environment": "live",
           "receivedAt": "2026-04-23T14:30:15.209952452Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|chat_messages,count_priority_chat,unread_tips",
-          "shapeSubtype": "chat.inbox.counts_updated",
           "truncated": false,
           "json": {
             "chat_messages": 25,
@@ -746,7 +660,7 @@
       "RealtimeOnlyfansSystemMessagesEventData": {
         "type": "object",
         "title": "System messages payload received",
-        "description": "A structured websocket payload carrying `messages` and `hasSystemNotifications`.",
+        "description": "A system messages event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -763,47 +677,29 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|hasSystemNotifications,messages"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.multi-key",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
@@ -813,10 +709,11 @@
               },
               "messages": {
                 "type": [
+                  "number",
                   "array",
                   "object"
                 ],
-                "description": "Observed upstream `messages` payload. Nested shape is still being classified.",
+                "description": "Observed `messages` payload. Nested shape is still being classified.",
                 "items": {
                   "type": "object",
                   "additionalProperties": true
@@ -840,7 +737,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -853,20 +749,18 @@
           "environment": "live",
           "receivedAt": "2026-04-19T12:03:56.332699689Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|hasSystemNotifications,messages",
-          "shapeSubtype": "websocket.structured.multi-key",
           "truncated": false,
           "json": {
-            "hasSystemNotifications": true,
-            "messages": []
+            "hasSystemNotifications": false,
+            "messages": 1
           },
-          "rawText": "{\"hasSystemNotifications\":true,\"messages\":[]}"
+          "rawText": "{\"messages\":1,\"hasSystemNotifications\":false}"
         }
       },
       "RealtimeOnlyfansSystemNewMessageEventData": {
         "type": "object",
         "title": "System new-message payload received",
-        "description": "A structured websocket payload carrying `new_message` and `hasSystemNotifications`.",
+        "description": "A system new-message event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -883,47 +777,29 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|hasSystemNotifications,new_message"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.multi-key",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
@@ -933,7 +809,7 @@
               },
               "new_message": {
                 "type": "object",
-                "description": "Observed upstream `new_message` payload. Nested fields are still being classified.",
+                "description": "Observed `new_message` payload. Nested fields are still being classified.",
                 "additionalProperties": true
               }
             },
@@ -953,7 +829,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -966,8 +841,6 @@
           "environment": "live",
           "receivedAt": "2026-04-19T11:31:53.219930536Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|hasSystemNotifications,new_message",
-          "shapeSubtype": "websocket.structured.multi-key",
           "truncated": false,
           "json": {
             "hasSystemNotifications": true,
@@ -979,7 +852,7 @@
       "RealtimeOnlyfansChatMessageLikeEventData": {
         "type": "object",
         "title": "Chat message like payload received",
-        "description": "A structured websocket payload keyed by `chat_message_like`.",
+        "description": "A chat message like event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -996,55 +869,40 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|chat_message_like"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.chat_message_like",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
-            "description": "Structured upstream payload with a top-level `chat_message_like` key. Nested fields may expand during beta.",
+            "description": "Structured payload with a top-level `chat_message_like` key.",
             "properties": {
               "chat_message_like": {
-                "type": "object",
-                "description": "Upstream OnlyFans payload for `chat_message_like`. Nested fields may expand during beta.",
+                "type": [
+                  "string",
+                  "object"
+                ],
+                "description": "Observed payload for `chat_message_like`.",
                 "additionalProperties": true
               }
             },
@@ -1053,7 +911,7 @@
             ],
             "additionalProperties": true,
             "example": {
-              "chat_message_like": {}
+              "chat_message_like": "9375049127457"
             }
           }
         },
@@ -1062,7 +920,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -1075,19 +932,17 @@
           "environment": "live",
           "receivedAt": "2026-04-19T05:59:20.883109815Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|chat_message_like",
-          "shapeSubtype": "websocket.structured.chat_message_like",
           "truncated": false,
           "json": {
-            "chat_message_like": {}
+            "chat_message_like": "9375049127457"
           },
-          "rawText": "{\"chat_message_like\":{}}"
+          "rawText": "{\"chat_message_like\":\"9375049127457\"}"
         }
       },
       "RealtimeOnlyfansToastsEventData": {
         "type": "object",
         "title": "Toasts payload received",
-        "description": "A structured websocket payload keyed by `toasts`.",
+        "description": "A toasts event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -1104,56 +959,41 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|toasts"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.toasts",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
-            "description": "Structured upstream payload with a top-level `toasts` key. Nested fields may expand during beta.",
+            "description": "Structured payload with a top-level `toasts` key.",
             "properties": {
               "toasts": {
-                "type": "object",
-                "description": "Upstream OnlyFans payload for `toasts`. Nested fields may expand during beta.",
-                "additionalProperties": true
+                "type": "array",
+                "description": "Observed `toasts` payload entries.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
               }
             },
             "required": [
@@ -1161,7 +1001,7 @@
             ],
             "additionalProperties": true,
             "example": {
-              "toasts": {}
+              "toasts": []
             }
           }
         },
@@ -1170,7 +1010,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -1183,19 +1022,17 @@
           "environment": "live",
           "receivedAt": "2026-04-19T02:59:05.553450608Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|toasts",
-          "shapeSubtype": "websocket.structured.toasts",
           "truncated": false,
           "json": {
-            "toasts": {}
+            "toasts": []
           },
-          "rawText": "{\"toasts\":{}}"
+          "rawText": "{\"toasts\":[]}"
         }
       },
       "RealtimeOnlyfansPostFundraisingUpdatedEventData": {
         "type": "object",
         "title": "Post fundraising updated payload received",
-        "description": "A structured websocket payload keyed by `post_fundraising_updated`.",
+        "description": "A post fundraising updated event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -1212,55 +1049,37 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|post_fundraising_updated"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.post_fundraising_updated",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
-            "description": "Structured upstream payload with a top-level `post_fundraising_updated` key. Nested fields may expand during beta.",
+            "description": "Structured payload with a top-level `post_fundraising_updated` key. Nested fields may expand during beta.",
             "properties": {
               "post_fundraising_updated": {
                 "type": "object",
-                "description": "Upstream OnlyFans payload for `post_fundraising_updated`. Nested fields may expand during beta.",
+                "description": "OnlyFans payload for `post_fundraising_updated`. Nested fields may expand during beta.",
                 "additionalProperties": true
               }
             },
@@ -1278,7 +1097,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -1291,8 +1109,6 @@
           "environment": "live",
           "receivedAt": "2026-04-19T05:28:35.136409371Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|post_fundraising_updated",
-          "shapeSubtype": "websocket.structured.post_fundraising_updated",
           "truncated": false,
           "json": {
             "post_fundraising_updated": {}
@@ -1303,7 +1119,7 @@
       "RealtimeOnlyfansChatMessageUnlikeEventData": {
         "type": "object",
         "title": "Chat message unlike payload received",
-        "description": "A structured websocket payload keyed by `chat_message_unlike`.",
+        "description": "A chat message unlike event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -1320,55 +1136,37 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|chat_message_unlike"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.chat_message_unlike",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
-            "description": "Structured upstream payload with a top-level `chat_message_unlike` key. Nested fields may expand during beta.",
+            "description": "Structured payload with a top-level `chat_message_unlike` key. Nested fields may expand during beta.",
             "properties": {
               "chat_message_unlike": {
                 "type": "object",
-                "description": "Upstream OnlyFans payload for `chat_message_unlike`. Nested fields may expand during beta.",
+                "description": "OnlyFans payload for `chat_message_unlike`. Nested fields may expand during beta.",
                 "additionalProperties": true
               }
             },
@@ -1386,7 +1184,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -1399,8 +1196,6 @@
           "environment": "live",
           "receivedAt": "2026-04-19T02:52:51.780139196Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|chat_message_unlike",
-          "shapeSubtype": "websocket.structured.chat_message_unlike",
           "truncated": false,
           "json": {
             "chat_message_unlike": {}
@@ -1411,7 +1206,7 @@
       "RealtimeOnlyfansPostPublishedEventData": {
         "type": "object",
         "title": "Post published payload received",
-        "description": "A structured websocket payload keyed by `post_published`.",
+        "description": "A post published event payload.",
         "properties": {
           "connection": {
             "$ref": "#/components/schemas/RealtimeOnlyfansWebsocketConnection"
@@ -1428,55 +1223,37 @@
           "receivedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "When OFAuth received the upstream websocket payload."
+            "description": "When OFAuth received the event payload."
           },
           "messageType": {
             "type": "string",
-            "description": "Transport-level websocket frame classification from the relay."
-          },
-          "payloadKey": {
-            "type": "string",
-            "enum": [
-              "of.websocket.event.received|post_published"
-            ],
-            "description": "Stable OFAuth shape key for this payload."
-          },
-          "shapeSubtype": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "websocket.structured.post_published",
-              null
-            ],
-            "description": "Curated subtype label for this payload family."
+            "description": "Event message type metadata."
           },
           "truncated": {
             "type": "boolean",
-            "description": "Whether OFAuth truncated the upstream payload before forwarding it."
+            "description": "Whether OFAuth truncated the payload before delivery."
           },
           "rawText": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload text, present when the frame was text-based."
+            "description": "Original payload text when available."
           },
           "rawBase64": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Raw upstream payload bytes as base64 when the frame was binary."
+            "description": "Original payload bytes as base64 when available."
           },
           "json": {
             "type": "object",
-            "description": "Structured upstream payload with a top-level `post_published` key. Nested fields may expand during beta.",
+            "description": "Structured payload with a top-level `post_published` key. Nested fields may expand during beta.",
             "properties": {
               "post_published": {
                 "type": "object",
-                "description": "Upstream OnlyFans payload for `post_published`. Nested fields may expand during beta.",
+                "description": "OnlyFans payload for `post_published`. Nested fields may expand during beta.",
                 "additionalProperties": true
               }
             },
@@ -1494,7 +1271,6 @@
           "environment",
           "receivedAt",
           "messageType",
-          "payloadKey",
           "truncated",
           "json"
         ],
@@ -1507,8 +1283,6 @@
           "environment": "live",
           "receivedAt": "2026-04-19T02:11:07.832075774Z",
           "messageType": "text",
-          "payloadKey": "of.websocket.event.received|post_published",
-          "shapeSubtype": "websocket.structured.post_published",
           "truncated": false,
           "json": {
             "post_published": {}
@@ -1524,8 +1298,8 @@
         "tags": [
           "Realtime"
         ],
-        "summary": "OnlyFans websocket event received",
-        "description": "Triggered when OFAuth relays a supported upstream OnlyFans websocket payload to your Svix-managed webhook endpoint.",
+        "summary": "OnlyFans event received",
+        "description": "Triggered when OFAuth delivers a supported OnlyFans event to your webhook endpoint.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1547,8 +1321,6 @@
                       "environment": "live",
                       "receivedAt": "2026-04-23T14:30:13.435435299Z",
                       "messageType": "text",
-                      "payloadKey": "of.websocket.event.received|typing",
-                      "shapeSubtype": "chat.typing.updated",
                       "truncated": false,
                       "json": {
                         "typing": {
@@ -1572,8 +1344,6 @@
                       "environment": "live",
                       "receivedAt": "2026-04-23T14:30:15.143911227Z",
                       "messageType": "text",
-                      "payloadKey": "of.websocket.event.received|api2_chat_message",
-                      "shapeSubtype": "chat.message.created.live",
                       "truncated": false,
                       "json": {
                         "api2_chat_message": {
@@ -1619,8 +1389,6 @@
                       "environment": "live",
                       "receivedAt": "2026-04-23T14:30:15.209952452Z",
                       "messageType": "text",
-                      "payloadKey": "of.websocket.event.received|chat_messages,count_priority_chat,unread_tips",
-                      "shapeSubtype": "chat.inbox.counts_updated",
                       "truncated": false,
                       "json": {
                         "chat_messages": 25,
@@ -1642,9 +1410,9 @@
         },
         "x-mint": {
           "metadata": {
-            "title": "OnlyFans websocket event received",
+            "title": "OnlyFans event received",
             "sidebarTitle": "Realtime Webhook",
-            "description": "Webhook contract for relayed upstream OnlyFans websocket activity."
+            "description": "Webhook contract for delivered OnlyFans events."
           }
         }
       }

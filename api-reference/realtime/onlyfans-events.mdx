@@ -13,15 +13,14 @@ OnlyFans Events is a beta Realtime surface for receiving supported OnlyFans even
 
 ## What Is Stable
 
-- `data.payloadKey` is the main key to use for filtering and routing
-- `data.shapeSubtype` may be present for documented event categories
+- The top-level event type is `of.websocket.event.received`
 - `data.json` contains the event payload
 - New event categories may be added during the beta
 
 ## How To Integrate
 
 1. Verify the webhook signature on the raw request body.
-2. Route incoming deliveries by `data.payloadKey`.
+2. Route incoming deliveries by the top-level keys present in `data.json`.
 3. Parse `data.json` defensively.
 4. Tolerate additional event categories appearing over time during the beta.
 
@@ -44,5 +43,5 @@ The schema pages below are generated from the same OpenAPI spec as the webhook c
 ## Notes
 
 - The schema pages below describe currently documented event categories.
-- `payloadKey` is the most stable key to use in your application logic.
+- `messageType` is transport metadata and is not enough to distinguish event variants on its own.
 - Fields may be added over time as beta coverage expands.
