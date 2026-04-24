@@ -1,31 +1,31 @@
 ---
 title: "OnlyFans Events"
 sidebarTitle: "OnlyFans Events"
-description: "Beta webhook contract for upstream OnlyFans websocket activity relayed through Realtime"
+description: "Beta webhook contract for OnlyFans events delivered through Realtime"
 openapi: "/openapi/realtime-webhooks.json webhook onlyfansWebsocketEventReceived"
 ---
 
-OnlyFans Events is a beta Realtime surface that relays supported upstream OnlyFans websocket traffic to your Svix-managed webhook endpoint.
+OnlyFans Events is a beta Realtime surface for receiving supported OnlyFans events in your webhook endpoint.
 
 <Info>
-  **Beta status:** The top-level webhook contract is now documented as a stable OpenAPI 3.1 webhook, but the nested upstream payload families may continue to expand as OFAuth classifies more websocket activity.
+  **Beta status:** The top-level webhook contract is stable, but the set of documented event categories may continue to expand over time.
 </Info>
 
 ## What Is Stable
 
-- The top-level event type is always `of.websocket.event.received`
-- The webhook is always delivered over HTTPS through Svix
-- `data.payloadKey` is the stable shape key you should use for filtering and routing
-- `data.shapeSubtype` is the curated subtype label when OFAuth has promoted that payload family
+- `data.payloadKey` is the main key to use for filtering and routing
+- `data.shapeSubtype` may be present for documented event categories
+- `data.json` contains the event payload
+- New event categories may be added during the beta
 
 ## How To Integrate
 
-1. Verify the Svix signature on the raw request body.
-2. Route incoming deliveries by `type`.
-3. For `of.websocket.event.received`, branch on `data.payloadKey`.
-4. Parse `data.json` defensively and tolerate new payload families appearing over time.
+1. Verify the webhook signature on the raw request body.
+2. Route incoming deliveries by `data.payloadKey`.
+3. Parse `data.json` defensively.
+4. Tolerate additional event categories appearing over time during the beta.
 
-## Promoted Payload Families
+## Documented Event Schemas
 
 The schema pages below are generated from the same OpenAPI spec as the webhook contract:
 
@@ -43,6 +43,6 @@ The schema pages below are generated from the same OpenAPI spec as the webhook c
 
 ## Notes
 
-- `data.rawText` and `data.rawBase64` are preserved for beta debugging and fallback parsing.
-- `data.truncated` tells you whether OFAuth had to truncate the upstream payload before delivery.
-- A single `payloadKey` can represent many individual events over time. The shape catalog is intentionally keyed by payload family, not by request-specific values like message text or timestamps.
+- The schema pages below describe currently documented event categories.
+- `payloadKey` is the most stable key to use in your application logic.
+- Fields may be added over time as beta coverage expands.
