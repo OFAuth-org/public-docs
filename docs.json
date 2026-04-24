@@ -16,6 +16,7 @@
     "options": [
       "copy",
       "view",
+      "mcp",
       "chatgpt",
       "claude"
     ]
